@@ -1,51 +1,52 @@
 "use client";
 
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 
+import { Link } from "@/i18n/navigation";
 import { SEVERITIES, type Dashboard } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, ErrorText, PageHeader, SEVERITY_STYLE } from "@/components/common";
 import { MatchTable } from "@/components/match-table";
 import { useMe } from "@/components/app-shell";
-import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
+  const t = useTranslations("dashboard");
   const me = useMe();
   const { data, error, reload } = useApi<Dashboard>("/dashboard");
 
   return (
     <>
-      <PageHeader title="ダッシュボード" description={`${me.group_name} — 見えているプロジェクト全体の未対応の脆弱性`} />
+      <PageHeader title={t("title")} description={t("description", { group: me.group_name })} />
       <ErrorText>{error}</ErrorText>
       {data && (
         <>
           <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-7">
-            <Stat label="プロジェクト" value={data.project_count} />
-            <Stat label="パッケージ" value={data.package_count} />
+            <Stat label={t("projects")} value={data.project_count} />
+            <Stat label={t("packages")} value={data.package_count} />
             {SEVERITIES.map((s) => (
-              <Link key={s} href={`/vulnerabilities/?severity=${s}`}>
+              <Link key={s} href={{ pathname: "/vulnerabilities/", query: { severity: s } }}>
                 <Stat label={s} value={data.open_counts[s]} className={data.open_counts[s] ? SEVERITY_STYLE[s] : ""} />
               </Link>
             ))}
           </div>
           <Card>
             <CardHeader>
-              <CardTitle>未対応の脆弱性（重大度順・最新20件）</CardTitle>
+              <CardTitle>{t("recent")}</CardTitle>
             </CardHeader>
             <CardContent>
               {data.recent.length === 0 ? (
                 <Empty>
-                  未対応の脆弱性はありません。
-                  {data.package_count === 0 && (
-                    <>
-                      {" "}
-                      <Link href="/projects/" className="underline">
-                        プロジェクト
-                      </Link>
-                      にパッケージを登録すると監視が始まります。
-                    </>
-                  )}
+                  {t("empty")}{" "}
+                  {data.package_count === 0 &&
+                    t.rich("emptyHint", {
+                      link: (chunks) => (
+                        <Link href="/projects/" className="underline">
+                          {chunks}
+                        </Link>
+                      ),
+                    })}
                 </Empty>
               ) : (
                 <MatchTable matches={data.recent} onChanged={reload} showProject />

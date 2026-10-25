@@ -2,17 +2,22 @@
 
 import { MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useTranslations } from "next-intl";
+
+import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
+  const t = useTranslations("common");
   const { resolvedTheme, setTheme } = useTheme();
   return (
-    <button
-      title="テーマ切り替え"
-      className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+    <Button
+      variant="ghost"
+      size="icon"
+      title={t("theme")}
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
     >
-      <SunIcon className="size-4 dark:hidden" />
-      <MoonIcon className="hidden size-4 dark:block" />
-    </button>
+      <SunIcon className="dark:hidden" />
+      <MoonIcon className="hidden dark:block" />
+    </Button>
   );
 }

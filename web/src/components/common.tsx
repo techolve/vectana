@@ -1,7 +1,13 @@
 "use client";
 
+import { useCallback } from "react";
+import { useLocale } from "next-intl";
+
 import { cn } from "@/lib/utils";
 import { SEVERITIES, type Severity, type SeverityCounts } from "@/lib/api";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const SEVERITY_STYLE: Record<Severity, string> = {
   CRITICAL: "bg-red-600 text-white",
@@ -25,9 +31,9 @@ export function SeverityBadge({ severity, className }: { severity: Severity; cla
   );
 }
 
-export function SeverityCountsInline({ counts }: { counts: SeverityCounts }) {
+export function SeverityCountsInline({ counts, empty }: { counts: SeverityCounts; empty: string }) {
   const shown = SEVERITIES.filter((s) => counts[s] > 0);
-  if (shown.length === 0) return <span className="text-xs text-muted-foreground">なし</span>;
+  if (shown.length === 0) return <span className="text-xs text-muted-foreground">{empty}</span>;
   return (
     <span className="flex flex-wrap gap-1">
       {shown.map((s) => (
@@ -52,22 +58,53 @@ export function PageHeader({
     <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
         <h1 className="text-xl font-semibold">{title}</h1>
-        {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+        {description && <div className="mt-1 text-sm text-muted-foreground">{description}</div>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }
 
-export function Select({ className, ...props }: React.ComponentProps<"select">) {
+export type Option = { value: string; label: React.ReactNode };
+
+// Base UI's Select has no notion of an empty value, so "" maps to a sentinel.
+const EMPTY = "__empty__";
+
+/** shadcn Select with a plain value/options API (value "" = nothing chosen). */
+export function OptionSelect({
+  value,
+  onValueChange,
+  options,
+  className,
+  disabled,
+  title,
+}: {
+  value: string;
+  onValueChange: (value: string) => void;
+  options: Option[];
+  className?: string;
+  disabled?: boolean;
+  title?: string;
+}) {
+  const items = options.map((o) => ({ value: o.value === "" ? EMPTY : o.value, label: o.label }));
   return (
-    <select
-      className={cn(
-        "h-8 rounded-lg border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 dark:bg-input/30",
-        className,
-      )}
-      {...props}
-    />
+    <Select
+      items={items}
+      value={value === "" ? EMPTY : value}
+      onValueChange={(v) => onValueChange(v === EMPTY || v == null ? "" : String(v))}
+      disabled={disabled}
+    >
+      <SelectTrigger className={cn("min-w-32", className)} title={title}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {items.map((o) => (
+          <SelectItem key={o.value} value={o.value}>
+            {o.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -84,22 +121,38 @@ export function ErrorText({ children }: { children?: React.ReactNode }) {
   return <p className="text-sm text-destructive">{children}</p>;
 }
 
-export function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
+/** A labelled form control built from shadcn Field parts. */
+export function LabeledField({
+  label,
+  htmlFor,
+  hint,
+  children,
+}: {
+  label: string;
+  htmlFor?: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <label className="grid gap-1.5 text-sm">
-      <span className="font-medium">{label}</span>
+    <Field>
+      <FieldLabel htmlFor={htmlFor}>{label}</FieldLabel>
       {children}
-      {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
-    </label>
+      {hint && <FieldDescription>{hint}</FieldDescription>}
+    </Field>
   );
 }
 
-export function formatDate(value: string | null | undefined) {
-  if (!value) return "-";
-  return new Date(value).toLocaleString("ja-JP", { dateStyle: "short", timeStyle: "short" });
+export function useFormatDate() {
+  const locale = useLocale();
+  return useCallback(
+    (value: string | null | undefined) =>
+      value ? new Date(value).toLocaleString(locale, { dateStyle: "short", timeStyle: "short" }) : "-",
+    [locale],
+  );
 }
 
-export function Tabs<T extends string>({
+/** Underlined page tabs (shadcn Tabs, "line" variant). Content is rendered by the caller. */
+export function PageTabs<T extends string>({
   tabs,
   value,
   onChange,
@@ -109,19 +162,14 @@ export function Tabs<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div className="mb-4 flex gap-1 overflow-x-auto border-b">
-      {tabs.map((t) => (
-        <button
-          key={t.value}
-          onClick={() => onChange(t.value)}
-          className={cn(
-            "-mb-px border-b-2 border-transparent px-3 py-2 text-sm whitespace-nowrap text-muted-foreground hover:text-foreground",
-            value === t.value && "border-primary font-medium text-foreground",
-          )}
-        >
-          {t.label}
-        </button>
-      ))}
-    </div>
+    <Tabs value={value} onValueChange={(v) => onChange(v as T)} className="mb-4">
+      <TabsList variant="line" className="w-full justify-start overflow-x-auto border-b">
+        {tabs.map((t) => (
+          <TabsTrigger key={t.value} value={t.value} className="flex-none">
+            {t.label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
   );
 }

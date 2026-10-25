@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from app import __version__
 from app.core.config import settings
 from app.routers import auth, org, project
 
@@ -25,7 +26,7 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
 app = FastAPI(
     lifespan=lifespan,
     title=settings.app_name,
-    version="0.1.2",
+    version=__version__,
     description="Project dependency vulnerability monitoring",
     docs_url="/api/docs",
     openapi_url="/api/openapi.json",
@@ -46,7 +47,7 @@ app.include_router(project.router)
 
 @app.get("/api/health", tags=["system"])
 async def health() -> dict[str, str]:
-    return {"status": "ok"}
+    return {"status": "ok", "version": __version__}
 
 
 # Serve the exported Next.js app. API routes are registered first and win.

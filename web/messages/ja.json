@@ -1,0 +1,231 @@
+{
+  "meta": { "description": "プロジェクトの依存パッケージの脆弱性を監視・通知" },
+  "common": {
+    "loading": "読み込み中…",
+    "save": "保存",
+    "saved": "保存しました",
+    "add": "追加",
+    "delete": "削除",
+    "remove": "解除",
+    "edit": "編集",
+    "rename": "名前変更",
+    "cancel": "キャンセル",
+    "create": "作成",
+    "copy": "コピー",
+    "copied": "コピーしました",
+    "none": "なし",
+    "noneOption": "（なし）",
+    "filter": "絞り込み",
+    "keyword": "キーワード",
+    "version": "バージョン {version}",
+    "language": "言語",
+    "theme": "テーマ切り替え",
+    "settings": "個人設定",
+    "logout": "ログアウト",
+    "atLeast": "{severity} 以上",
+    "enabled": "有効",
+    "disabled": "無効",
+    "testSend": "テスト送信",
+    "loginRequired": "ログインが必要です"
+  },
+  "locales": { "ja": "日本語", "en": "English" },
+  "nav": {
+    "dashboard": "ダッシュボード",
+    "projects": "プロジェクト",
+    "vulnerabilities": "脆弱性",
+    "admin": "組織管理"
+  },
+  "labels": {
+    "role": { "group_admin": "グループ管理者", "company_admin": "会社管理者", "member": "メンバー" },
+    "companyType": { "parent": "親会社", "affiliate": "関連会社", "partner": "BP（協力会社）" },
+    "projectRole": { "owner": "オーナー", "member": "メンバー", "viewer": "閲覧のみ" },
+    "status": { "open": "未対応", "ack": "確認済み", "ignored": "無視" },
+    "partner": "BP"
+  },
+  "login": {
+    "title": "Vectana にログイン",
+    "description": "メールアドレスとパスワードを入力してください",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "submit": "ログイン",
+    "invalid": "メールアドレスまたはパスワードが違います",
+    "inviteOnly": "アカウントは管理者からの招待で作成されます。"
+  },
+  "invite": {
+    "title": "Vectana への招待",
+    "description": "{company} の {email} としてアカウントを作成します。",
+    "displayName": "表示名",
+    "password": "パスワード",
+    "passwordHint": "8文字以上",
+    "confirm": "パスワード（確認）",
+    "mismatch": "パスワードが一致しません",
+    "submit": "アカウントを作成",
+    "checking": "確認中…",
+    "expired": "招待の有効期限が切れています",
+    "notFound": "招待が見つかりません",
+    "invalidLink": "招待リンクが正しくありません"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "description": "{group} — 見えているプロジェクト全体の未対応の脆弱性",
+    "projects": "プロジェクト",
+    "packages": "パッケージ",
+    "recent": "未対応の脆弱性（重大度順・最新20件）",
+    "empty": "未対応の脆弱性はありません。",
+    "emptyHint": "<link>プロジェクト</link>にパッケージを登録すると監視が始まります。"
+  },
+  "matches": {
+    "severity": "重大度",
+    "project": "プロジェクト",
+    "package": "パッケージ",
+    "fixed": "修正版",
+    "vulnerability": "脆弱性",
+    "detected": "検知日時",
+    "status": "状態"
+  },
+  "vulns": {
+    "title": "脆弱性",
+    "description": "見えているプロジェクトでヒットした脆弱性の一覧",
+    "allSeverities": "すべての重大度",
+    "empty": "該当する脆弱性はありません"
+  },
+  "projects": {
+    "title": "プロジェクト",
+    "description": "見えているプロジェクト（アサイン先・管理範囲）",
+    "new": "新規作成",
+    "empty": "プロジェクトがありません",
+    "name": "名前",
+    "companyDept": "会社 / 部署",
+    "packages": "パッケージ",
+    "openVulns": "未対応の脆弱性",
+    "createTitle": "プロジェクトを作成",
+    "descriptionField": "説明",
+    "company": "会社",
+    "department": "担当部署",
+    "departmentHint": "部署長は配下のプロジェクトを閲覧・管理できます"
+  },
+  "project": {
+    "notSpecified": "プロジェクトが指定されていません",
+    "scanNow": "今すぐスキャン",
+    "scanStarted": "{count} 件のパッケージをスキャンしています。少し待ってから再読み込みしてください。",
+    "tabs": {
+      "vulns": "脆弱性",
+      "packages": "パッケージ ({count})",
+      "members": "メンバー",
+      "webhooks": "通知（Webhook）",
+      "settings": "設定"
+    },
+    "noMatches": "ヒットした脆弱性はありません"
+  },
+  "packages": {
+    "manual": "手動で登録",
+    "namePlaceholder": "パッケージ名",
+    "versionPlaceholder": "バージョン",
+    "added": "登録しました。バックグラウンドでスキャンします。",
+    "drop": "lockfile をドロップして取り込み",
+    "reimportHint": "同じファイル名で再取り込みすると差分を反映します",
+    "imported": "{file}: {total} 件（追加 {added} / 削除 {removed}）",
+    "confirmDelete": "{name}@{version} を削除しますか？",
+    "empty": "パッケージが登録されていません",
+    "ecosystem": "エコシステム",
+    "package": "パッケージ",
+    "version": "バージョン",
+    "source": "登録元",
+    "lastScanned": "最終スキャン",
+    "open": "未対応"
+  },
+  "members": {
+    "assign": "メンバーをアサイン",
+    "search": "名前・メールで検索",
+    "assigned": "{name} をアサインしました",
+    "confirmRemove": "{name} のアサインを解除しますか？",
+    "empty": "アサインされたメンバーはいません",
+    "member": "メンバー",
+    "company": "会社",
+    "role": "ロール",
+    "note": "アサインされたメンバーには、個人設定に応じて脆弱性の通知メールが届きます。BP（協力会社）はアサインされたプロジェクトだけが見えます。"
+  },
+  "webhooks": {
+    "add": "Webhook を追加",
+    "minSeverity": "この重大度以上を通知",
+    "empty": "Webhook は登録されていません。チームのチャンネルに通知したい場合に追加してください。",
+    "testSent": "テスト通知を送信しました",
+    "confirmDelete": "この Webhook を削除しますか？"
+  },
+  "projectSettings": {
+    "name": "名前",
+    "description": "説明",
+    "department": "担当部署",
+    "dangerTitle": "プロジェクトの削除",
+    "dangerDescription": "パッケージ・検知結果・Webhook もすべて削除されます。",
+    "deleteButton": "削除する",
+    "confirmDelete": "削除するにはプロジェクト名「{name}」を入力してください"
+  },
+  "settings": {
+    "title": "個人設定",
+    "emailTitle": "メール通知",
+    "emailEnabled": "アサインされたプロジェクトで脆弱性が見つかったらメールで受け取る",
+    "minSeverity": "通知する重大度",
+    "minSeverityHint": "重大度が不明なものは常に通知します",
+    "passwordTitle": "パスワード変更",
+    "currentPassword": "現在のパスワード",
+    "newPassword": "新しいパスワード",
+    "passwordHint": "8文字以上",
+    "change": "変更",
+    "passwordChanged": "パスワードを変更しました"
+  },
+  "admin": {
+    "title": "組織管理",
+    "description": "{group} の会社・部署・ユーザー",
+    "adminOnly": "管理者のみ利用できます",
+    "addCompanyFirst": "先に会社を追加してください",
+    "tabs": { "companies": "会社", "departments": "部署", "users": "ユーザー", "invitations": "招待" }
+  },
+  "companies": {
+    "add": "会社を追加",
+    "added": "会社を追加しました",
+    "name": "会社名",
+    "type": "種別",
+    "newName": "新しい会社名",
+    "confirmDelete": "{name} を削除しますか？"
+  },
+  "departments": {
+    "addTo": "{company} に部署を追加",
+    "top": "（最上位）",
+    "name": "部署名",
+    "parent": "親部署",
+    "empty": "部署がありません",
+    "newName": "新しい部署名",
+    "confirmDelete": "{name} を削除しますか？",
+    "noneInCompany": "この会社には部署がありません",
+    "column": "部署",
+    "primary": "主所属",
+    "head": "部署長"
+  },
+  "users": {
+    "filter": "名前・メールで絞り込み",
+    "count": "{company}（{type}）: {count} 人",
+    "user": "ユーザー",
+    "role": "ロール",
+    "departments": "部署",
+    "state": "状態",
+    "primarySuffix": "(主)",
+    "head": "部署長",
+    "displayName": "表示名",
+    "allowLogin": "ログインを許可",
+    "departmentsField": "所属部署（兼務可）"
+  },
+  "invitations": {
+    "inviteTo": "{company} にユーザーを招待",
+    "email": "メールアドレス",
+    "displayName": "表示名（任意）",
+    "role": "ロール",
+    "departments": "所属部署（兼務可・任意）",
+    "send": "招待メールを送る",
+    "sent": "{email} に招待メールを送りました",
+    "notSent": "メールを送れませんでした。下のリンクを直接共有してください。",
+    "empty": "保留中の招待はありません",
+    "expires": "有効期限",
+    "revoke": "取り消し"
+  }
+}

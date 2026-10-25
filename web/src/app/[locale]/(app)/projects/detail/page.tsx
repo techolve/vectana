@@ -1,15 +1,17 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { RefreshCwIcon } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
+import { useRouter } from "@/i18n/navigation";
 import { api, type Company, type Department, type Match, type Project } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import { departmentPath } from "@/lib/org";
 import { Button } from "@/components/ui/button";
-import { Empty, ErrorText, PageHeader, SeverityCountsInline, Tabs } from "@/components/common";
+import { Empty, ErrorText, PageHeader, PageTabs, SeverityCountsInline } from "@/components/common";
 import { MatchTable } from "@/components/match-table";
 import { PackagesPanel } from "@/components/project/packages-panel";
 import { MembersPanel } from "@/components/project/members-panel";
@@ -19,6 +21,7 @@ import { SettingsPanel } from "@/components/project/settings-panel";
 type Tab = "vulns" | "packages" | "members" | "webhooks" | "settings";
 
 function ProjectDetail() {
+  const t = useTranslations();
   const id = useSearchParams().get("id");
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("vulns");
@@ -27,7 +30,7 @@ function ProjectDetail() {
   const { data: companies } = useApi<Company[]>("/companies");
   const { data: departments } = useApi<Department[]>("/departments");
 
-  if (!id) return <ErrorText>プロジェクトが指定されていません</ErrorText>;
+  if (!id) return <ErrorText>{t("project.notSpecified")}</ErrorText>;
   if (error) return <ErrorText>{error}</ErrorText>;
   if (!project) return null;
 
@@ -42,7 +45,7 @@ function ProjectDetail() {
   async function scan() {
     try {
       const r = await api<{ packages: number }>(`/projects/${id}/scan`, { method: "POST" });
-      toast.success(`${r.packages} 件のパッケージをスキャンしています。少し待ってから再読み込みしてください。`);
+      toast.success(t("project.scanStarted", { count: r.packages }));
       setTimeout(refreshAll, 5000);
     } catch (e) {
       toast.error((e as Error).message);
@@ -50,13 +53,13 @@ function ProjectDetail() {
   }
 
   const tabs: { value: Tab; label: React.ReactNode }[] = [
-    { value: "vulns", label: "脆弱性" },
-    { value: "packages", label: `パッケージ (${project.package_count})` },
-    { value: "members", label: "メンバー" },
+    { value: "vulns", label: t("project.tabs.vulns") },
+    { value: "packages", label: t("project.tabs.packages", { count: project.package_count }) },
+    { value: "members", label: t("project.tabs.members") },
     ...(canManage
       ? [
-          { value: "webhooks" as const, label: "通知（Webhook）" },
-          { value: "settings" as const, label: "設定" },
+          { value: "webhooks" as const, label: t("project.tabs.webhooks") },
+          { value: "settings" as const, label: t("project.tabs.settings") },
         ]
       : []),
   ];
@@ -71,23 +74,25 @@ function ProjectDetail() {
               {company?.name}
               {project.department_id && departments ? ` / ${departmentPath(departments, project.department_id)}` : ""}
             </span>
-            <SeverityCountsInline counts={project.open_counts} />
+            <SeverityCountsInline counts={project.open_counts} empty={t("common.none")} />
           </span>
         }
         actions={
           canWrite && (
             <Button variant="outline" onClick={scan}>
-              <RefreshCwIcon /> 今すぐスキャン
+              <RefreshCwIcon /> {t("project.scanNow")}
             </Button>
           )
         }
       />
-      {project.description && <p className="-mt-3 mb-4 text-sm whitespace-pre-wrap text-muted-foreground">{project.description}</p>}
-      <Tabs tabs={tabs} value={tab} onChange={setTab} />
+      {project.description && (
+        <p className="-mt-3 mb-4 text-sm whitespace-pre-wrap text-muted-foreground">{project.description}</p>
+      )}
+      <PageTabs tabs={tabs} value={tab} onChange={setTab} />
       {tab === "vulns" &&
         matches &&
         (matches.length === 0 ? (
-          <Empty>ヒットした脆弱性はありません</Empty>
+          <Empty>{t("project.noMatches")}</Empty>
         ) : (
           <MatchTable matches={matches} onChanged={refreshAll} canTriage={canWrite} />
         ))}

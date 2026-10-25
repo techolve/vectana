@@ -3,19 +3,33 @@
 import { useState } from "react";
 import { SendIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { api, SEVERITIES, type Severity, type Webhook } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Empty, Select } from "@/components/common";
+import { Label } from "@/components/ui/label";
+import { Empty, OptionSelect } from "@/components/common";
+
+const TYPES = [
+  { value: "discord", label: "Discord" },
+  { value: "slack", label: "Slack" },
+];
 
 export function WebhooksPanel({ projectId }: { projectId: string }) {
+  const t = useTranslations();
   const base = `/projects/${projectId}/webhooks`;
   const { data, reload } = useApi<Webhook[]>(base);
-  const [type, setType] = useState<Webhook["type"]>("discord");
+  const [type, setType] = useState<string>("discord");
   const [url, setUrl] = useState("");
-  const [minSeverity, setMinSeverity] = useState<Severity>("LOW");
+  const [minSeverity, setMinSeverity] = useState<string>("LOW");
+  const severityOptions = SEVERITIES.filter((s) => s !== "UNKNOWN").map((s) => ({
+    value: s,
+    label: t("common.atLeast", { severity: s }),
+  }));
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
@@ -40,14 +54,14 @@ export function WebhooksPanel({ projectId }: { projectId: string }) {
   async function test(w: Webhook) {
     try {
       await api(`${base}/${w.id}/test`, { method: "POST" });
-      toast.success("テスト通知を送信しました");
+      toast.success(t("webhooks.testSent"));
     } catch (err) {
       toast.error((err as Error).message);
     }
   }
 
   async function remove(w: Webhook) {
-    if (!confirm("このWebhookを削除しますか？")) return;
+    if (!confirm(t("webhooks.confirmDelete"))) return;
     await api(`${base}/${w.id}`, { method: "DELETE" });
     reload();
   }
@@ -55,11 +69,8 @@ export function WebhooksPanel({ projectId }: { projectId: string }) {
   return (
     <div className="grid gap-4">
       <form onSubmit={add} className="flex flex-wrap items-end gap-2 rounded-xl border p-3">
-        <div className="w-full text-sm font-medium">Webhook を追加</div>
-        <Select value={type} onChange={(e) => setType(e.target.value as Webhook["type"])}>
-          <option value="discord">Discord</option>
-          <option value="slack">Slack</option>
-        </Select>
+        <div className="w-full text-sm font-medium">{t("webhooks.add")}</div>
+        <OptionSelect value={type} onValueChange={setType} options={TYPES} />
         <Input
           className="min-w-64 flex-1"
           type="url"
@@ -68,41 +79,35 @@ export function WebhooksPanel({ projectId }: { projectId: string }) {
           value={url}
           onChange={(e) => setUrl(e.target.value)}
         />
-        <Select value={minSeverity} onChange={(e) => setMinSeverity(e.target.value as Severity)} title="この重大度以上を通知">
-          {SEVERITIES.filter((s) => s !== "UNKNOWN").map((s) => (
-            <option key={s} value={s}>
-              {s} 以上
-            </option>
-          ))}
-        </Select>
-        <Button type="submit">追加</Button>
+        <OptionSelect value={minSeverity} onValueChange={setMinSeverity} options={severityOptions} title={t("webhooks.minSeverity")} />
+        <Button type="submit">{t("common.add")}</Button>
       </form>
       {data &&
         (data.length === 0 ? (
-          <Empty>Webhook は登録されていません。チームのチャンネルに通知したい場合に追加してください。</Empty>
+          <Empty>{t("webhooks.empty")}</Empty>
         ) : (
           <ul className="grid gap-2">
             {data.map((w) => (
               <li key={w.id} className="flex flex-wrap items-center gap-2 rounded-xl border p-3">
-                <span className="rounded bg-muted px-1.5 py-0.5 text-xs font-medium capitalize">{w.type}</span>
+                <Badge variant="secondary" className="capitalize">
+                  {w.type}
+                </Badge>
                 <span className="min-w-0 flex-1 truncate font-mono text-xs" title={w.url}>
                   {w.url.replace(/(.{40}).+/, "$1…")}
                 </span>
-                <Select value={w.min_severity} onChange={(e) => update(w, { min_severity: e.target.value as Severity })}>
-                  {SEVERITIES.filter((s) => s !== "UNKNOWN").map((s) => (
-                    <option key={s} value={s}>
-                      {s} 以上
-                    </option>
-                  ))}
-                </Select>
-                <label className="flex items-center gap-1 text-sm">
-                  <input type="checkbox" checked={w.enabled} onChange={(e) => update(w, { enabled: e.target.checked })} />
-                  有効
-                </label>
+                <OptionSelect
+                  value={w.min_severity}
+                  onValueChange={(v) => update(w, { min_severity: v as Severity })}
+                  options={severityOptions}
+                />
+                <Label className="flex items-center gap-2 text-sm font-normal">
+                  <Checkbox checked={w.enabled} onCheckedChange={(checked) => update(w, { enabled: checked === true })} />
+                  {t("common.enabled")}
+                </Label>
                 <Button variant="outline" size="sm" onClick={() => test(w)}>
-                  <SendIcon /> テスト送信
+                  <SendIcon /> {t("common.testSend")}
                 </Button>
-                <Button variant="ghost" size="icon-sm" onClick={() => remove(w)} title="削除">
+                <Button variant="ghost" size="icon-sm" onClick={() => remove(w)} title={t("common.delete")}>
                   <Trash2Icon />
                 </Button>
               </li>

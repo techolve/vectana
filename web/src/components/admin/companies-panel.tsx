@@ -2,27 +2,34 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
-import { api, COMPANY_TYPE_LABEL, type Company, type CompanyType } from "@/lib/api";
+import { api, type Company, type CompanyType } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select } from "@/components/common";
+import { OptionSelect } from "@/components/common";
 import { useMe } from "@/components/app-shell";
 
+const TYPES: CompanyType[] = ["parent", "affiliate", "partner"];
+
 export function CompaniesPanel({ companies, onChanged }: { companies: Company[]; onChanged: () => void }) {
+  const t = useTranslations();
   const me = useMe();
   const editable = me.role === "group_admin";
   const [name, setName] = useState("");
-  const [type, setType] = useState<CompanyType>("affiliate");
+  const [type, setType] = useState<string>("affiliate");
+  const typeOptions = TYPES.map((v) => ({ value: v, label: t(`labels.companyType.${v}`) }));
 
   async function call(fn: () => Promise<unknown>, ok?: string) {
     try {
       await fn();
       if (ok) toast.success(ok);
       onChanged();
+      return true;
     } catch (e) {
       toast.error((e as Error).message);
+      return false;
     }
   }
 
@@ -31,30 +38,22 @@ export function CompaniesPanel({ companies, onChanged }: { companies: Company[];
       {editable && (
         <form
           className="flex flex-wrap items-end gap-2 rounded-xl border p-3"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            call(() => api("/companies", { method: "POST", json: { name, type } }), "会社を追加しました").then(() =>
-              setName(""),
-            );
+            if (await call(() => api("/companies", { method: "POST", json: { name, type } }), t("companies.added"))) setName("");
           }}
         >
-          <div className="w-full text-sm font-medium">会社を追加</div>
-          <Input className="max-w-xs" required placeholder="会社名" value={name} onChange={(e) => setName(e.target.value)} />
-          <Select value={type} onChange={(e) => setType(e.target.value as CompanyType)}>
-            {(Object.keys(COMPANY_TYPE_LABEL) as CompanyType[]).map((t) => (
-              <option key={t} value={t}>
-                {COMPANY_TYPE_LABEL[t]}
-              </option>
-            ))}
-          </Select>
-          <Button type="submit">追加</Button>
+          <div className="w-full text-sm font-medium">{t("companies.add")}</div>
+          <Input className="max-w-xs" required placeholder={t("companies.name")} value={name} onChange={(e) => setName(e.target.value)} />
+          <OptionSelect value={type} onValueChange={setType} options={typeOptions} />
+          <Button type="submit">{t("common.add")}</Button>
         </form>
       )}
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>会社名</TableHead>
-            <TableHead>種別</TableHead>
+            <TableHead>{t("companies.name")}</TableHead>
+            <TableHead>{t("companies.type")}</TableHead>
             {editable && <TableHead />}
           </TableRow>
         </TableHeader>
@@ -64,20 +63,13 @@ export function CompaniesPanel({ companies, onChanged }: { companies: Company[];
               <TableCell className="font-medium">{c.name}</TableCell>
               <TableCell>
                 {editable ? (
-                  <Select
+                  <OptionSelect
                     value={c.type}
-                    onChange={(e) =>
-                      call(() => api(`/companies/${c.id}`, { method: "PATCH", json: { name: c.name, type: e.target.value } }))
-                    }
-                  >
-                    {(Object.keys(COMPANY_TYPE_LABEL) as CompanyType[]).map((t) => (
-                      <option key={t} value={t}>
-                        {COMPANY_TYPE_LABEL[t]}
-                      </option>
-                    ))}
-                  </Select>
+                    onValueChange={(v) => call(() => api(`/companies/${c.id}`, { method: "PATCH", json: { name: c.name, type: v } }))}
+                    options={typeOptions}
+                  />
                 ) : (
-                  COMPANY_TYPE_LABEL[c.type]
+                  t(`labels.companyType.${c.type}`)
                 )}
               </TableCell>
               {editable && (
@@ -86,20 +78,23 @@ export function CompaniesPanel({ companies, onChanged }: { companies: Company[];
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      const next = prompt("新しい会社名", c.name);
+                      const next = prompt(t("companies.newName"), c.name);
                       if (next && next !== c.name)
                         call(() => api(`/companies/${c.id}`, { method: "PATCH", json: { name: next, type: c.type } }));
                     }}
                   >
-                    名前変更
+                    {t("common.rename")}
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     className="text-destructive"
-                    onClick={() => confirm(`${c.name} を削除しますか？`) && call(() => api(`/companies/${c.id}`, { method: "DELETE" }))}
+                    onClick={() =>
+                      confirm(t("companies.confirmDelete", { name: c.name })) &&
+                      call(() => api(`/companies/${c.id}`, { method: "DELETE" }))
+                    }
                   >
-                    削除
+                    {t("common.delete")}
                   </Button>
                 </TableCell>
               )}

@@ -3,13 +3,17 @@
 import { useEffect, useState } from "react";
 import { Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
-import { api, PROJECT_ROLE_LABEL, type Company, type Member, type ProjectRole, type UserBrief } from "@/lib/api";
+import { api, type Company, type Member, type ProjectRole, type UserBrief } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Empty, Select } from "@/components/common";
+import { Empty, OptionSelect } from "@/components/common";
+
+const ROLES: ProjectRole[] = ["owner", "member", "viewer"];
 
 export function MembersPanel({
   projectId,
@@ -20,11 +24,12 @@ export function MembersPanel({
   canManage: boolean;
   companies: Company[];
 }) {
+  const t = useTranslations();
   const { data, reload } = useApi<Member[]>(`/projects/${projectId}/members`);
   const company = (id: string | null) => companies.find((c) => c.id === id);
   const isPartner = (id: string | null) => company(id)?.type === "partner";
 
-  async function setRole(m: Member, role: ProjectRole) {
+  async function setRole(m: Member, role: string) {
     try {
       await api(`/projects/${projectId}/members/${m.id}`, { method: "PATCH", json: { role } });
       reload();
@@ -34,7 +39,7 @@ export function MembersPanel({
   }
 
   async function remove(m: Member) {
-    if (!confirm(`${m.display_name || m.email} のアサインを解除しますか？`)) return;
+    if (!confirm(t("members.confirmRemove", { name: m.display_name || m.email }))) return;
     await api(`/projects/${projectId}/members/${m.id}`, { method: "DELETE" });
     reload();
   }
@@ -44,14 +49,14 @@ export function MembersPanel({
       {canManage && <AssignForm projectId={projectId} companies={companies} onAdded={reload} existing={data ?? []} />}
       {data &&
         (data.length === 0 ? (
-          <Empty>アサインされたメンバーはいません</Empty>
+          <Empty>{t("members.empty")}</Empty>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>メンバー</TableHead>
-                <TableHead>会社</TableHead>
-                <TableHead>ロール</TableHead>
+                <TableHead>{t("members.member")}</TableHead>
+                <TableHead>{t("members.company")}</TableHead>
+                <TableHead>{t("members.role")}</TableHead>
                 {canManage && <TableHead />}
               </TableRow>
             </TableHeader>
@@ -64,26 +69,29 @@ export function MembersPanel({
                   </TableCell>
                   <TableCell className="text-xs">
                     {company(m.company_id)?.name ?? "-"}
-                    {isPartner(m.company_id) && <span className="ml-1 rounded bg-muted px-1">BP</span>}
+                    {isPartner(m.company_id) && (
+                      <Badge variant="secondary" className="ml-1">
+                        {t("labels.partner")}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     {canManage ? (
-                      <Select value={m.role} onChange={(e) => setRole(m, e.target.value as ProjectRole)}>
-                        {(Object.keys(PROJECT_ROLE_LABEL) as ProjectRole[])
-                          .filter((r) => r !== "owner" || !isPartner(m.company_id))
-                          .map((r) => (
-                            <option key={r} value={r}>
-                              {PROJECT_ROLE_LABEL[r]}
-                            </option>
-                          ))}
-                      </Select>
+                      <OptionSelect
+                        value={m.role}
+                        onValueChange={(v) => setRole(m, v)}
+                        options={ROLES.filter((r) => r !== "owner" || !isPartner(m.company_id)).map((r) => ({
+                          value: r,
+                          label: t(`labels.projectRole.${r}`),
+                        }))}
+                      />
                     ) : (
-                      PROJECT_ROLE_LABEL[m.role]
+                      t(`labels.projectRole.${m.role}`)
                     )}
                   </TableCell>
                   {canManage && (
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon-sm" onClick={() => remove(m)} title="解除">
+                      <Button variant="ghost" size="icon-sm" onClick={() => remove(m)} title={t("common.remove")}>
                         <Trash2Icon />
                       </Button>
                     </TableCell>
@@ -93,9 +101,7 @@ export function MembersPanel({
             </TableBody>
           </Table>
         ))}
-      <p className="text-xs text-muted-foreground">
-        アサインされたメンバーには、個人設定に応じて脆弱性の通知メールが届きます。BP（協力会社）はアサインされたプロジェクトだけが見えます。
-      </p>
+      <p className="text-xs text-muted-foreground">{t("members.note")}</p>
     </div>
   );
 }
@@ -111,17 +117,18 @@ function AssignForm({
   onAdded: () => void;
   existing: Member[];
 }) {
+  const t = useTranslations();
   const [q, setQ] = useState("");
   const [results, setResults] = useState<UserBrief[]>([]);
-  const [role, setRole] = useState<ProjectRole>("member");
+  const [role, setRole] = useState<string>("member");
 
   useEffect(() => {
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       api<UserBrief[]>(`/users/directory?q=${encodeURIComponent(q)}`)
         .then(setResults)
         .catch(() => setResults([]));
     }, 250);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [q]);
 
   const assigned = new Set(existing.map((m) => m.user_id));
@@ -129,7 +136,7 @@ function AssignForm({
   async function add(u: UserBrief) {
     try {
       await api(`/projects/${projectId}/members`, { method: "POST", json: { user_id: u.id, role } });
-      toast.success(`${u.display_name || u.email} をアサインしました`);
+      toast.success(t("members.assigned", { name: u.display_name || u.email }));
       onAdded();
     } catch (e) {
       toast.error((e as Error).message);
@@ -139,15 +146,13 @@ function AssignForm({
   return (
     <div className="grid gap-2 rounded-xl border p-3">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium">メンバーをアサイン</span>
-        <Input className="max-w-xs" placeholder="名前・メールで検索" value={q} onChange={(e) => setQ(e.target.value)} />
-        <Select value={role} onChange={(e) => setRole(e.target.value as ProjectRole)}>
-          {(Object.keys(PROJECT_ROLE_LABEL) as ProjectRole[]).map((r) => (
-            <option key={r} value={r}>
-              {PROJECT_ROLE_LABEL[r]}
-            </option>
-          ))}
-        </Select>
+        <span className="text-sm font-medium">{t("members.assign")}</span>
+        <Input className="max-w-xs" placeholder={t("members.search")} value={q} onChange={(e) => setQ(e.target.value)} />
+        <OptionSelect
+          value={role}
+          onValueChange={setRole}
+          options={ROLES.map((r) => ({ value: r, label: t(`labels.projectRole.${r}`) }))}
+        />
       </div>
       <div className="flex flex-wrap gap-2">
         {results

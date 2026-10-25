@@ -3,13 +3,15 @@
 import { useRef, useState } from "react";
 import { PlusIcon, Trash2Icon, UploadIcon } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { api, ECOSYSTEMS, type Package } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Empty, formatDate, Select } from "@/components/common";
+import { Empty, OptionSelect, useFormatDate } from "@/components/common";
 
 type ImportResult = { filename: string; ecosystem: string; added: number; removed: number; total: number };
 
@@ -24,6 +26,8 @@ export function PackagesPanel({
   canWrite: boolean;
   onChanged: () => void;
 }) {
+  const t = useTranslations("packages");
+  const formatDate = useFormatDate();
   const { data, reload } = useApi<Package[]>(`/projects/${projectId}/packages`);
   const [ecosystem, setEcosystem] = useState("npm");
   const [name, setName] = useState("");
@@ -43,7 +47,7 @@ export function PackagesPanel({
       await api(`/projects/${projectId}/packages`, { method: "POST", json: { ecosystem, name, version } });
       setName("");
       setVersion("");
-      toast.success("登録しました。バックグラウンドでスキャンします。");
+      toast.success(t("added"));
       changed();
     } catch (err) {
       toast.error((err as Error).message);
@@ -56,7 +60,7 @@ export function PackagesPanel({
       form.append("file", file);
       try {
         const r = await api<ImportResult>(`/projects/${projectId}/packages/import`, { method: "POST", body: form });
-        toast.success(`${r.filename}: ${r.total} 件（追加 ${r.added} / 削除 ${r.removed}）`);
+        toast.success(t("imported", { file: r.filename, total: r.total, added: r.added, removed: r.removed }));
       } catch (err) {
         toast.error(`${file.name}: ${(err as Error).message}`);
       }
@@ -65,7 +69,7 @@ export function PackagesPanel({
   }
 
   async function remove(p: Package) {
-    if (!confirm(`${p.name}@${p.version} を削除しますか？`)) return;
+    if (!confirm(t("confirmDelete", { name: p.name, version: p.version }))) return;
     try {
       await api(`/projects/${projectId}/packages/${p.id}`, { method: "DELETE" });
       changed();
@@ -82,16 +86,12 @@ export function PackagesPanel({
       {canWrite && (
         <div className="grid gap-3 md:grid-cols-2">
           <form onSubmit={add} className="flex flex-wrap items-end gap-2 rounded-xl border p-3">
-            <div className="w-full text-sm font-medium">手動で登録</div>
-            <Select value={ecosystem} onChange={(e) => setEcosystem(e.target.value)}>
-              {ECOSYSTEMS.map((e) => (
-                <option key={e}>{e}</option>
-              ))}
-            </Select>
-            <Input className="w-40 flex-1" placeholder="パッケージ名" required value={name} onChange={(e) => setName(e.target.value)} />
-            <Input className="w-28" placeholder="バージョン" required value={version} onChange={(e) => setVersion(e.target.value)} />
+            <div className="w-full text-sm font-medium">{t("manual")}</div>
+            <OptionSelect value={ecosystem} onValueChange={setEcosystem} options={ECOSYSTEMS.map((e) => ({ value: e, label: e }))} />
+            <Input className="w-40 flex-1" placeholder={t("namePlaceholder")} required value={name} onChange={(e) => setName(e.target.value)} />
+            <Input className="w-28" placeholder={t("versionPlaceholder")} required value={version} onChange={(e) => setVersion(e.target.value)} />
             <Button type="submit">
-              <PlusIcon /> 追加
+              <PlusIcon />
             </Button>
           </form>
           <div
@@ -106,32 +106,35 @@ export function PackagesPanel({
               upload(e.dataTransfer.files);
             }}
             onClick={() => fileInput.current?.click()}
-            className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed p-3 text-center text-sm ${dragging ? "bg-muted" : ""}`}
+            className={cn(
+              "flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed p-3 text-center text-sm",
+              dragging && "bg-muted",
+            )}
           >
             <UploadIcon className="size-5 text-muted-foreground" />
-            <span className="font-medium">lockfile をドロップして取り込み</span>
+            <span className="font-medium">{t("drop")}</span>
             <span className="text-xs text-muted-foreground">{LOCKFILES}</span>
-            <span className="text-xs text-muted-foreground">同じファイル名で再取り込みすると差分を反映します</span>
+            <span className="text-xs text-muted-foreground">{t("reimportHint")}</span>
             <input ref={fileInput} type="file" multiple className="hidden" onChange={(e) => upload(e.target.files)} />
           </div>
         </div>
       )}
       {data && data.length > 0 && (
-        <Input className="max-w-xs" placeholder="絞り込み" value={q} onChange={(e) => setQ(e.target.value)} />
+        <Input className="max-w-xs" placeholder={t("namePlaceholder")} value={q} onChange={(e) => setQ(e.target.value)} />
       )}
       {data &&
         (data.length === 0 ? (
-          <Empty>パッケージが登録されていません</Empty>
+          <Empty>{t("empty")}</Empty>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>エコシステム</TableHead>
-                <TableHead>パッケージ</TableHead>
-                <TableHead>バージョン</TableHead>
-                <TableHead>登録元</TableHead>
-                <TableHead>最終スキャン</TableHead>
-                <TableHead className="text-right">未対応</TableHead>
+                <TableHead>{t("ecosystem")}</TableHead>
+                <TableHead>{t("package")}</TableHead>
+                <TableHead>{t("version")}</TableHead>
+                <TableHead>{t("source")}</TableHead>
+                <TableHead>{t("lastScanned")}</TableHead>
+                <TableHead className="text-right">{t("open")}</TableHead>
                 {canWrite && <TableHead />}
               </TableRow>
             </TableHeader>
@@ -143,12 +146,12 @@ export function PackagesPanel({
                   <TableCell className="font-mono text-xs">{p.version}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">{p.source.replace("lockfile:", "")}</TableCell>
                   <TableCell className="text-xs">{formatDate(p.last_scanned_at)}</TableCell>
-                  <TableCell className={`text-right tabular-nums ${p.open_vulns ? "font-semibold text-destructive" : ""}`}>
+                  <TableCell className={cn("text-right tabular-nums", p.open_vulns && "font-semibold text-destructive")}>
                     {p.open_vulns}
                   </TableCell>
                   {canWrite && (
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon-sm" onClick={() => remove(p)} title="削除">
+                      <Button variant="ghost" size="icon-sm" onClick={() => remove(p)} title={t("confirmDelete", { name: p.name, version: p.version })}>
                         <Trash2Icon />
                       </Button>
                     </TableCell>

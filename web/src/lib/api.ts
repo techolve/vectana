@@ -83,9 +83,10 @@ export async function api<T = unknown>(
   if (res.status === 401 && auth) {
     clearTokens();
     // Outside React (no router here); a full reload also drops in-memory state.
+    const locale = window.location.pathname.split("/")[1] || "ja";
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-    window.location.href = "/login/";
-    throw new ApiError(401, "ログインが必要です");
+    window.location.href = `/${locale}/login/`;
+    throw new ApiError(401, "Unauthorized");
   }
   if (res.status === 204) return undefined as T;
   const body = await res.json().catch(() => null);
@@ -199,23 +200,4 @@ export type Dashboard = {
 
 export const ECOSYSTEMS = ["npm", "PyPI", "Pub", "Maven", "Go", "crates.io", "RubyGems", "Packagist", "NuGet"];
 
-export const ROLE_LABEL: Record<Me["role"], string> = {
-  group_admin: "グループ管理者",
-  company_admin: "会社管理者",
-  member: "メンバー",
-};
-export const COMPANY_TYPE_LABEL: Record<CompanyType, string> = {
-  parent: "親会社",
-  affiliate: "関連会社",
-  partner: "BP（協力会社）",
-};
-export const PROJECT_ROLE_LABEL: Record<ProjectRole, string> = {
-  owner: "オーナー",
-  member: "メンバー",
-  viewer: "閲覧のみ",
-};
-export const STATUS_LABEL: Record<Match["status"], string> = {
-  open: "未対応",
-  ack: "確認済み",
-  ignored: "無視",
-};
+export type Health = { status: string; version: string };

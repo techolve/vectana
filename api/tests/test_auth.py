@@ -109,3 +109,9 @@ async def test_notification_prefs(client: AsyncClient, org: Org) -> None:
     )
     assert r.status_code == 200
     assert (await client.get("/api/auth/notifications", headers=h)).json()["min_severity"] == "HIGH"
+
+
+async def test_health_reports_version(client: AsyncClient) -> None:
+    from app import __version__
+
+    assert (await client.get("/api/health")).json() == {"status": "ok", "version": __version__}

@@ -1,0 +1,231 @@
+{
+  "meta": { "description": "Monitor your projects' dependencies for vulnerabilities and get notified" },
+  "common": {
+    "loading": "Loading…",
+    "save": "Save",
+    "saved": "Saved",
+    "add": "Add",
+    "delete": "Delete",
+    "remove": "Remove",
+    "edit": "Edit",
+    "rename": "Rename",
+    "cancel": "Cancel",
+    "create": "Create",
+    "copy": "Copy",
+    "copied": "Copied",
+    "none": "None",
+    "noneOption": "(none)",
+    "filter": "Filter",
+    "keyword": "Keyword",
+    "version": "Version {version}",
+    "language": "Language",
+    "theme": "Toggle theme",
+    "settings": "Settings",
+    "logout": "Log out",
+    "atLeast": "{severity} or higher",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "testSend": "Send test",
+    "loginRequired": "Please log in"
+  },
+  "locales": { "ja": "日本語", "en": "English" },
+  "nav": {
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "vulnerabilities": "Vulnerabilities",
+    "admin": "Organization"
+  },
+  "labels": {
+    "role": { "group_admin": "Group admin", "company_admin": "Company admin", "member": "Member" },
+    "companyType": { "parent": "Parent company", "affiliate": "Affiliate", "partner": "Partner (BP)" },
+    "projectRole": { "owner": "Owner", "member": "Member", "viewer": "Viewer" },
+    "status": { "open": "Open", "ack": "Acknowledged", "ignored": "Ignored" },
+    "partner": "Partner"
+  },
+  "login": {
+    "title": "Log in to Vectana",
+    "description": "Enter your email and password",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Log in",
+    "invalid": "Incorrect email or password",
+    "inviteOnly": "Accounts are created by invitation from an administrator."
+  },
+  "invite": {
+    "title": "You're invited to Vectana",
+    "description": "You are creating an account for {email} at {company}.",
+    "displayName": "Display name",
+    "password": "Password",
+    "passwordHint": "At least 8 characters",
+    "confirm": "Confirm password",
+    "mismatch": "Passwords do not match",
+    "submit": "Create account",
+    "checking": "Checking…",
+    "expired": "This invitation has expired",
+    "notFound": "Invitation not found",
+    "invalidLink": "This invitation link is invalid"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "description": "{group} — open vulnerabilities across the projects you can see",
+    "projects": "Projects",
+    "packages": "Packages",
+    "recent": "Open vulnerabilities (by severity, latest 20)",
+    "empty": "No open vulnerabilities.",
+    "emptyHint": "Add packages to a <link>project</link> to start monitoring."
+  },
+  "matches": {
+    "severity": "Severity",
+    "project": "Project",
+    "package": "Package",
+    "fixed": "Fixed in",
+    "vulnerability": "Vulnerability",
+    "detected": "Detected",
+    "status": "Status"
+  },
+  "vulns": {
+    "title": "Vulnerabilities",
+    "description": "Vulnerabilities found in the projects you can see",
+    "allSeverities": "All severities",
+    "empty": "No matching vulnerabilities"
+  },
+  "projects": {
+    "title": "Projects",
+    "description": "Projects you can see (assigned or managed)",
+    "new": "New project",
+    "empty": "No projects yet",
+    "name": "Name",
+    "companyDept": "Company / Department",
+    "packages": "Packages",
+    "openVulns": "Open vulnerabilities",
+    "createTitle": "Create project",
+    "descriptionField": "Description",
+    "company": "Company",
+    "department": "Department",
+    "departmentHint": "Department heads can see and manage projects under their departments"
+  },
+  "project": {
+    "notSpecified": "No project specified",
+    "scanNow": "Scan now",
+    "scanStarted": "Scanning {count} packages. Reload in a moment.",
+    "tabs": {
+      "vulns": "Vulnerabilities",
+      "packages": "Packages ({count})",
+      "members": "Members",
+      "webhooks": "Notifications (Webhook)",
+      "settings": "Settings"
+    },
+    "noMatches": "No vulnerabilities found"
+  },
+  "packages": {
+    "manual": "Add manually",
+    "namePlaceholder": "Package name",
+    "versionPlaceholder": "Version",
+    "added": "Added. Scanning in the background.",
+    "drop": "Drop a lockfile to import",
+    "reimportHint": "Re-importing a file with the same name applies the differences",
+    "imported": "{file}: {total} packages (added {added} / removed {removed})",
+    "confirmDelete": "Delete {name}@{version}?",
+    "empty": "No packages registered",
+    "ecosystem": "Ecosystem",
+    "package": "Package",
+    "version": "Version",
+    "source": "Source",
+    "lastScanned": "Last scanned",
+    "open": "Open"
+  },
+  "members": {
+    "assign": "Assign members",
+    "search": "Search by name or email",
+    "assigned": "Assigned {name}",
+    "confirmRemove": "Remove {name} from this project?",
+    "empty": "No members assigned",
+    "member": "Member",
+    "company": "Company",
+    "role": "Role",
+    "note": "Assigned members get vulnerability emails according to their settings. Partner (BP) users can only see projects they are assigned to."
+  },
+  "webhooks": {
+    "add": "Add webhook",
+    "minSeverity": "Notify at this severity or higher",
+    "empty": "No webhooks. Add one to notify your team's channel.",
+    "testSent": "Test notification sent",
+    "confirmDelete": "Delete this webhook?"
+  },
+  "projectSettings": {
+    "name": "Name",
+    "description": "Description",
+    "department": "Department",
+    "dangerTitle": "Delete project",
+    "dangerDescription": "Packages, findings and webhooks are deleted too.",
+    "deleteButton": "Delete",
+    "confirmDelete": "Type the project name \"{name}\" to delete it"
+  },
+  "settings": {
+    "title": "Settings",
+    "emailTitle": "Email notifications",
+    "emailEnabled": "Email me when vulnerabilities are found in projects I'm assigned to",
+    "minSeverity": "Minimum severity",
+    "minSeverityHint": "Vulnerabilities with unknown severity are always sent",
+    "passwordTitle": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "passwordHint": "At least 8 characters",
+    "change": "Change",
+    "passwordChanged": "Password changed"
+  },
+  "admin": {
+    "title": "Organization",
+    "description": "Companies, departments and users of {group}",
+    "adminOnly": "Administrators only",
+    "addCompanyFirst": "Add a company first",
+    "tabs": { "companies": "Companies", "departments": "Departments", "users": "Users", "invitations": "Invitations" }
+  },
+  "companies": {
+    "add": "Add company",
+    "added": "Company added",
+    "name": "Company name",
+    "type": "Type",
+    "newName": "New company name",
+    "confirmDelete": "Delete {name}?"
+  },
+  "departments": {
+    "addTo": "Add a department to {company}",
+    "top": "(top level)",
+    "name": "Department name",
+    "parent": "Parent department",
+    "empty": "No departments",
+    "newName": "New department name",
+    "confirmDelete": "Delete {name}?",
+    "noneInCompany": "This company has no departments",
+    "column": "Department",
+    "primary": "Primary",
+    "head": "Head"
+  },
+  "users": {
+    "filter": "Filter by name or email",
+    "count": "{company} ({type}): {count} users",
+    "user": "User",
+    "role": "Role",
+    "departments": "Departments",
+    "state": "Status",
+    "primarySuffix": "(primary)",
+    "head": "Head",
+    "displayName": "Display name",
+    "allowLogin": "Allow login",
+    "departmentsField": "Departments (multiple allowed)"
+  },
+  "invitations": {
+    "inviteTo": "Invite a user to {company}",
+    "email": "Email",
+    "displayName": "Display name (optional)",
+    "role": "Role",
+    "departments": "Departments (optional, multiple allowed)",
+    "send": "Send invitation",
+    "sent": "Invitation sent to {email}",
+    "notSent": "The email could not be sent. Share the link below instead.",
+    "empty": "No pending invitations",
+    "expires": "Expires",
+    "revoke": "Revoke"
+  }
+}

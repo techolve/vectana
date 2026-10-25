@@ -1,9 +1,13 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import type { Department, UserDepartment } from "@/lib/api";
 import { departmentTree } from "@/lib/org";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-/** Pick departments (兼務), the primary one, and which ones the user heads. */
+/** Pick departments (multiple allowed), the primary one, and which ones the user heads. */
 export function DepartmentPicker({
   departments,
   companyId,
@@ -15,8 +19,9 @@ export function DepartmentPicker({
   value: UserDepartment[];
   onChange: (v: UserDepartment[]) => void;
 }) {
+  const t = useTranslations("departments");
   const tree = departmentTree(departments, companyId);
-  if (tree.length === 0) return <p className="text-xs text-muted-foreground">この会社には部署がありません</p>;
+  if (tree.length === 0) return <p className="text-xs text-muted-foreground">{t("noneInCompany")}</p>;
   const get = (id: string) => value.find((v) => v.department_id === id);
 
   const toggle = (id: string, on: boolean) => {
@@ -30,54 +35,52 @@ export function DepartmentPicker({
   };
   const patch = (id: string, p: Partial<UserDepartment>) =>
     onChange(
-      value.map((v) =>
-        v.department_id === id ? { ...v, ...p } : p.is_primary ? { ...v, is_primary: false } : v,
-      ),
+      value.map((v) => (v.department_id === id ? { ...v, ...p } : p.is_primary ? { ...v, is_primary: false } : v)),
     );
 
   return (
     <div className="max-h-64 overflow-y-auto rounded-lg border">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/50 text-xs text-muted-foreground">
-          <tr>
-            <th className="px-2 py-1 text-left font-medium">部署</th>
-            <th className="px-2 py-1 font-medium">主所属</th>
-            <th className="px-2 py-1 font-medium">部署長</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("column")}</TableHead>
+            <TableHead className="text-center">{t("primary")}</TableHead>
+            <TableHead className="text-center">{t("head")}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {tree.map(({ dept, depth }) => {
             const entry = get(dept.id);
             return (
-              <tr key={dept.id} className="border-t">
-                <td className="px-2 py-1">
+              <TableRow key={dept.id}>
+                <TableCell>
                   <label className="flex items-center gap-2" style={{ paddingLeft: depth * 16 }}>
-                    <input type="checkbox" checked={!!entry} onChange={(e) => toggle(dept.id, e.target.checked)} />
+                    <Checkbox checked={!!entry} onCheckedChange={(checked) => toggle(dept.id, checked === true)} />
                     {dept.name}
                   </label>
-                </td>
-                <td className="px-2 py-1 text-center">
+                </TableCell>
+                <TableCell className="text-center">
                   <input
                     type="radio"
                     name="primary-department"
+                    className="accent-primary"
                     disabled={!entry}
                     checked={!!entry?.is_primary}
                     onChange={() => patch(dept.id, { is_primary: true })}
                   />
-                </td>
-                <td className="px-2 py-1 text-center">
-                  <input
-                    type="checkbox"
+                </TableCell>
+                <TableCell className="text-center">
+                  <Checkbox
                     disabled={!entry}
                     checked={!!entry?.is_head}
-                    onChange={(e) => patch(dept.id, { is_head: e.target.checked })}
+                    onCheckedChange={(checked) => patch(dept.id, { is_head: checked === true })}
                   />
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             );
           })}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

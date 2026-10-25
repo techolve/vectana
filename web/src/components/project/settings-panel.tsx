@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { api, type Department, type Project } from "@/lib/api";
 import { departmentPath } from "@/lib/org";
 import { Button } from "@/components/ui/button";
+import { FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Field, Select } from "@/components/common";
+import { LabeledField, OptionSelect } from "@/components/common";
 
 export function SettingsPanel({
   project,
@@ -21,6 +23,7 @@ export function SettingsPanel({
   onSaved: () => void;
   onDeleted: () => void;
 }) {
+  const t = useTranslations();
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description ?? "");
   const [departmentId, setDepartmentId] = useState(project.department_id ?? "");
@@ -32,7 +35,7 @@ export function SettingsPanel({
         method: "PATCH",
         json: { name, description: description || null, department_id: departmentId || null },
       });
-      toast.success("保存しました");
+      toast.success(t("common.saved"));
       onSaved();
     } catch (err) {
       toast.error((err as Error).message);
@@ -40,7 +43,7 @@ export function SettingsPanel({
   }
 
   async function remove() {
-    if (prompt(`削除するにはプロジェクト名「${project.name}」を入力してください`) !== project.name) return;
+    if (prompt(t("projectSettings.confirmDelete", { name: project.name })) !== project.name) return;
     await api(`/projects/${project.id}`, { method: "DELETE" });
     onDeleted();
   }
@@ -49,32 +52,34 @@ export function SettingsPanel({
 
   return (
     <div className="grid max-w-xl gap-8">
-      <form onSubmit={save} className="grid gap-4">
-        <Field label="名前">
-          <Input required value={name} onChange={(e) => setName(e.target.value)} />
-        </Field>
-        <Field label="説明">
-          <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
-        </Field>
-        <Field label="担当部署">
-          <Select value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
-            <option value="">（なし）</option>
-            {depts.map((d) => (
-              <option key={d.id} value={d.id}>
-                {departmentPath(departments, d.id)}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <div>
-          <Button type="submit">保存</Button>
-        </div>
+      <form onSubmit={save}>
+        <FieldGroup>
+          <LabeledField label={t("projectSettings.name")} htmlFor="settings-name">
+            <Input id="settings-name" required value={name} onChange={(e) => setName(e.target.value)} />
+          </LabeledField>
+          <LabeledField label={t("projectSettings.description")} htmlFor="settings-description">
+            <Textarea id="settings-description" value={description} onChange={(e) => setDescription(e.target.value)} />
+          </LabeledField>
+          <LabeledField label={t("projectSettings.department")}>
+            <OptionSelect
+              value={departmentId}
+              onValueChange={setDepartmentId}
+              options={[
+                { value: "", label: t("common.noneOption") },
+                ...depts.map((d) => ({ value: d.id, label: departmentPath(departments, d.id) })),
+              ]}
+            />
+          </LabeledField>
+          <div>
+            <Button type="submit">{t("common.save")}</Button>
+          </div>
+        </FieldGroup>
       </form>
       <div className="rounded-xl border border-destructive/40 p-4">
-        <div className="mb-2 text-sm font-medium text-destructive">プロジェクトの削除</div>
-        <p className="mb-3 text-xs text-muted-foreground">パッケージ・検知結果・Webhook もすべて削除されます。</p>
+        <div className="mb-2 text-sm font-medium text-destructive">{t("projectSettings.dangerTitle")}</div>
+        <p className="mb-3 text-xs text-muted-foreground">{t("projectSettings.dangerDescription")}</p>
         <Button variant="destructive" onClick={remove}>
-          削除する
+          {t("projectSettings.deleteButton")}
         </Button>
       </div>
     </div>
