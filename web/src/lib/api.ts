@@ -82,6 +82,8 @@ export async function api<T = unknown>(
   if (res.status === 401 && auth && (await refresh())) res = await doFetch();
   if (res.status === 401 && auth) {
     clearTokens();
+    // Outside React (no router here); a full reload also drops in-memory state.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = "/login/";
     throw new ApiError(401, "ログインが必要です");
   }
