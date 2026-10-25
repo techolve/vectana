@@ -1,0 +1,54 @@
+# Production: uses the published image. Put secrets in .env next to this file.
+#   docker compose -f compose.prod.yaml up -d
+name: vectana
+
+x-app: &app
+  image: techolve/vectana:${VECTANA_VERSION:-latest}
+  restart: unless-stopped
+  env_file: .env
+  environment:
+    DATABASE_URL: postgresql+asyncpg://vectana:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/vectana
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vectana
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: vectana
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vectana"]
+      interval: 5s
+      retries: 20
+
+  migrate:
+    <<: *app
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+
+  app:
+    <<: *app
+    # Only reachable from the host; cloudflared publishes it.
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *app
+    command: ["python", "-m", "app.worker"]
+    healthcheck:
+      disable: true
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  db-data:

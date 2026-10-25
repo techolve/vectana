@@ -2,3 +2,9 @@
 *.log
 .idea/
 .vscode/
+.DS_Store
+node_modules/
+web/out/
+web/.next/
+.venv/
+__pycache__/
