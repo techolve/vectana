@@ -22,6 +22,7 @@ from app.models.package import Severity
 from app.models.user import User
 from app.schemas.auth import (
     AcceptInvitation,
+    LocaleBody,
     LoginRequest,
     MeResponse,
     NotificationPrefsBody,
@@ -87,7 +88,16 @@ async def me(actor: CurrentActor, session: Session) -> MeResponse:
         can_manage_org=actor.can_manage_org,
         managed_department_ids=sorted(actor.managed_department_ids, key=str),
         group_name=settings.group_name,
+        locale=user.locale,
     )
+
+
+@router.put("/locale", status_code=status.HTTP_204_NO_CONTENT, summary="表示言語の保存")
+async def set_locale(body: LocaleBody, actor: CurrentActor, session: Session) -> None:
+    """Saved language is used for emails; the web app also switches to it on login."""
+    actor.user.locale = body.locale
+    session.add(actor.user)
+    await session.commit()
 
 
 @router.post("/password", status_code=status.HTTP_204_NO_CONTENT, summary="パスワード変更")
@@ -141,6 +151,7 @@ async def preview_invitation(token: str, session: Session) -> InvitationPreview:
     invitation = await _pending_invitation(token, session)
     company = await session.get(Company, invitation.company_id)
     return InvitationPreview(
+        locale=invitation.locale,
         email=invitation.email,
         display_name=invitation.display_name,
         company_name=company.name if company else "",
@@ -160,6 +171,7 @@ async def accept_invitation(body: AcceptInvitation, session: Session) -> TokenRe
         display_name=body.display_name or invitation.display_name,
         role=invitation.role,
         company_id=invitation.company_id,
+        locale=invitation.locale,
     )
     session.add(user)
     await session.flush()

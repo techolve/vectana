@@ -11,11 +11,13 @@ The backend is chosen by ``MAIL_BACKEND``:
 import logging
 from email.message import EmailMessage
 from email.utils import formatdate, make_msgid, parseaddr
+from html import escape
 
 import aiosmtplib
 import httpx
 
 from app.core.config import settings
+from app.i18n import t
 
 logger = logging.getLogger(__name__)
 
@@ -99,23 +101,27 @@ async def _send_cloudflare(to: str, subject: str, text: str, html: str | None) -
     response.raise_for_status()
 
 
-async def send_invitation_email(*, to: str, company_name: str, accept_url: str) -> bool:
+async def send_invitation_email(
+    *, to: str, company_name: str, accept_url: str, locale: str
+) -> bool:
     """Never raises; returns True if the email was sent."""
-    subject = "[Vectana] アカウント招待"
-    text = (
-        f"{company_name} のメンバーとして Vectana に招待されました。\n\n"
-        f"次のリンクからパスワードを設定してください:\n{accept_url}\n\n"
-        f"リンクの有効期限は {settings.invitation_expire_days} 日です。"
-        "心当たりがない場合はこのメールを無視してください。"
+    days = settings.invitation_expire_days
+    text = "\n\n".join(
+        [
+            t(locale, "invite.body", company=company_name),
+            f"{t(locale, 'invite.link_hint', days=days)}\n{accept_url}",
+            t(locale, "invite.ignore"),
+        ]
     )
     html = (
-        f"<p><strong>{company_name}</strong> のメンバーとして Vectana に招待されました。</p>"
-        f'<p><a href="{accept_url}">パスワードを設定する</a></p>'
-        f'<p style="color:#666;font-size:12px">リンクが開けない場合は次のURLを'
-        f"ブラウザに貼り付けてください:<br>{accept_url}</p>"
+        f"<p>{escape(t(locale, 'invite.body', company=company_name))}</p>"
+        f'<p><a href="{escape(accept_url)}">{escape(t(locale, "invite.action"))}</a></p>'
+        f'<p style="color:#666;font-size:12px">{escape(t(locale, "invite.fallback"))}'
+        f"<br>{escape(accept_url)}</p>"
+        f'<p style="color:#666;font-size:12px">{escape(t(locale, "invite.ignore"))}</p>'
     )
     try:
-        await send_email(to=to, subject=subject, text=text, html=html)
+        await send_email(to=to, subject=t(locale, "invite.subject"), text=text, html=html)
         return True
     except Exception:
         logger.exception("Failed to send invitation email to %s", to)

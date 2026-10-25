@@ -118,14 +118,44 @@ async def scan(
     return new_ids
 
 
-async def scan_and_notify(package_ids: Iterable[UUID] | None = None) -> int:
-    """Entry point for the worker and for on-change scans. Uses its own session."""
+async def scan_and_notify(
+    package_ids: Iterable[UUID] | None = None,
+    project_ids: Iterable[UUID] | None = None,
+) -> int:
+    """Entry point for the worker and for on-change scans. Uses its own session.
+
+    With no arguments everything is scanned. ``package_ids`` scans those packages
+    (and refreshes EOL for their projects); ``project_ids`` refreshes EOL only.
+    """
+    from app.services import eol
     from app.services.notify import notify_pending
 
+    pkg_list = list(package_ids) if package_ids is not None else None
+    proj_list = list(project_ids) if project_ids is not None else None
     async with AsyncSessionLocal() as session:
-        try:
-            await scan(session, package_ids)
-        except Exception:
-            logger.exception("Scan failed")
-            await session.rollback()
+        if pkg_list is not None or proj_list is None:
+            try:
+                await scan(session, pkg_list)
+            except Exception:
+                logger.exception("Scan failed")
+                await session.rollback()
+
+        eol_projects: list[UUID] | None = None
+        if pkg_list is not None or proj_list is not None:
+            ids = set(proj_list or [])
+            if pkg_list:
+                ids |= set(
+                    (
+                        await session.exec(
+                            select(Package.project_id).where(col(Package.id).in_(pkg_list))
+                        )
+                    ).all()
+                )
+            eol_projects = list(ids)
+        if eol_projects is None or eol_projects:
+            try:
+                await eol.refresh(session, eol_projects)
+            except Exception:
+                logger.exception("EOL refresh failed")
+                await session.rollback()
         return await notify_pending(session)

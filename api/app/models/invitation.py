@@ -28,6 +28,8 @@ class Invitation(SQLModel, table=True):
     role: str = Field(max_length=20)
     department_ids: list[Any] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
     primary_department_id: UUID | None = Field(default=None)
+    # Language of the invitation email and of the new account.
+    locale: str = Field(default="ja", max_length=5)
     token: str = Field(max_length=64, unique=True, index=True)
     status: str = Field(default=InvitationStatus.pending, max_length=20)
     invited_by: UUID | None = Field(default=None, foreign_key="users.id", ondelete="SET NULL")

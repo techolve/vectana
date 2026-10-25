@@ -1,4 +1,5 @@
 from collections import defaultdict
+from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
@@ -26,12 +27,14 @@ from app.core.access import (
 )
 from app.core.config import settings
 from app.core.database import get_session
+from app.models.eol import EolFinding, EolStatus
 from app.models.organization import Company, CompanyType, Department
 from app.models.package import MatchStatus, Package, Severity, VulnMatch
 from app.models.project import Project, ProjectMember, ProjectRole, ProjectWebhook
 from app.models.user import User
 from app.schemas.project import (
     DashboardOut,
+    EolCounts,
     ImportResult,
     MatchOut,
     MatchUpdate,
@@ -99,8 +102,63 @@ async def _package_counts(session: AsyncSession, project_ids: list[UUID]) -> dic
     return dict(rows)
 
 
+async def _eol_counts(session: AsyncSession, project_ids: list[UUID]) -> dict[UUID, EolCounts]:
+    counts: dict[UUID, EolCounts] = defaultdict(EolCounts)
+    if not project_ids:
+        return counts
+    rows = (
+        await session.exec(
+            select(EolFinding.project_id, EolFinding.status, func.count())
+            .where(
+                col(EolFinding.project_id).in_(project_ids),
+                col(EolFinding.status).in_([EolStatus.eol, EolStatus.approaching]),
+            )
+            .group_by(col(EolFinding.project_id), col(EolFinding.status))
+        )
+    ).all()
+    for project_id, status_, n in rows:
+        setattr(counts[project_id], status_, n)
+    return counts
+
+
+async def _last_scans(session: AsyncSession, project_ids: list[UUID]) -> dict[UUID, datetime]:
+    if not project_ids:
+        return {}
+    rows = (
+        await session.exec(
+            select(Package.project_id, func.max(Package.last_scanned_at))
+            .where(col(Package.project_id).in_(project_ids))
+            .group_by(col(Package.project_id))
+        )
+    ).all()
+    return {pid: ts for pid, ts in rows if ts is not None}
+
+
+async def project_rows(session: AsyncSession, projects: list[Project]) -> list[ProjectOut]:
+    ids = [p.id for p in projects]
+    counts = await _open_counts(session, ids)
+    packages = await _package_counts(session, ids)
+    eol_counts = await _eol_counts(session, ids)
+    scans = await _last_scans(session, ids)
+    return [
+        _project_out(
+            p,
+            counts[p.id],
+            packages.get(p.id, 0),
+            eol_counts=eol_counts[p.id],
+            last_scanned_at=scans.get(p.id),
+        )
+        for p in projects
+    ]
+
+
 def _project_out(
-    p: Project, counts: SeverityCounts, packages: int, level: Level | None = None
+    p: Project,
+    counts: SeverityCounts,
+    packages: int,
+    level: Level | None = None,
+    eol_counts: EolCounts | None = None,
+    last_scanned_at: datetime | None = None,
 ) -> ProjectOut:
     return ProjectOut(
         id=p.id,
@@ -111,6 +169,8 @@ def _project_out(
         created_at=p.created_at,
         package_count=packages,
         open_counts=counts,
+        eol_counts=eol_counts or EolCounts(),
+        last_scanned_at=last_scanned_at,
         my_level=level.name if level else None,
     )
 
@@ -127,10 +187,7 @@ async def list_projects(actor: CurrentActor, session: Session) -> list[ProjectOu
             )
         ).all()
     )
-    ids = [p.id for p in projects]
-    counts = await _open_counts(session, ids)
-    packages = await _package_counts(session, ids)
-    return [_project_out(p, counts[p.id], packages.get(p.id, 0)) for p in projects]
+    return await project_rows(session, projects)
 
 
 @router.post(
@@ -178,9 +235,9 @@ async def create_project(body: ProjectBody, actor: CurrentActor, session: Sessio
 async def get_project(project_id: UUID, actor: CurrentActor, session: Session) -> ProjectOut:
     project = await accessible_project(project_id, actor, session)
     level = await project_level(project, actor, session)
-    counts = await _open_counts(session, [project.id])
-    packages = await _package_counts(session, [project.id])
-    return _project_out(project, counts[project.id], packages.get(project.id, 0), level)
+    row = (await project_rows(session, [project]))[0]
+    row.my_level = level.name if level else None
+    return row
 
 
 @router.patch("/projects/{project_id}", response_model=ProjectOut, summary="プロジェクトの更新")
@@ -346,7 +403,12 @@ async def remove_member(
 
 def _webhook_out(w: ProjectWebhook) -> WebhookOut:
     return WebhookOut(
-        id=w.id, type=w.type, url=w.url, min_severity=w.min_severity, enabled=w.enabled
+        id=w.id,
+        type=w.type,
+        url=w.url,
+        min_severity=w.min_severity,
+        locale=w.locale,
+        enabled=w.enabled,
     )
 
 
@@ -433,7 +495,7 @@ async def test_webhook(
     await accessible_project(project_id, actor, session, Level.manage)
     hook = await _get_webhook(project_id, webhook_id, session)
     try:
-        await digest.send_test(hook.type, hook.url)
+        await digest.send_test(hook.type, hook.url, hook.locale)
     except Exception as exc:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"Webhook failed: {exc}") from exc
 
@@ -695,18 +757,39 @@ async def update_match(
 
 @router.get("/dashboard", response_model=DashboardOut, summary="ダッシュボード")
 async def dashboard(actor: CurrentActor, session: Session) -> DashboardOut:
-    project_ids = list(
-        (await session.exec(select(Project.id).where(visible_projects_clause(actor)))).all()
+    from app.routers.eol import list_findings
+
+    projects = list(
+        (
+            await session.exec(
+                select(Project).where(visible_projects_clause(actor)).order_by(Project.name)
+            )
+        ).all()
     )
+    rows = await project_rows(session, projects)
     totals = SeverityCounts()
-    for counts in (await _open_counts(session, project_ids)).values():
+    eol_totals = EolCounts()
+    for row in rows:
         for key in SeverityCounts.model_fields:
-            setattr(totals, key, getattr(totals, key) + getattr(counts, key))
-    package_count = sum((await _package_counts(session, project_ids)).values())
-    recent = await list_matches(actor, session, None, "open", None, 20)
+            setattr(totals, key, getattr(totals, key) + getattr(row.open_counts, key))
+        eol_totals.eol += row.eol_counts.eol
+        eol_totals.approaching += row.eol_counts.approaching
+    # Riskiest projects first: CRITICAL, HIGH, EOL reached, then everything else.
+    rows.sort(
+        key=lambda r: (
+            -r.open_counts.CRITICAL,
+            -r.open_counts.HIGH,
+            -r.eol_counts.eol,
+            -(r.open_counts.MEDIUM + r.open_counts.LOW + r.eol_counts.approaching),
+            r.name,
+        )
+    )
     return DashboardOut(
-        project_count=len(project_ids),
-        package_count=package_count,
+        project_count=len(rows),
+        package_count=sum(r.package_count for r in rows),
         open_counts=totals,
-        recent=recent,
+        eol_counts=eol_totals,
+        projects=rows,
+        recent=await list_matches(actor, session, None, "open", None, 20),
+        eol=await list_findings(actor, session, None, [EolStatus.eol, EolStatus.approaching], 20),
     )

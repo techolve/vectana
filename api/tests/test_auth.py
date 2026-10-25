@@ -54,6 +54,7 @@ async def test_invitation_flow(client: AsyncClient, session: AsyncSession, org: 
 
     preview = await client.get(f"/api/auth/invitations/{token}")
     assert preview.json() == {
+        "locale": "ja",
         "email": "new@example.com",
         "display_name": None,
         "company_name": "親会社",

@@ -1,3 +1,4 @@
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, field_validator
@@ -35,6 +36,7 @@ class MeResponse(BaseModel):
     can_manage_org: bool
     managed_department_ids: list[UUID]
     group_name: str
+    locale: str
 
 
 class PasswordChange(BaseModel):
@@ -61,3 +63,7 @@ class AcceptInvitation(BaseModel):
     @classmethod
     def strength(cls, v: str) -> str:
         return _check_password(v)
+
+
+class LocaleBody(BaseModel):
+    locale: Literal["ja", "en"]

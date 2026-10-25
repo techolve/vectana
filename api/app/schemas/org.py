@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
@@ -76,6 +77,8 @@ class InvitationBody(BaseModel):
     company_id: UUID
     role: UserRole = UserRole.member
     departments: list[UserDepartmentIn] = []
+    # Language of the invitation email and the new account; defaults to the caller's.
+    locale: Literal["ja", "en"] | None = None
 
 
 class InvitationOut(BaseModel):
@@ -84,6 +87,7 @@ class InvitationOut(BaseModel):
     display_name: str | None
     company_id: UUID
     role: str
+    locale: str
     status: str
     created_at: datetime
     expires_at: datetime
@@ -93,6 +97,7 @@ class InvitationOut(BaseModel):
 
 
 class InvitationPreview(BaseModel):
+    locale: str
     email: str
     display_name: str | None
     company_name: str

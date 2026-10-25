@@ -27,4 +27,6 @@ class User(SQLModel, table=True):
     company_id: UUID | None = Field(
         default=None, foreign_key="companies.id", index=True, ondelete="RESTRICT"
     )
+    # UI and email language ("ja" / "en").
+    locale: str = Field(default="ja", max_length=5)
     created_at: datetime = created_at_field()

@@ -37,6 +37,11 @@ class Settings(BaseSettings):
     osv_timeout_seconds: float = 30.0
     osv_max_retries: int = 3
 
+    # endoflife.date
+    eol_base_url: str = "https://endoflife.date/api/v1"
+    eol_timeout_seconds: float = 20.0
+    eol_cache_ttl_seconds: float = 6 * 3600
+
     # Worker
     scan_interval_minutes: int = 360
     # Scan packages right after they are added (in the API process).

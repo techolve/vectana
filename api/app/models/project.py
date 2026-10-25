@@ -51,5 +51,6 @@ class ProjectWebhook(SQLModel, table=True):
     type: str = Field(max_length=20)
     url: str = Field(max_length=1000)
     min_severity: str = Field(default="LOW", max_length=20)
+    locale: str = Field(default="ja", max_length=5)
     enabled: bool = Field(default=True)
     created_at: datetime = created_at_field()

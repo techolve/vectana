@@ -1,10 +1,12 @@
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, field_validator
 
 from app.models.package import ECOSYSTEMS, Severity
 from app.models.project import ProjectRole, WebhookType
+from app.schemas.eol import EolFindingOut
 
 
 class ProjectBody(BaseModel):
@@ -28,6 +30,11 @@ class SeverityCounts(BaseModel):
     UNKNOWN: int = 0
 
 
+class EolCounts(BaseModel):
+    eol: int = 0
+    approaching: int = 0
+
+
 class ProjectOut(BaseModel):
     id: UUID
     company_id: UUID
@@ -37,6 +44,8 @@ class ProjectOut(BaseModel):
     created_at: datetime
     package_count: int = 0
     open_counts: SeverityCounts = SeverityCounts()
+    eol_counts: EolCounts = EolCounts()
+    last_scanned_at: datetime | None = None
     my_level: str | None = None
 
 
@@ -62,6 +71,7 @@ class WebhookBody(BaseModel):
     type: WebhookType
     url: str
     min_severity: Severity = Severity.LOW
+    locale: Literal["ja", "en"] = "ja"
     enabled: bool = True
 
     @field_validator("url")
@@ -77,6 +87,7 @@ class WebhookOut(BaseModel):
     type: str
     url: str
     min_severity: str
+    locale: str
     enabled: bool
 
 
@@ -152,4 +163,7 @@ class DashboardOut(BaseModel):
     project_count: int
     package_count: int
     open_counts: SeverityCounts
+    eol_counts: EolCounts
+    projects: list[ProjectOut]
     recent: list[MatchOut]
+    eol: list[EolFindingOut]

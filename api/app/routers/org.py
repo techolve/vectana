@@ -9,7 +9,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import col, delete, select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -23,6 +23,7 @@ from app.core.access import (
 )
 from app.core.config import settings
 from app.core.database import get_session
+from app.i18n import request_locale
 from app.models.invitation import Invitation, InvitationStatus
 from app.models.organization import Company, CompanyType, Department, UserDepartment
 from app.models.project import Project
@@ -413,6 +414,7 @@ def _invitation_out(inv: Invitation, **extra: object) -> InvitationOut:
         display_name=inv.display_name,
         company_id=inv.company_id,
         role=inv.role,
+        locale=inv.locale,
         status=inv.status,
         created_at=inv.created_at,
         expires_at=inv.expires_at,
@@ -420,8 +422,8 @@ def _invitation_out(inv: Invitation, **extra: object) -> InvitationOut:
     )
 
 
-def accept_url(token: str) -> str:
-    return f"{settings.web_url.rstrip('/')}/invite/?token={token}"
+def accept_url(token: str, locale: str) -> str:
+    return f"{settings.web_url.rstrip('/')}/{locale}/invite/?token={token}"
 
 
 @router.get("/invitations", response_model=list[InvitationOut], summary="招待一覧")
@@ -443,7 +445,7 @@ async def list_invitations(actor: OrgAdmin, session: Session) -> list[Invitation
     summary="ユーザーを招待",
 )
 async def create_invitation(
-    body: InvitationBody, actor: OrgAdmin, session: Session
+    body: InvitationBody, request: Request, actor: OrgAdmin, session: Session
 ) -> InvitationOut:
     _ensure_company_scope(actor, body.company_id)
     company = await _get_company(body.company_id, session)
@@ -469,6 +471,7 @@ async def create_invitation(
         display_name=body.display_name,
         company_id=company.id,
         role=body.role,
+        locale=body.locale or request_locale(request),
         department_ids=[e.model_dump(mode="json") for e in body.departments],
         token=secrets.token_urlsafe(32),
         invited_by=actor.user.id,
@@ -477,8 +480,10 @@ async def create_invitation(
     session.add(invitation)
     await session.commit()
 
-    url = accept_url(invitation.token)
-    sent = await send_invitation_email(to=email, company_name=company.name, accept_url=url)
+    url = accept_url(invitation.token, invitation.locale)
+    sent = await send_invitation_email(
+        to=email, company_name=company.name, accept_url=url, locale=invitation.locale
+    )
     return _invitation_out(invitation, email_sent=sent, accept_url=url)
 
 

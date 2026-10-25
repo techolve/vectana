@@ -51,8 +51,8 @@ def fake_osv() -> httpx.AsyncClient:
 def sent(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str, int]]:
     calls: list[tuple[str, str, int]] = []
 
-    async def fake_send(channel: str, address: str, items: list[digest.Item]) -> None:
-        calls.append((channel, address, len(items)))
+    async def fake_send(channel: str, address: str, d: digest.Digest, locale: str) -> None:
+        calls.append((channel, address, len(d.vulns)))
 
     monkeypatch.setattr(digest, "send", fake_send)
     monkeypatch.setattr("app.services.notify.mail_enabled", lambda: True)
@@ -144,14 +144,14 @@ async def test_failed_send_is_retried(
     async with fake_osv() as osv_client:
         await scanner.scan(session, client=osv_client)
 
-    async def boom(channel: str, address: str, items: list[digest.Item]) -> None:
+    async def boom(channel: str, address: str, d: digest.Digest, locale: str) -> None:
         raise RuntimeError("down")
 
     monkeypatch.setattr(digest, "send", boom)
     monkeypatch.setattr("app.services.notify.mail_enabled", lambda: True)
     assert await notify_pending(session) == 0
 
-    async def ok(channel: str, address: str, items: list[digest.Item]) -> None:
+    async def ok(channel: str, address: str, d: digest.Digest, locale: str) -> None:
         return None
 
     monkeypatch.setattr(digest, "send", ok)
