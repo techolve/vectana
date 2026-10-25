@@ -75,8 +75,7 @@
     "password": "Password",
     "submit": "Log in",
     "invalid": "Incorrect email or password",
-    "inviteOnly": "Accounts are created by invitation from an administrator.",
-    "tagline": "Monitor your projects' dependencies for vulnerabilities and end-of-life, and get notified."
+    "inviteOnly": "Accounts are created by invitation from an administrator."
   },
   "invite": {
     "title": "You're invited to Vectana",
