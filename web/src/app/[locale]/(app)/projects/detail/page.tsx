@@ -9,16 +9,19 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { api, type Company, type Department, type Match, type Project } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
+import { usePageCrumb } from "@/components/app-shell";
 import { departmentPath } from "@/lib/org";
 import { Button } from "@/components/ui/button";
 import { Empty, ErrorText, PageHeader, PageTabs, SeverityCountsInline } from "@/components/common";
 import { MatchTable } from "@/components/match-table";
+import { EolBadge } from "@/components/eol-table";
+import { EolPanel } from "@/components/project/eol-panel";
 import { PackagesPanel } from "@/components/project/packages-panel";
 import { MembersPanel } from "@/components/project/members-panel";
 import { WebhooksPanel } from "@/components/project/webhooks-panel";
 import { SettingsPanel } from "@/components/project/settings-panel";
 
-type Tab = "vulns" | "packages" | "members" | "webhooks" | "settings";
+type Tab = "vulns" | "eol" | "packages" | "members" | "webhooks" | "settings";
 
 function ProjectDetail() {
   const t = useTranslations();
@@ -29,6 +32,7 @@ function ProjectDetail() {
   const { data: matches, reload: reloadMatches } = useApi<Match[]>(id ? `/vulnerabilities?project_id=${id}&status=` : null);
   const { data: companies } = useApi<Company[]>("/companies");
   const { data: departments } = useApi<Department[]>("/departments");
+  usePageCrumb(project?.name);
 
   if (!id) return <ErrorText>{t("project.notSpecified")}</ErrorText>;
   if (error) return <ErrorText>{error}</ErrorText>;
@@ -54,6 +58,7 @@ function ProjectDetail() {
 
   const tabs: { value: Tab; label: React.ReactNode }[] = [
     { value: "vulns", label: t("project.tabs.vulns") },
+    { value: "eol", label: t("project.tabs.eol") },
     { value: "packages", label: t("project.tabs.packages", { count: project.package_count }) },
     { value: "members", label: t("project.tabs.members") },
     ...(canManage
@@ -75,6 +80,8 @@ function ProjectDetail() {
               {project.department_id && departments ? ` / ${departmentPath(departments, project.department_id)}` : ""}
             </span>
             <SeverityCountsInline counts={project.open_counts} empty={t("common.none")} />
+            {project.eol_counts.eol > 0 && <EolBadge status="eol" />}
+            {project.eol_counts.approaching > 0 && <EolBadge status="approaching" />}
           </span>
         }
         actions={
@@ -96,6 +103,7 @@ function ProjectDetail() {
         ) : (
           <MatchTable matches={matches} onChanged={refreshAll} canTriage={canWrite} />
         ))}
+      {tab === "eol" && <EolPanel projectId={project.id} canWrite={canWrite} onChanged={reload} />}
       {tab === "packages" && <PackagesPanel projectId={project.id} canWrite={canWrite} onChanged={refreshAll} />}
       {tab === "members" && companies && <MembersPanel projectId={project.id} canManage={canManage} companies={companies} />}
       {tab === "webhooks" && canManage && <WebhooksPanel projectId={project.id} />}

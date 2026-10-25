@@ -1,5 +1,7 @@
 {
-  "meta": { "description": "プロジェクトの依存パッケージの脆弱性を監視・通知" },
+  "meta": {
+    "description": "プロジェクトの依存パッケージの脆弱性を監視・通知"
+  },
   "common": {
     "loading": "読み込み中…",
     "save": "保存",
@@ -26,20 +28,44 @@
     "enabled": "有効",
     "disabled": "無効",
     "testSend": "テスト送信",
-    "loginRequired": "ログインが必要です"
+    "loginRequired": "ログインが必要です",
+    "systemSettings": "システム設定"
   },
-  "locales": { "ja": "日本語", "en": "English" },
+  "locales": {
+    "ja": "日本語",
+    "en": "English"
+  },
   "nav": {
     "dashboard": "ダッシュボード",
     "projects": "プロジェクト",
     "vulnerabilities": "脆弱性",
-    "admin": "組織管理"
+    "admin": "組織管理",
+    "eol": "EOL",
+    "platform": "メニュー",
+    "myProjects": "プロジェクト",
+    "more": "すべて表示"
   },
   "labels": {
-    "role": { "group_admin": "グループ管理者", "company_admin": "会社管理者", "member": "メンバー" },
-    "companyType": { "parent": "親会社", "affiliate": "関連会社", "partner": "BP（協力会社）" },
-    "projectRole": { "owner": "オーナー", "member": "メンバー", "viewer": "閲覧のみ" },
-    "status": { "open": "未対応", "ack": "確認済み", "ignored": "無視" },
+    "role": {
+      "group_admin": "グループ管理者",
+      "company_admin": "会社管理者",
+      "member": "メンバー"
+    },
+    "companyType": {
+      "parent": "親会社",
+      "affiliate": "関連会社",
+      "partner": "BP（協力会社）"
+    },
+    "projectRole": {
+      "owner": "オーナー",
+      "member": "メンバー",
+      "viewer": "閲覧のみ"
+    },
+    "status": {
+      "open": "未対応",
+      "ack": "確認済み",
+      "ignored": "無視"
+    },
     "partner": "BP"
   },
   "login": {
@@ -49,7 +75,8 @@
     "password": "パスワード",
     "submit": "ログイン",
     "invalid": "メールアドレスまたはパスワードが違います",
-    "inviteOnly": "アカウントは管理者からの招待で作成されます。"
+    "inviteOnly": "アカウントは管理者からの招待で作成されます。",
+    "tagline": "プロジェクトの依存パッケージの脆弱性とサポート終了（EOL）を監視して、通知します。"
   },
   "invite": {
     "title": "Vectana への招待",
@@ -67,12 +94,25 @@
   },
   "dashboard": {
     "title": "ダッシュボード",
-    "description": "{group} — 見えているプロジェクト全体の未対応の脆弱性",
+    "description": "{group} — 見えているプロジェクト全体の状況",
     "projects": "プロジェクト",
     "packages": "パッケージ",
     "recent": "未対応の脆弱性（重大度順・最新20件）",
     "empty": "未対応の脆弱性はありません。",
-    "emptyHint": "<link>プロジェクト</link>にパッケージを登録すると監視が始まります。"
+    "emptyHint": "<link>プロジェクト</link>にパッケージを登録すると監視が始まります。",
+    "eolReached": "EOL 済み",
+    "eolApproaching": "EOL 間近",
+    "health": "プロジェクトの状況",
+    "healthDescription": "重大な脆弱性と EOL が多い順",
+    "project": "プロジェクト",
+    "vulns": "未対応の脆弱性",
+    "eol": "EOL",
+    "lastScanned": "最終スキャン",
+    "todo": "対応が必要な項目",
+    "tabVulns": "脆弱性 ({count})",
+    "tabEol": "EOL ({count})",
+    "eolEmpty": "EOL 済み・間近のものはありません。",
+    "noProjects": "見えているプロジェクトはまだありません。"
   },
   "matches": {
     "severity": "重大度",
@@ -113,7 +153,8 @@
       "packages": "パッケージ ({count})",
       "members": "メンバー",
       "webhooks": "通知（Webhook）",
-      "settings": "設定"
+      "settings": "設定",
+      "eol": "EOL"
     },
     "noMatches": "ヒットした脆弱性はありません"
   },
@@ -150,7 +191,8 @@
     "minSeverity": "この重大度以上を通知",
     "empty": "Webhook は登録されていません。チームのチャンネルに通知したい場合に追加してください。",
     "testSent": "テスト通知を送信しました",
-    "confirmDelete": "この Webhook を削除しますか？"
+    "confirmDelete": "この Webhook を削除しますか？",
+    "language": "通知の言語"
   },
   "projectSettings": {
     "name": "名前",
@@ -172,14 +214,22 @@
     "newPassword": "新しいパスワード",
     "passwordHint": "8文字以上",
     "change": "変更",
-    "passwordChanged": "パスワードを変更しました"
+    "passwordChanged": "パスワードを変更しました",
+    "languageTitle": "表示言語",
+    "languageHint": "メールもこの言語で届きます"
   },
   "admin": {
     "title": "組織管理",
     "description": "{group} の会社・部署・ユーザー",
     "adminOnly": "管理者のみ利用できます",
     "addCompanyFirst": "先に会社を追加してください",
-    "tabs": { "companies": "会社", "departments": "部署", "users": "ユーザー", "invitations": "招待" }
+    "tabs": {
+      "companies": "会社",
+      "departments": "部署",
+      "users": "ユーザー",
+      "invitations": "招待",
+      "system": "システム設定"
+    }
   },
   "companies": {
     "add": "会社を追加",
@@ -226,6 +276,46 @@
     "notSent": "メールを送れませんでした。下のリンクを直接共有してください。",
     "empty": "保留中の招待はありません",
     "expires": "有効期限",
-    "revoke": "取り消し"
+    "revoke": "取り消し",
+    "language": "メールの言語"
+  },
+  "eol": {
+    "title": "EOL（サポート終了）",
+    "description": "パッケージとランタイムのサポート終了状況（endoflife.date）",
+    "product": "製品",
+    "version": "バージョン",
+    "cycle": "サイクル",
+    "eolDate": "EOL 日",
+    "latest": "最新版",
+    "status": "状態",
+    "source": "対象",
+    "sourcePackage": "パッケージ",
+    "sourceRuntime": "ランタイム",
+    "statusLabel": {
+      "eol": "サポート終了",
+      "approaching": "まもなく終了",
+      "supported": "サポート中",
+      "unknown": "不明"
+    },
+    "allStatuses": "すべての状態",
+    "attention": "EOL 済み・間近のみ",
+    "empty": "該当する項目はありません",
+    "runtimes": "ランタイム（言語・DB・OS など）",
+    "runtimesHint": "lockfile に出てこない Python・Node.js・PostgreSQL・Ubuntu などを登録します。",
+    "searchProduct": "製品を検索（例: python）",
+    "versionPlaceholder": "バージョン（例: 3.14）",
+    "runtimeAdded": "登録しました。EOL を判定しています。",
+    "confirmDeleteRuntime": "{product} {version} を削除しますか？",
+    "noRuntimes": "ランタイムは登録されていません",
+    "refresh": "EOL を再判定",
+    "refreshStarted": "EOL を再判定しています。少し待ってから再読み込みしてください。",
+    "daysLeft": "あと {days} 日",
+    "daysAgo": "{days} 日前に終了"
+  },
+  "system": {
+    "eolTitle": "EOL の警告",
+    "eolWarningDays": "サポート終了の何日前から警告するか",
+    "eolWarningHint": "この日数以内に EOL を迎えるものを「まもなく終了」として表示・通知します（1〜730日）",
+    "days": "日"
   }
 }

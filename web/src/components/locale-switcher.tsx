@@ -3,8 +3,8 @@
 import { LanguagesIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
-import { usePathname, useRouter } from "@/i18n/navigation";
-import { LOCALE_STORAGE_KEY, routing, type Locale } from "@/i18n/routing";
+import { routing, type Locale } from "@/i18n/routing";
+import { useChangeLocale } from "@/lib/use-change-locale";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,17 +17,7 @@ import {
 export function LocaleSwitcher() {
   const t = useTranslations();
   const locale = useLocale();
-  const pathname = usePathname();
-  const router = useRouter();
-
-  function change(next: string) {
-    try {
-      localStorage.setItem(LOCALE_STORAGE_KEY, next);
-    } catch {}
-    // Keep query parameters such as ?id= on detail pages.
-    const query = Object.fromEntries(new URLSearchParams(window.location.search));
-    router.replace({ pathname, query }, { locale: next as Locale });
-  }
+  const changeLocale = useChangeLocale();
 
   return (
     <DropdownMenu>
@@ -35,7 +25,7 @@ export function LocaleSwitcher() {
         <LanguagesIcon />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuRadioGroup value={locale} onValueChange={change}>
+        <DropdownMenuRadioGroup value={locale} onValueChange={(v) => changeLocale(v as Locale)}>
           {routing.locales.map((l) => (
             <DropdownMenuRadioItem key={l} value={l}>
               {t(`locales.${l}`)}

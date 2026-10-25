@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { CopyIcon } from "lucide-react";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { api, type Company, type Department, type Invitation, type Me, type UserDepartment } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
+import { routing } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ export function InvitationsPanel({
   const t = useTranslations();
   const me = useMe();
   const formatDate = useFormatDate();
+  const localeOptions = routing.locales.map((l) => ({ value: l, label: t(`locales.${l}`) }));
   const { data, reload } = useApi<Invitation[]>("/invitations");
   const company = companies.find((c) => c.id === companyId);
   const [email, setEmail] = useState("");
@@ -35,13 +37,14 @@ export function InvitationsPanel({
   const [role, setRole] = useState<string>("member");
   const [depts, setDepts] = useState<UserDepartment[]>([]);
   const [lastUrl, setLastUrl] = useState<string | null>(null);
+  const [inviteLocale, setInviteLocale] = useState<string>(useLocale());
 
   async function invite(e: React.FormEvent) {
     e.preventDefault();
     try {
       const inv = await api<Invitation>("/invitations", {
         method: "POST",
-        json: { email, display_name: name || null, company_id: companyId, role, departments: depts },
+        json: { email, display_name: name || null, company_id: companyId, role, departments: depts, locale: inviteLocale },
       });
       if (inv.email_sent) {
         toast.success(t("invitations.sent", { email: inv.email }));
@@ -66,7 +69,7 @@ export function InvitationsPanel({
       <form onSubmit={invite} className="rounded-xl border p-4">
         <FieldGroup>
           <div className="text-sm font-medium">{t("invitations.inviteTo", { company: company?.name ?? "" })}</div>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
             <LabeledField label={t("invitations.email")} htmlFor="invite-email">
               <Input id="invite-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
             </LabeledField>
@@ -79,6 +82,9 @@ export function InvitationsPanel({
                 onValueChange={setRole}
                 options={roleOptions(me, company).map((r) => ({ value: r, label: t(`labels.role.${r}`) }))}
               />
+            </LabeledField>
+            <LabeledField label={t("invitations.language")}>
+              <OptionSelect value={inviteLocale} onValueChange={setInviteLocale} options={localeOptions} />
             </LabeledField>
           </div>
           <LabeledField label={t("invitations.departments")}>

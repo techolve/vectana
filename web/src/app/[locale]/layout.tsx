@@ -7,6 +7,7 @@ import "../globals.css";
 import { routing } from "@/i18n/routing";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -35,7 +36,7 @@ export default async function LocaleLayout({
       <body className="flex min-h-full flex-col font-sans">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <NextIntlClientProvider>
-            {children}
+            <TooltipProvider>{children}</TooltipProvider>
             <Toaster richColors position="top-right" />
           </NextIntlClientProvider>
         </ThemeProvider>

@@ -11,8 +11,9 @@ import { CompaniesPanel } from "@/components/admin/companies-panel";
 import { DepartmentsPanel } from "@/components/admin/departments-panel";
 import { UsersPanel } from "@/components/admin/users-panel";
 import { InvitationsPanel } from "@/components/admin/invitations-panel";
+import { SystemPanel } from "@/components/admin/system-panel";
 
-type Tab = "companies" | "departments" | "users" | "invitations";
+type Tab = "companies" | "departments" | "users" | "invitations" | "system";
 
 export default function AdminPage() {
   const t = useTranslations();
@@ -27,7 +28,7 @@ export default function AdminPage() {
   if (!me.can_manage_org) return <ErrorText>{t("admin.adminOnly")}</ErrorText>;
   if (!companies || !departments) return null;
 
-  const companyPicker = tab !== "companies" && manageable.length > 1 && (
+  const companyPicker = tab !== "companies" && tab !== "system" && manageable.length > 1 && (
     <OptionSelect
       value={companyId}
       onValueChange={setPicked}
@@ -46,10 +47,12 @@ export default function AdminPage() {
           { value: "departments", label: t("admin.tabs.departments") },
           { value: "users", label: t("admin.tabs.users") },
           { value: "invitations", label: t("admin.tabs.invitations") },
+          ...(me.role === "group_admin" ? [{ value: "system" as const, label: t("admin.tabs.system") }] : []),
         ]}
       />
       {tab === "companies" && <CompaniesPanel companies={companies} onChanged={reloadCompanies} />}
-      {tab !== "companies" && !companyId && <ErrorText>{t("admin.addCompanyFirst")}</ErrorText>}
+      {tab === "system" && <SystemPanel />}
+      {tab !== "companies" && tab !== "system" && !companyId && <ErrorText>{t("admin.addCompanyFirst")}</ErrorText>}
       {tab === "departments" && companyId && (
         <DepartmentsPanel companies={companies} departments={departments} companyId={companyId} onChanged={reloadDepartments} />
       )}

@@ -1,5 +1,7 @@
 {
-  "meta": { "description": "Monitor your projects' dependencies for vulnerabilities and get notified" },
+  "meta": {
+    "description": "Monitor your projects' dependencies for vulnerabilities and get notified"
+  },
   "common": {
     "loading": "Loading…",
     "save": "Save",
@@ -26,20 +28,44 @@
     "enabled": "Enabled",
     "disabled": "Disabled",
     "testSend": "Send test",
-    "loginRequired": "Please log in"
+    "loginRequired": "Please log in",
+    "systemSettings": "System settings"
   },
-  "locales": { "ja": "日本語", "en": "English" },
+  "locales": {
+    "ja": "日本語",
+    "en": "English"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "projects": "Projects",
     "vulnerabilities": "Vulnerabilities",
-    "admin": "Organization"
+    "admin": "Organization",
+    "eol": "EOL",
+    "platform": "Menu",
+    "myProjects": "Projects",
+    "more": "View all"
   },
   "labels": {
-    "role": { "group_admin": "Group admin", "company_admin": "Company admin", "member": "Member" },
-    "companyType": { "parent": "Parent company", "affiliate": "Affiliate", "partner": "Partner (BP)" },
-    "projectRole": { "owner": "Owner", "member": "Member", "viewer": "Viewer" },
-    "status": { "open": "Open", "ack": "Acknowledged", "ignored": "Ignored" },
+    "role": {
+      "group_admin": "Group admin",
+      "company_admin": "Company admin",
+      "member": "Member"
+    },
+    "companyType": {
+      "parent": "Parent company",
+      "affiliate": "Affiliate",
+      "partner": "Partner (BP)"
+    },
+    "projectRole": {
+      "owner": "Owner",
+      "member": "Member",
+      "viewer": "Viewer"
+    },
+    "status": {
+      "open": "Open",
+      "ack": "Acknowledged",
+      "ignored": "Ignored"
+    },
     "partner": "Partner"
   },
   "login": {
@@ -49,7 +75,8 @@
     "password": "Password",
     "submit": "Log in",
     "invalid": "Incorrect email or password",
-    "inviteOnly": "Accounts are created by invitation from an administrator."
+    "inviteOnly": "Accounts are created by invitation from an administrator.",
+    "tagline": "Monitor your projects' dependencies for vulnerabilities and end-of-life, and get notified."
   },
   "invite": {
     "title": "You're invited to Vectana",
@@ -67,12 +94,25 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "description": "{group} — open vulnerabilities across the projects you can see",
+    "description": "{group} — status of the projects you can see",
     "projects": "Projects",
     "packages": "Packages",
     "recent": "Open vulnerabilities (by severity, latest 20)",
     "empty": "No open vulnerabilities.",
-    "emptyHint": "Add packages to a <link>project</link> to start monitoring."
+    "emptyHint": "Add packages to a <link>project</link> to start monitoring.",
+    "eolReached": "End of life",
+    "eolApproaching": "Ending soon",
+    "health": "Project status",
+    "healthDescription": "Most critical vulnerabilities and EOL first",
+    "project": "Project",
+    "vulns": "Open vulnerabilities",
+    "eol": "EOL",
+    "lastScanned": "Last scanned",
+    "todo": "Needs attention",
+    "tabVulns": "Vulnerabilities ({count})",
+    "tabEol": "EOL ({count})",
+    "eolEmpty": "Nothing has reached or is close to end of life.",
+    "noProjects": "You can't see any projects yet."
   },
   "matches": {
     "severity": "Severity",
@@ -113,7 +153,8 @@
       "packages": "Packages ({count})",
       "members": "Members",
       "webhooks": "Notifications (Webhook)",
-      "settings": "Settings"
+      "settings": "Settings",
+      "eol": "EOL"
     },
     "noMatches": "No vulnerabilities found"
   },
@@ -150,7 +191,8 @@
     "minSeverity": "Notify at this severity or higher",
     "empty": "No webhooks. Add one to notify your team's channel.",
     "testSent": "Test notification sent",
-    "confirmDelete": "Delete this webhook?"
+    "confirmDelete": "Delete this webhook?",
+    "language": "Notification language"
   },
   "projectSettings": {
     "name": "Name",
@@ -172,14 +214,22 @@
     "newPassword": "New password",
     "passwordHint": "At least 8 characters",
     "change": "Change",
-    "passwordChanged": "Password changed"
+    "passwordChanged": "Password changed",
+    "languageTitle": "Language",
+    "languageHint": "Emails are sent in this language too"
   },
   "admin": {
     "title": "Organization",
     "description": "Companies, departments and users of {group}",
     "adminOnly": "Administrators only",
     "addCompanyFirst": "Add a company first",
-    "tabs": { "companies": "Companies", "departments": "Departments", "users": "Users", "invitations": "Invitations" }
+    "tabs": {
+      "companies": "Companies",
+      "departments": "Departments",
+      "users": "Users",
+      "invitations": "Invitations",
+      "system": "System settings"
+    }
   },
   "companies": {
     "add": "Add company",
@@ -226,6 +276,46 @@
     "notSent": "The email could not be sent. Share the link below instead.",
     "empty": "No pending invitations",
     "expires": "Expires",
-    "revoke": "Revoke"
+    "revoke": "Revoke",
+    "language": "Email language"
+  },
+  "eol": {
+    "title": "End of life",
+    "description": "Support status of packages and runtimes (endoflife.date)",
+    "product": "Product",
+    "version": "Version",
+    "cycle": "Cycle",
+    "eolDate": "EOL date",
+    "latest": "Latest",
+    "status": "Status",
+    "source": "Source",
+    "sourcePackage": "Package",
+    "sourceRuntime": "Runtime",
+    "statusLabel": {
+      "eol": "End of life",
+      "approaching": "Ending soon",
+      "supported": "Supported",
+      "unknown": "Unknown"
+    },
+    "allStatuses": "All statuses",
+    "attention": "Ended or ending soon",
+    "empty": "Nothing to show",
+    "runtimes": "Runtimes (languages, databases, OS…)",
+    "runtimesHint": "Register what lockfiles don't show, such as Python, Node.js, PostgreSQL or Ubuntu.",
+    "searchProduct": "Search products (e.g. python)",
+    "versionPlaceholder": "Version (e.g. 3.14)",
+    "runtimeAdded": "Added. Checking end of life.",
+    "confirmDeleteRuntime": "Delete {product} {version}?",
+    "noRuntimes": "No runtimes registered",
+    "refresh": "Re-check EOL",
+    "refreshStarted": "Re-checking end of life. Reload in a moment.",
+    "daysLeft": "{days} days left",
+    "daysAgo": "ended {days} days ago"
+  },
+  "system": {
+    "eolTitle": "EOL warnings",
+    "eolWarningDays": "Warn this many days before end of life",
+    "eolWarningHint": "Anything reaching end of life within this window is shown and notified as \"ending soon\" (1–730 days)",
+    "days": "days"
   }
 }

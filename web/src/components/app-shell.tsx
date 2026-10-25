@@ -1,26 +1,24 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import {
-  BugIcon,
-  Building2Icon,
-  FolderIcon,
-  LayoutDashboardIcon,
-  LogOutIcon,
-  SettingsIcon,
-  ShieldIcon,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
-import { api, clearTokens, hasToken, type Me } from "@/lib/api";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { LocaleSwitcher } from "@/components/locale-switcher";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { VersionLabel } from "@/components/version-label";
+import { api, hasToken, type Me } from "@/lib/api";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 
 const MeContext = createContext<Me | null>(null);
+const CrumbContext = createContext<(label: string | null) => void>(() => {});
 
 export function useMe(): Me {
   const me = useContext(MeContext);
@@ -28,11 +26,29 @@ export function useMe(): Me {
   return me;
 }
 
+/** Let a page add its own last breadcrumb (e.g. the project name). */
+export function usePageCrumb(label: string | null | undefined) {
+  const set = useContext(CrumbContext);
+  useEffect(() => {
+    set(label ?? null);
+    return () => set(null);
+  }, [label, set]);
+}
+
+const SECTIONS = {
+  "/projects": "nav.projects",
+  "/vulnerabilities": "nav.vulnerabilities",
+  "/eol": "nav.eol",
+  "/admin": "nav.admin",
+  "/settings": "common.settings",
+} as const;
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const t = useTranslations();
   const router = useRouter();
   const pathname = usePathname();
   const [me, setMe] = useState<Me | null>(null);
+  const [crumb, setCrumb] = useState<string | null>(null);
 
   useEffect(() => {
     if (!hasToken()) {
@@ -46,78 +62,57 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return <div className="flex flex-1 items-center justify-center text-muted-foreground">{t("common.loading")}</div>;
   }
 
-  const nav = [
-    { href: "/", label: t("nav.dashboard"), icon: LayoutDashboardIcon },
-    { href: "/projects/", label: t("nav.projects"), icon: FolderIcon },
-    { href: "/vulnerabilities/", label: t("nav.vulnerabilities"), icon: BugIcon },
-    ...(me.can_manage_org ? [{ href: "/admin/", label: t("nav.admin"), icon: Building2Icon }] : []),
-  ];
-  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href.replace(/\/$/, "")));
+  const sectionPath = (Object.keys(SECTIONS) as (keyof typeof SECTIONS)[]).find((p) => pathname.startsWith(p));
 
   return (
     <MeContext.Provider value={me}>
-      <div className="flex min-h-full flex-1 flex-col">
-        <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur">
-          <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4">
-            <Link href="/" className="flex items-center gap-2 font-semibold">
-              <span className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                <ShieldIcon className="size-4" />
-              </span>
-              Vectana
-            </Link>
-            <nav className="flex items-center gap-1 overflow-x-auto">
-              {nav.map(({ href, label, icon: Icon }) => (
-                <Button
-                  key={href}
-                  variant="ghost"
-                  size="sm"
-                  className={cn("text-muted-foreground", isActive(href) && "bg-muted text-foreground")}
-                  nativeButton={false}
-                  render={<Link href={href} />}
-                >
-                  <Icon />
-                  <span className="hidden sm:inline">{label}</span>
-                </Button>
-              ))}
-            </nav>
-            <div className="ml-auto flex items-center gap-1">
-              <div className="mr-2 hidden text-right text-xs leading-tight md:block">
-                <div className="font-medium">{me.display_name || me.email}</div>
-                <div className="text-muted-foreground">
-                  {me.company_name ?? me.group_name}
-                  {me.is_partner ? ` (${t("labels.partner")})` : ` / ${t(`labels.role.${me.role}`)}`}
-                </div>
+      <CrumbContext.Provider value={setCrumb}>
+        <SidebarProvider>
+          <AppSidebar me={me} />
+          <SidebarInset>
+            <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+              <div className="flex items-center gap-2 px-4">
+                <SidebarTrigger className="-ml-1" />
+                <Separator orientation="vertical" className="mr-2 data-vertical:h-4 data-vertical:self-auto" />
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem className="hidden md:block">
+                      {sectionPath ? (
+                        <BreadcrumbLink render={<Link href="/" />}>{me.group_name}</BreadcrumbLink>
+                      ) : (
+                        <BreadcrumbPage>{t("nav.dashboard")}</BreadcrumbPage>
+                      )}
+                    </BreadcrumbItem>
+                    {sectionPath && (
+                      <>
+                        <BreadcrumbSeparator className="hidden md:block" />
+                        <BreadcrumbItem>
+                          {crumb ? (
+                            <BreadcrumbLink render={<Link href={`${sectionPath}/`} />}>
+                              {t(SECTIONS[sectionPath])}
+                            </BreadcrumbLink>
+                          ) : (
+                            <BreadcrumbPage>{t(SECTIONS[sectionPath])}</BreadcrumbPage>
+                          )}
+                        </BreadcrumbItem>
+                      </>
+                    )}
+                    {crumb && (
+                      <>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                          <BreadcrumbPage>{crumb}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                      </>
+                    )}
+                  </BreadcrumbList>
+                </Breadcrumb>
               </div>
-              <LocaleSwitcher />
-              <ThemeToggle />
-              <Button
-                variant="ghost"
-                size="icon"
-                title={t("common.settings")}
-                nativeButton={false}
-                render={<Link href="/settings/" />}
-              >
-                <SettingsIcon />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                title={t("common.logout")}
-                onClick={() => {
-                  clearTokens();
-                  router.replace("/login/");
-                }}
-              >
-                <LogOutIcon />
-              </Button>
-            </div>
-          </div>
-        </header>
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">{children}</main>
-        <footer className="mx-auto w-full max-w-7xl px-4 pb-4 text-right">
-          <VersionLabel />
-        </footer>
-      </div>
+            </header>
+            <main className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</main>
+          </SidebarInset>
+        </SidebarProvider>
+      </CrumbContext.Provider>
     </MeContext.Provider>
   );
 }

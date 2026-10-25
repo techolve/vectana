@@ -211,7 +211,7 @@ def test_digest_renders_both_languages() -> None:
     d = digest.Digest(eol=[digest.EolItem(finding=finding, project=project)])
     assert "サポート終了" in digest.render_text(d, "ja")
     assert "ended on 2026-10-21" in digest.render_text(d, "en")
-    assert digest.subject(d, "en") == "[Vectana] 1 items need your attention"
+    assert digest.subject(d, "en") == "[Vectana] 1 item(s) need your attention"
 
 
 def org_id():  # type: ignore[no-untyped-def]

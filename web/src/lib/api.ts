@@ -29,6 +29,11 @@ export function hasToken() {
   return typeof window !== "undefined" && !!localStorage.getItem(ACCESS);
 }
 
+export function currentLocale(): string {
+  const first = typeof window === "undefined" ? "" : window.location.pathname.split("/")[1];
+  return first === "en" ? "en" : "ja";
+}
+
 let refreshing: Promise<boolean> | null = null;
 
 async function refresh(): Promise<boolean> {
@@ -69,6 +74,8 @@ export async function api<T = unknown>(
   const doFetch = () => {
     const headers = new Headers(rest.headers);
     if (json !== undefined) headers.set("Content-Type", "application/json");
+    // The API translates its error messages into this language.
+    headers.set("Accept-Language", currentLocale());
     const token = localStorage.getItem(ACCESS);
     if (auth && token) headers.set("Authorization", `Bearer ${token}`);
     return fetch(`/api${path}`, {
@@ -83,9 +90,8 @@ export async function api<T = unknown>(
   if (res.status === 401 && auth) {
     clearTokens();
     // Outside React (no router here); a full reload also drops in-memory state.
-    const locale = window.location.pathname.split("/")[1] || "ja";
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-    window.location.href = `/${locale}/login/`;
+    window.location.href = `/${currentLocale()}/login/`;
     throw new ApiError(401, "Unauthorized");
   }
   if (res.status === 204) return undefined as T;
@@ -109,6 +115,7 @@ export type Me = {
   can_manage_org: boolean;
   managed_department_ids: string[];
   group_name: string;
+  locale: string;
 };
 
 export type CompanyType = "parent" | "affiliate" | "partner";
@@ -131,6 +138,7 @@ export type Invitation = {
   display_name: string | null;
   company_id: string;
   role: string;
+  locale: string;
   status: string;
   created_at: string;
   expires_at: string;
@@ -147,6 +155,8 @@ export type Project = {
   created_at: string;
   package_count: number;
   open_counts: SeverityCounts;
+  eol_counts: EolCounts;
+  last_scanned_at: string | null;
   my_level: "read" | "write" | "manage" | null;
 };
 export type ProjectRole = "owner" | "member" | "viewer";
@@ -163,6 +173,7 @@ export type Webhook = {
   type: "discord" | "slack";
   url: string;
   min_severity: Severity;
+  locale: string;
   enabled: boolean;
 };
 export type Package = {
@@ -191,11 +202,35 @@ export type Match = {
   status: "open" | "ack" | "ignored";
   first_seen_at: string;
 };
+export type EolCounts = { eol: number; approaching: number };
+export type EolStatus = "eol" | "approaching" | "supported" | "unknown";
+export const EOL_STATUSES: EolStatus[] = ["eol", "approaching", "supported", "unknown"];
+export type EolFinding = {
+  id: string;
+  project_id: string;
+  project_name: string;
+  source: "package" | "runtime";
+  product: string;
+  product_label: string;
+  version: string;
+  cycle: string | null;
+  eol_date: string | null;
+  latest: string | null;
+  status: EolStatus;
+  checked_at: string | null;
+};
+export type Runtime = { id: string; product: string; version: string };
+export type EolProduct = { name: string; label: string; category: string | null };
+export type SystemSettings = { eol_warning_days: number };
+
 export type Dashboard = {
   project_count: number;
   package_count: number;
   open_counts: SeverityCounts;
+  eol_counts: EolCounts;
+  projects: Project[];
   recent: Match[];
+  eol: EolFinding[];
 };
 
 export const ECOSYSTEMS = ["npm", "PyPI", "Pub", "Maven", "Go", "crates.io", "RubyGems", "Packagist", "NuGet"];

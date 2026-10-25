@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { SendIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { api, SEVERITIES, type Severity, type Webhook } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
+import { routing } from "@/i18n/routing";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,6 +27,8 @@ export function WebhooksPanel({ projectId }: { projectId: string }) {
   const [type, setType] = useState<string>("discord");
   const [url, setUrl] = useState("");
   const [minSeverity, setMinSeverity] = useState<string>("LOW");
+  const [hookLocale, setHookLocale] = useState<string>(useLocale());
+  const localeOptions = routing.locales.map((l) => ({ value: l, label: t(`locales.${l}`) }));
   const severityOptions = SEVERITIES.filter((s) => s !== "UNKNOWN").map((s) => ({
     value: s,
     label: t("common.atLeast", { severity: s }),
@@ -34,7 +37,7 @@ export function WebhooksPanel({ projectId }: { projectId: string }) {
   async function add(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await api(base, { method: "POST", json: { type, url, min_severity: minSeverity, enabled: true } });
+      await api(base, { method: "POST", json: { type, url, min_severity: minSeverity, locale: hookLocale, enabled: true } });
       setUrl("");
       reload();
     } catch (err) {
@@ -80,6 +83,7 @@ export function WebhooksPanel({ projectId }: { projectId: string }) {
           onChange={(e) => setUrl(e.target.value)}
         />
         <OptionSelect value={minSeverity} onValueChange={setMinSeverity} options={severityOptions} title={t("webhooks.minSeverity")} />
+        <OptionSelect value={hookLocale} onValueChange={setHookLocale} options={localeOptions} title={t("webhooks.language")} />
         <Button type="submit">{t("common.add")}</Button>
       </form>
       {data &&
@@ -99,6 +103,12 @@ export function WebhooksPanel({ projectId }: { projectId: string }) {
                   value={w.min_severity}
                   onValueChange={(v) => update(w, { min_severity: v as Severity })}
                   options={severityOptions}
+                />
+                <OptionSelect
+                  value={w.locale}
+                  onValueChange={(v) => update(w, { locale: v })}
+                  options={localeOptions}
+                  title={t("webhooks.language")}
                 />
                 <Label className="flex items-center gap-2 text-sm font-normal">
                   <Checkbox checked={w.enabled} onCheckedChange={(checked) => update(w, { enabled: checked === true })} />

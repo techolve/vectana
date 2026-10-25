@@ -90,7 +90,7 @@ def _eol_line(i: EolItem, locale: str, link_style: str) -> str:
         label = f"<{eol_url(f.product)}|{label}>"
     elif link_style == "discord":
         label = f"[{label}](<{eol_url(f.product)}>)"
-    latest = f" (latest {f.latest})" if f.latest else ""
+    latest = t(locale, "eol.latest", version=f.latest) if f.latest else ""
     return f"{EOL_EMOJI.get(f.status, '')} {i.project.name}: {label} — {when}{latest}"
 
 

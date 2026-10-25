@@ -145,7 +145,7 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "digest.subject": {
         "ja": "[Vectana] 対応が必要な項目が {count} 件あります",
-        "en": "[Vectana] {count} items need your attention",
+        "en": "[Vectana] {count} item(s) need your attention",
     },
     "digest.vulns": {"ja": "新しい脆弱性（{count} 件）", "en": "New vulnerabilities ({count})"},
     "digest.eol": {"ja": "サポート終了（EOL）（{count} 件）", "en": "End of life ({count})"},
@@ -162,6 +162,7 @@ TEXTS: dict[str, dict[str, str]] = {
     "digest.col.eol_date": {"ja": "EOL日", "en": "EOL date"},
     "eol.status.eol": {"ja": "サポート終了", "en": "End of life"},
     "eol.status.approaching": {"ja": "まもなく終了", "en": "Ending soon"},
+    "eol.latest": {"ja": "（最新 {version}）", "en": " (latest {version})"},
     "eol.line.eol": {"ja": "{date} にサポート終了", "en": "ended on {date}"},
     "eol.line.approaching": {"ja": "{date} にサポート終了予定", "en": "ends on {date}"},
     "test.subject": {"ja": "[Vectana] テスト通知", "en": "[Vectana] Test notification"},

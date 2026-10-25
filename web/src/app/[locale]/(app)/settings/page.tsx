@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+
+import { routing, type Locale } from "@/i18n/routing";
+import { useChangeLocale } from "@/lib/use-change-locale";
 
 import { api, SEVERITIES, type Severity } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
@@ -24,6 +27,7 @@ export default function SettingsPage() {
     <>
       <PageHeader title={t("title")} description={me.email} />
       <div className="grid gap-6 md:grid-cols-2">
+        <LanguageCard />
         {data && <PrefsCard initial={data} />}
         <PasswordCard />
       </div>
@@ -135,6 +139,28 @@ function PasswordCard() {
             </div>
           </FieldGroup>
         </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function LanguageCard() {
+  const t = useTranslations();
+  const locale = useLocale();
+  const changeLocale = useChangeLocale();
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("settings.languageTitle")}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <LabeledField label={t("common.language")} hint={t("settings.languageHint")}>
+          <OptionSelect
+            value={locale}
+            onValueChange={(v) => changeLocale(v as Locale)}
+            options={routing.locales.map((l) => ({ value: l, label: t(`locales.${l}`) }))}
+          />
+        </LabeledField>
       </CardContent>
     </Card>
   );
