@@ -1,5 +1,7 @@
 # Vectana
 
+📖 ドキュメント（日本語 / English）: https://docs.vectana.techolve.org
+
 プロジェクトごとに使っているパッケージを登録しておくと、[OSV](https://osv.dev/) で脆弱性を定期チェックして、メールと Discord / Slack に通知するアプリです。
 
 - 組織: グループ > 会社（親会社・関連会社・BP）> 部署（入れ子）
