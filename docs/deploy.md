@@ -2,13 +2,15 @@
 
 ## 1. イメージを Docker Hub に push（手元で実行）
 
-`techolve/vectana` は **Private** リポジトリ。VPS は amd64 なので、マルチアーキテクチャでビルドする。
+`heki0824/vectana` は **Private** リポジトリ（Docker Hub の無料プランの Private 枠を使用）。push する前に Docker Hub で Private として作っておく。作らずに push すると、アカウントの既定の公開設定で作られてしまう。VPS は amd64 なので、マルチアーキテクチャでビルドする。
 
 ```bash
-docker login
+docker login -u heki0824
 docker buildx build --platform linux/amd64,linux/arm64 -f docker/Dockerfile \
-  -t techolve/vectana:0.1.0 -t techolve/vectana:latest --push .
+  -t heki0824/vectana:0.1.0 -t heki0824/vectana:latest --push .
 ```
+
+別の名前空間に移す場合は、`.env` の `VECTANA_IMAGE` でイメージ名を変えられる。
 
 ## 2. VPS で起動
 

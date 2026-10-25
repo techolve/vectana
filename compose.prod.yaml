@@ -3,7 +3,7 @@
 name: vectana
 
 x-app: &app
-  image: techolve/vectana:${VECTANA_VERSION:-latest}
+  image: ${VECTANA_IMAGE:-heki0824/vectana}:${VECTANA_VERSION:-latest}
   restart: unless-stopped
   env_file: .env
   environment:
