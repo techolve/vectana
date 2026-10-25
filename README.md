@@ -36,3 +36,7 @@ cd web && npm install && npm run dev      # web（/api は localhost:8000 にプ
 ```
 
 本番へのデプロイは [docs/deploy.md](docs/deploy.md) を参照。
+
+## ライセンス
+
+[AGPL-3.0](LICENSE)
