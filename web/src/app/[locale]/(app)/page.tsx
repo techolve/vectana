@@ -139,8 +139,8 @@ function StatCard({
     <Card className={cn("h-full transition-colors", href && "hover:bg-muted/50", accent)}>
       <CardHeader>
         <CardDescription className={cn("flex items-center gap-1.5", accent && "text-current opacity-90")}>
-          <Icon className="size-4" />
-          {label}
+          <Icon className="size-4 shrink-0" />
+          <span className="truncate">{label}</span>
         </CardDescription>
         <CardTitle className="text-3xl font-semibold tabular-nums">{value}</CardTitle>
       </CardHeader>
