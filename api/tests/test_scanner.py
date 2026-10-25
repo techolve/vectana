@@ -202,10 +202,12 @@ async def test_lockfile_import_syncs(client: AsyncClient, session: AsyncSession,
     )
     assert r.json() == {
         "filename": "package-lock.json",
+        "kind": "packages",
         "ecosystem": "npm",
         "added": 2,
         "removed": 0,
         "total": 2,
+        "skipped": [],
     }
     r = await client.post(
         url, files={"file": ("package-lock.json", lock({"a": "1.0.1", "b": "1.0.0"}))}, headers=h

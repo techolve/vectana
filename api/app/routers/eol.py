@@ -81,7 +81,9 @@ async def list_runtimes(
             select(Runtime).where(Runtime.project_id == project_id).order_by(Runtime.product)
         )
     ).all()
-    return [RuntimeOut(id=r.id, product=r.product, version=r.version) for r in rows]
+    return [
+        RuntimeOut(id=r.id, product=r.product, version=r.version, source=r.source) for r in rows
+    ]
 
 
 @router.post(
@@ -108,7 +110,9 @@ async def add_runtime(
     except IntegrityError:
         raise HTTPException(status.HTTP_409_CONFLICT, "Runtime already registered")
     _refresh_later(tasks, project_id)
-    return RuntimeOut(id=runtime.id, product=runtime.product, version=runtime.version)
+    return RuntimeOut(
+        id=runtime.id, product=runtime.product, version=runtime.version, source=runtime.source
+    )
 
 
 @router.delete(

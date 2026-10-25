@@ -90,8 +90,14 @@ export function EolPanel({ projectId, canWrite, onChanged }: { projectId: string
         <div className="flex flex-wrap gap-2">
           {runtimes?.length === 0 && <span className="text-xs text-muted-foreground">{t("eol.noRuntimes")}</span>}
           {runtimes?.map((r) => (
-            <Badge key={r.id} variant="secondary" className="gap-1 pr-1">
+            <Badge
+              key={r.id}
+              variant="secondary"
+              className="gap-1 pr-1"
+              title={r.source.startsWith("file:") ? t("eol.fromFile", { file: r.source.slice(5) }) : undefined}
+            >
               {r.product} {r.version}
+              {r.source.startsWith("file:") && <span className="text-muted-foreground">· {r.source.slice(5)}</span>}
               {canWrite && (
                 <button className="rounded p-0.5 hover:bg-background" title={t("common.delete")} onClick={() => remove(r)}>
                   <Trash2Icon className="size-3" />

@@ -219,7 +219,7 @@ export type EolFinding = {
   status: EolStatus;
   checked_at: string | null;
 };
-export type Runtime = { id: string; product: string; version: string };
+export type Runtime = { id: string; product: string; version: string; source: string };
 export type EolProduct = { name: string; label: string; category: string | null };
 export type SystemSettings = { eol_warning_days: number };
 

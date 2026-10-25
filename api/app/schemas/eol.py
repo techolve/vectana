@@ -21,6 +21,7 @@ class RuntimeOut(BaseModel):
     id: UUID
     product: str
     version: str
+    source: str
 
 
 class EolFindingOut(BaseModel):

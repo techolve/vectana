@@ -173,7 +173,13 @@
     "version": "Version",
     "source": "Source",
     "lastScanned": "Last scanned",
-    "open": "Open"
+    "open": "Open",
+    "importedRuntimes": "{file}: {total} runtimes (added {added} / removed {removed}). See the EOL tab",
+    "skipped": "Not imported: {list}",
+    "reason": {
+      "unsupported": "no EOL data",
+      "unpinned": "version not pinned"
+    }
   },
   "members": {
     "assign": "Assign members",
@@ -301,7 +307,7 @@
     "attention": "Ended or ending soon",
     "empty": "Nothing to show",
     "runtimes": "Runtimes (languages, databases, OS…)",
-    "runtimesHint": "Register what lockfiles don't show, such as Python, Node.js, PostgreSQL or Ubuntu.",
+    "runtimesHint": "Register what lockfiles don't show, such as Python, Node.js, PostgreSQL or Ubuntu. You can also drop mise.toml or .tool-versions on the Packages tab.",
     "searchProduct": "Search products (e.g. python)",
     "versionPlaceholder": "Version (e.g. 3.14)",
     "runtimeAdded": "Added. Checking end of life.",
@@ -310,7 +316,8 @@
     "refresh": "Re-check EOL",
     "refreshStarted": "Re-checking end of life. Reload in a moment.",
     "daysLeft": "{days} days left",
-    "daysAgo": "ended {days} days ago"
+    "daysAgo": "ended {days} days ago",
+    "fromFile": "from {file}"
   },
   "system": {
     "eolTitle": "EOL warnings",

@@ -173,7 +173,13 @@
     "version": "バージョン",
     "source": "登録元",
     "lastScanned": "最終スキャン",
-    "open": "未対応"
+    "open": "未対応",
+    "importedRuntimes": "{file}: ランタイム {total} 件（追加 {added} / 削除 {removed}）。EOL タブに反映されます",
+    "skipped": "取り込まなかったツール: {list}",
+    "reason": {
+      "unsupported": "EOL 情報なし",
+      "unpinned": "バージョン未固定"
+    }
   },
   "members": {
     "assign": "メンバーをアサイン",
@@ -301,7 +307,7 @@
     "attention": "EOL 済み・間近のみ",
     "empty": "該当する項目はありません",
     "runtimes": "ランタイム（言語・DB・OS など）",
-    "runtimesHint": "lockfile に出てこない Python・Node.js・PostgreSQL・Ubuntu などを登録します。",
+    "runtimesHint": "lockfile に出てこない Python・Node.js・PostgreSQL・Ubuntu などを登録します。mise.toml や .tool-versions を「パッケージ」タブにドロップしても取り込めます。",
     "searchProduct": "製品を検索（例: python）",
     "versionPlaceholder": "バージョン（例: 3.14）",
     "runtimeAdded": "登録しました。EOL を判定しています。",
@@ -310,7 +316,8 @@
     "refresh": "EOL を再判定",
     "refreshStarted": "EOL を再判定しています。少し待ってから再読み込みしてください。",
     "daysLeft": "あと {days} 日",
-    "daysAgo": "{days} 日前に終了"
+    "daysAgo": "{days} 日前に終了",
+    "fromFile": "{file} から"
   },
   "system": {
     "eolTitle": "EOL の警告",

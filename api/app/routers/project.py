@@ -27,7 +27,7 @@ from app.core.access import (
 )
 from app.core.config import settings
 from app.core.database import get_session
-from app.models.eol import EolFinding, EolStatus
+from app.models.eol import EolFinding, EolStatus, Runtime
 from app.models.organization import Company, CompanyType, Department
 from app.models.package import MatchStatus, Package, Severity, VulnMatch
 from app.models.project import Project, ProjectMember, ProjectRole, ProjectWebhook
@@ -47,10 +47,11 @@ from app.schemas.project import (
     ProjectOut,
     ProjectUpdate,
     SeverityCounts,
+    SkippedTool,
     WebhookBody,
     WebhookOut,
 )
-from app.services import lockfile
+from app.services import eol, lockfile, toolfile
 from app.services.notify import digest
 from app.services.scanner import scan_and_notify
 
@@ -606,13 +607,16 @@ async def import_lockfile(
     actor: CurrentActor,
     session: Session,
 ) -> ImportResult:
-    """Sync packages from a lockfile. Re-importing the same filename replaces
-    what that file previously contributed; manual entries are untouched."""
+    """Sync packages from a lockfile, or runtimes from mise.toml / .tool-versions.
+    Re-importing the same filename replaces what that file previously
+    contributed; manual entries are untouched."""
     await accessible_project(project_id, actor, session, Level.write)
     raw = await file.read(MAX_LOCKFILE_BYTES + 1)
     if len(raw) > MAX_LOCKFILE_BYTES:
         raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, "File too large")
     filename = (file.filename or "").rsplit("/", 1)[-1]
+    if toolfile.is_tool_file(filename):
+        return await _import_tool_file(project_id, filename, raw, tasks, session)
     try:
         ecosystem, parsed = lockfile.parse(filename, raw.decode("utf-8"))
     except lockfile.UnsupportedLockfile as exc:
@@ -661,6 +665,61 @@ async def import_lockfile(
         added=len(added),
         removed=removed,
         total=len(wanted),
+    )
+
+
+async def _import_tool_file(
+    project_id: UUID,
+    filename: str,
+    raw: bytes,
+    tasks: BackgroundTasks,
+    session: AsyncSession,
+) -> ImportResult:
+    try:
+        entries = toolfile.parse(filename, raw.decode("utf-8"))
+    except Exception as exc:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, f"Could not parse {filename}: {exc}"
+        ) from exc
+    async with eol.make_client() as client:
+        index = toolfile.product_index(await eol.list_products(client))
+    known = set(index.values())
+
+    wanted: set[tuple[str, str]] = set()
+    skipped: list[SkippedTool] = []
+    for entry in entries:
+        res = toolfile.resolve(entry, index)
+        if res.product is None or res.product not in known:
+            reason = res.reason or "unsupported"
+            skipped.append(SkippedTool(tool=res.tool, version=res.version, reason=reason))
+        else:
+            wanted.add((res.product, res.version))
+
+    source = f"file:{filename}"
+    existing = list(
+        (await session.exec(select(Runtime).where(Runtime.project_id == project_id))).all()
+    )
+    have = {(r.product, r.version) for r in existing}
+    removed = 0
+    for r in existing:
+        if r.source == source and (r.product, r.version) not in wanted:
+            await session.delete(r)
+            removed += 1
+    added = 0
+    for product, version in sorted(wanted - have):
+        session.add(Runtime(project_id=project_id, product=product, version=version, source=source))
+        added += 1
+    await session.commit()
+    if settings.scan_on_change and (added or removed):
+        tasks.add_task(scan_and_notify, None, [project_id])
+    return ImportResult(
+        filename=filename,
+        kind="runtimes",
+        ecosystem="endoflife.date",
+        added=added,
+        removed=removed,
+        total=len(wanted),
+        skipped=skipped,
     )
 
 

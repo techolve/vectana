@@ -13,9 +13,18 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Empty, OptionSelect, useFormatDate } from "@/components/common";
 
-type ImportResult = { filename: string; ecosystem: string; added: number; removed: number; total: number };
+type ImportResult = {
+  filename: string;
+  kind: "packages" | "runtimes";
+  ecosystem: string;
+  added: number;
+  removed: number;
+  total: number;
+  skipped: { tool: string; version: string; reason: "unsupported" | "unpinned" }[];
+};
 
 const LOCKFILES = "package-lock.json / pnpm-lock.yaml / uv.lock / poetry.lock / requirements*.txt / pubspec.lock";
+const TOOL_FILES = "mise.toml / .tool-versions";
 
 export function PackagesPanel({
   projectId,
@@ -60,7 +69,12 @@ export function PackagesPanel({
       form.append("file", file);
       try {
         const r = await api<ImportResult>(`/projects/${projectId}/packages/import`, { method: "POST", body: form });
-        toast.success(t("imported", { file: r.filename, total: r.total, added: r.added, removed: r.removed }));
+        const counts = { file: r.filename, total: r.total, added: r.added, removed: r.removed };
+        toast.success(r.kind === "runtimes" ? t("importedRuntimes", counts) : t("imported", counts));
+        if (r.skipped.length > 0) {
+          const list = r.skipped.map((s) => `${s.tool} ${s.version}（${t(`reason.${s.reason}`)}）`).join(", ");
+          toast.info(t("skipped", { list }), { duration: 10000 });
+        }
       } catch (err) {
         toast.error(`${file.name}: ${(err as Error).message}`);
       }
@@ -114,6 +128,7 @@ export function PackagesPanel({
             <UploadIcon className="size-5 text-muted-foreground" />
             <span className="font-medium">{t("drop")}</span>
             <span className="text-xs text-muted-foreground">{LOCKFILES}</span>
+            <span className="text-xs text-muted-foreground">{TOOL_FILES}</span>
             <span className="text-xs text-muted-foreground">{t("reimportHint")}</span>
             <input ref={fileInput} type="file" multiple className="hidden" onChange={(e) => upload(e.target.files)} />
           </div>

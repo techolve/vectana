@@ -122,12 +122,20 @@ class PackageOut(BaseModel):
     open_vulns: int = 0
 
 
+class SkippedTool(BaseModel):
+    tool: str
+    version: str
+    reason: str  # unsupported | unpinned
+
+
 class ImportResult(BaseModel):
     filename: str
+    kind: str = "packages"  # packages | runtimes
     ecosystem: str
     added: int
     removed: int
     total: int
+    skipped: list[SkippedTool] = []
 
 
 class MatchOut(BaseModel):

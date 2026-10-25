@@ -19,6 +19,8 @@ class Runtime(SQLModel, table=True):
     project_id: UUID = Field(foreign_key="projects.id", index=True, ondelete="CASCADE")
     product: str = Field(max_length=100)
     version: str = Field(max_length=100)
+    # "manual" or "file:<filename>" (mise.toml, .tool-versions)
+    source: str = Field(default="manual", max_length=100)
     created_at: datetime = created_at_field()
 
 
