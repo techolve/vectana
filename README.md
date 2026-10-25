@@ -30,10 +30,26 @@ docker compose exec app python -m app.cli create-admin --email you@example.com -
 
 ## 開発
 
+ツールのバージョンとタスクは [mise](https://mise.jdx.dev/) で管理しています（`mise.toml`）。
+
 ```bash
-cd api && uv sync && uv run pytest        # API
-cd web && npm install && npm run dev      # web（/api は localhost:8000 にプロキシ）
+mise trust && mise install   # Python / Node.js / uv / git-cliff を入れる
+mise run setup               # api と web の依存関係を入れる
+mise run services            # PostgreSQL と Mailpit を Docker で起動
+mise run migrate             # DB を最新にする
+mise run dev                 # API (:8000) と web (:3100) を起動
 ```
+
+よく使うタスク:
+
+| タスク | 内容 |
+|---|---|
+| `mise run check` | lint・テスト・web のビルド（CI と同じ） |
+| `mise run api:test` | API のテスト |
+| `mise run api:worker` | スキャンを1回実行 |
+| `mise run makemigration -- "message"` | マイグレーションを自動生成 |
+| `mise run changelog -- --tag vX.Y.Z` | CHANGELOG.md を更新 |
+| `mise tasks` | タスクの一覧 |
 
 本番へのデプロイは [docs/deploy.md](docs/deploy.md) を参照。
 

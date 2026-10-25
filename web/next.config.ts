@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
   // In `next dev`, forward API calls to a locally running FastAPI.
   ...(process.env.NODE_ENV === "development"
     ? {
+        // trailingSlash would redirect /api/x to /api/x/ before proxying.
+        skipTrailingSlashRedirect: true,
         async rewrites() {
           return [{ source: "/api/:path*", destination: "http://localhost:8000/api/:path*" }];
         },

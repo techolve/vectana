@@ -1,0 +1,113 @@
+# Tool versions and tasks for the whole monorepo.
+#   mise install          # install the tools below
+#   mise run setup        # install dependencies (api + web)
+#   mise tasks            # list tasks
+#
+# Versions match docker/Dockerfile (python:3.14-slim, node:24-slim, uv 0.9).
+
+[tools]
+python = "3.14"
+node = "24"
+uv = "0.9"
+git-cliff = "2.13"
+
+# --- Setup ---------------------------------------------------------------------
+
+[tasks."api:install"]
+description = "Install API dependencies"
+dir = "api"
+run = "uv sync"
+
+[tasks."web:install"]
+description = "Install web dependencies"
+dir = "web"
+run = "npm ci"
+
+[tasks.setup]
+description = "Install all dependencies"
+depends = ["api:install", "web:install"]
+
+# --- Development ---------------------------------------------------------------
+
+[tasks.services]
+description = "Start PostgreSQL and Mailpit (http://localhost:8025) in Docker"
+run = "docker compose --profile dev up -d db mailpit"
+
+[tasks."api:dev"]
+description = "Run the API with reload on :8000 (needs `mise run services`)"
+dir = "api"
+env = { DATABASE_URL = "postgresql+asyncpg://vectana:vectana@localhost:5432/vectana", SECRET_KEY = "dev-only-secret-key-change-me-0123456789", SMTP_HOST = "localhost", SMTP_PORT = "1025", SMTP_START_TLS = "false", WEB_URL = "http://localhost:3100" }
+run = "uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+
+[tasks."api:worker"]
+description = "Run the scan worker once against the dev database"
+dir = "api"
+env = { DATABASE_URL = "postgresql+asyncpg://vectana:vectana@localhost:5432/vectana", SECRET_KEY = "dev-only-secret-key-change-me-0123456789", SMTP_HOST = "localhost", SMTP_PORT = "1025", SMTP_START_TLS = "false" }
+run = "uv run python -m app.worker --once"
+
+[tasks."web:dev"]
+description = "Run the web app on :3100 (proxies /api to :8000)"
+dir = "web"
+run = "npm run dev -- --port 3100"
+
+[tasks.dev]
+description = "Run API and web together"
+depends = ["api:dev", "web:dev"]
+
+# --- Database ------------------------------------------------------------------
+
+[tasks.migrate]
+description = "Apply migrations to the dev database"
+dir = "api"
+env = { ALEMBIC_DATABASE_URL = "postgresql+asyncpg://vectana:vectana@localhost:5432/vectana" }
+run = "uv run alembic upgrade head"
+
+[tasks.makemigration]
+description = "Autogenerate a migration: mise run makemigration -- \"message\""
+dir = "api"
+env = { ALEMBIC_DATABASE_URL = "postgresql+asyncpg://vectana:vectana@localhost:5432/vectana" }
+run = "uv run alembic revision --autogenerate -m"
+
+# --- Checks --------------------------------------------------------------------
+
+[tasks."api:lint"]
+description = "Ruff (lint + format check) and mypy"
+dir = "api"
+run = ["uv run ruff check .", "uv run ruff format --check .", "uv run mypy app"]
+
+[tasks."api:test"]
+description = "API tests"
+dir = "api"
+run = "uv run pytest -q"
+
+[tasks."web:lint"]
+description = "ESLint and TypeScript"
+dir = "web"
+run = ["npm run lint", "npm run typecheck"]
+
+[tasks."web:build"]
+description = "Static export of the web app"
+dir = "web"
+run = "npm run build"
+
+[tasks.lint]
+description = "Lint everything"
+depends = ["api:lint", "web:lint"]
+
+[tasks.test]
+description = "Run all tests"
+depends = ["api:test"]
+
+[tasks.check]
+description = "Lint, test and build (what CI runs)"
+depends = ["lint", "test", "web:build"]
+
+# --- Release -------------------------------------------------------------------
+
+[tasks."docker:build"]
+description = "Build the app image locally (vectana:dev)"
+run = "docker build -f docker/Dockerfile -t vectana:dev ."
+
+[tasks.changelog]
+description = "Regenerate CHANGELOG.md: mise run changelog -- --tag vX.Y.Z"
+run = "git-cliff -o CHANGELOG.md"
