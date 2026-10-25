@@ -25,7 +25,7 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
 app = FastAPI(
     lifespan=lifespan,
     title=settings.app_name,
-    version="0.1.1",
+    version="0.1.2",
     description="Project dependency vulnerability monitoring",
     docs_url="/api/docs",
     openapi_url="/api/openapi.json",
