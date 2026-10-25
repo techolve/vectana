@@ -43,6 +43,20 @@ cloudflared の `config.yml` の `ingress` に、既存の gitlab / redmine の�
   - REST API: `MAIL_BACKEND=cloudflare`、`CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_API_TOKEN`（メール送信の権限を付けたトークン）、`MAIL_FROM=vectana@<ドメイン>`
   - SMTP: `MAIL_BACKEND=smtp`、`SMTP_HOST=smtp.mx.cloudflare.net`、`SMTP_PORT=465`、`SMTP_USE_TLS=true`、ユーザー名とパスワードは Cloudflare の SMTP 設定画面で確認する
 - Workers Paid にしない場合は、Resend などの SMTP リレーを `MAIL_BACKEND=smtp` で使う（DNS は Cloudflare に登録する）
+- **自前の docker-mailserver を使う場合（techolve の VPS はこれ）**: Vectana の `app` と `worker` を mailserver の外部ネットワーク `shared-mail` につなぐ。`/srv/vectana/compose.override.yaml` に次を置く（compose が自動で読み込む）。mailserver の `mynetworks` に Docker のネットワーク（172.16.0.0/12）が入っているので、SMTP 認証はいらない
+
+  ```yaml
+  services:
+    app:
+      networks: [default, shared-mail]
+    worker:
+      networks: [default, shared-mail]
+  networks:
+    shared-mail:
+      external: true
+  ```
+
+  `.env` は `MAIL_BACKEND=smtp`、`MAIL_FROM=Vectana <no-reply@techolve.org>`、`SMTP_HOST=mailserver`、`SMTP_PORT=25`、`SMTP_START_TLS=false`
 - メールの準備ができるまでは `MAIL_BACKEND=none` にしておけば起動できる。その場合、招待は管理画面に表示されるリンクを直接共有する
 
 ## 5. 確認
