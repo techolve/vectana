@@ -51,6 +51,7 @@ mise run dev                 # API (:8000) と web (:3100) を起動
 | `mise run api:worker` | スキャンを1回実行 |
 | `mise run makemigration -- "message"` | マイグレーションを自動生成 |
 | `mise run changelog -- --tag vX.Y.Z` | CHANGELOG.md を更新 |
+| `mise run docs:screenshots -- <vectana-docs>/public/screenshots` | デモデータでドキュメント用のスクリーンショットを撮り直す（[tools/screenshots](tools/screenshots/run.sh)） |
 | `mise tasks` | タスクの一覧 |
 
 本番へのデプロイは [docs/deploy.md](docs/deploy.md) を参照。

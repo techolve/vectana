@@ -108,6 +108,11 @@ depends = ["lint", "test", "web:build"]
 description = "Build the app image locally (vectana:dev)"
 run = "docker build -f docker/Dockerfile -t vectana:dev ."
 
+[tasks."docs:screenshots"]
+description = "Screenshots for vectana-docs from demo data: mise run docs:screenshots -- <out-dir>"
+depends = ["web:build"]
+run = "tools/screenshots/run.sh"
+
 [tasks.changelog]
 description = "Regenerate CHANGELOG.md: mise run changelog -- --tag vX.Y.Z"
 run = "git-cliff -o CHANGELOG.md"

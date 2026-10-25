@@ -1,0 +1,9 @@
+{
+  "name": "vectana-screenshots",
+  "private": true,
+  "type": "module",
+  "description": "Documentation screenshots for vectana-docs. Run via `mise run docs:screenshots`.",
+  "devDependencies": {
+    "playwright": "1.64.1"
+  }
+}
