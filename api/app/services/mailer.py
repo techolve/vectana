@@ -10,7 +10,7 @@ The backend is chosen by ``MAIL_BACKEND``:
 
 import logging
 from email.message import EmailMessage
-from email.utils import parseaddr
+from email.utils import formatdate, make_msgid, parseaddr
 
 import aiosmtplib
 import httpx
@@ -47,15 +47,23 @@ async def send_email(*, to: str, subject: str, text: str, html: str | None = Non
         raise MailNotConfigured(f"Unknown mail backend {backend!r}")
 
 
-async def _send_smtp(to: str, subject: str, text: str, html: str | None) -> None:
+def build_message(to: str, subject: str, text: str, html: str | None) -> EmailMessage:
+    # Date and Message-ID are required; strict relays (e.g. amavis) reject mail without them.
+    _, sender = parseaddr(settings.mail_from)
     message = EmailMessage()
     message["From"] = settings.mail_from
     message["To"] = to
     message["Subject"] = subject
+    message["Date"] = formatdate(localtime=False)
+    message["Message-ID"] = make_msgid(domain=sender.rpartition("@")[2] or None)
     message.set_content(text)
     if html is not None:
         message.add_alternative(html, subtype="html")
+    return message
 
+
+async def _send_smtp(to: str, subject: str, text: str, html: str | None) -> None:
+    message = build_message(to, subject, text, html)
     await aiosmtplib.send(
         message,
         hostname=settings.smtp_host,
