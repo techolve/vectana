@@ -59,3 +59,10 @@ mise run dev                 # API (:8000) と web (:3100) を起動
 ## ライセンス
 
 [AGPL-3.0](LICENSE)
+
+## データの出典
+
+Vectana は次の外部データを取得して表示します。各データの権利は提供元にあります。
+
+- 脆弱性情報: [OSV.dev](https://osv.dev/)（Google が運営）。各アドバイザリは提供元（GitHub Advisory Database、PyPA Advisory Database など）のライセンスに従います。多くは [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/) です
+- サポート終了（EOL）情報: [endoflife.date](https://endoflife.date/)（[MIT License](https://github.com/endoflife-date/endoflife.date/blob/master/LICENSE)）
