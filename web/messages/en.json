@@ -75,7 +75,18 @@
     "password": "Password",
     "submit": "Log in",
     "invalid": "Incorrect email or password",
-    "inviteOnly": "Accounts are created by invitation from an administrator."
+    "inviteOnly": "Accounts are created by invitation from an administrator.",
+    "or": "Or",
+    "sso": "Sign in with {provider}",
+    "ssoSigningIn": "Signing you in…",
+    "backToLogin": "Back to sign in",
+    "ssoErrors": {
+      "not_registered": "There is no account for this email. Ask an administrator to invite you.",
+      "expired": "The sign-in request expired. Please try again.",
+      "denied": "Sign-in was cancelled.",
+      "provider": "Single sign-on failed. Please try again.",
+      "no_email": "The identity provider did not return a verified email address."
+    }
   },
   "invite": {
     "title": "You're invited to Vectana",

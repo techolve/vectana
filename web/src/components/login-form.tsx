@@ -1,17 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 
 import { useRouter } from "@/i18n/navigation";
 import { api, setTokens } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldSeparator,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
-// Based on the shadcn login-02 block. Social login, password reset and sign-up
-// are omitted: accounts are created by invitation only.
+type SsoConfig = { enabled: boolean; provider_name: string };
+
+const SSO_ERRORS = ["not_registered", "expired", "denied", "provider", "no_email"] as const;
+
+// Based on the shadcn login-02 block. Password reset and sign-up are omitted:
+// accounts are created by invitation only. SSO (OIDC) appears when the server
+// has it configured, and signs in existing users only.
 export function LoginForm({ className, ...props }: React.ComponentProps<"form">) {
   const t = useTranslations("login");
   const locale = useLocale();
@@ -20,6 +33,19 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [sso, setSso] = useState<SsoConfig | null>(null);
+
+  // The SSO callback sends failures back here as ?sso_error=<reason>.
+  const reason = useSearchParams().get("sso_error");
+  const ssoError = reason
+    ? t(`ssoErrors.${SSO_ERRORS.find((r) => r === reason) ?? "provider"}`)
+    : null;
+
+  useEffect(() => {
+    api<SsoConfig>("/auth/oidc/config", { auth: false })
+      .then(setSso)
+      .catch(() => setSso(null));
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -73,10 +99,26 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
           />
         </Field>
         <Field>
-          {error && <FieldError>{error}</FieldError>}
+          {(error ?? ssoError) && <FieldError>{error ?? ssoError}</FieldError>}
           <Button type="submit" disabled={busy}>
             {t("submit")}
           </Button>
+        </Field>
+        {sso?.enabled && (
+          <>
+            <FieldSeparator>{t("or")}</FieldSeparator>
+            <Field>
+              {/* A plain link: the browser leaves the app for the identity provider. */}
+              <a
+                href={`/api/auth/oidc/login?locale=${locale}`}
+                className={buttonVariants({ variant: "outline" })}
+              >
+                {t("sso", { provider: sso.provider_name })}
+              </a>
+            </Field>
+          </>
+        )}
+        <Field>
           <FieldDescription className="text-center">{t("inviteOnly")}</FieldDescription>
         </Field>
       </FieldGroup>

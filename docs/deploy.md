@@ -60,6 +60,15 @@ cloudflared の `config.yml` の `ingress` に、既存の gitlab / redmine の�
   `.env` は `MAIL_BACKEND=smtp`、`MAIL_FROM=Vectana <no-reply@techolve.org>`、`SMTP_HOST=mailserver`、`SMTP_PORT=25`、`SMTP_START_TLS=false`
 - メールの準備ができるまでは `MAIL_BACKEND=none` にしておけば起動できる。その場合、招待は管理画面に表示されるリンクを直接共有する
 
+## SSO（任意）
+
+OpenID Connect に対応した ID プロバイダーがあれば、ログイン画面に「〇〇 でログイン」ボタンを出せる。アカウントは今までどおり招待で作り、SSO は**メールアドレスが一致する既存ユーザー**をログインさせるだけ。
+
+- プロバイダーに登録するリダイレクト URI: `https://vectana.example.com/api/auth/oidc/callback`
+- スコープ: `openid email profile`
+- `.env` に `OIDC_ISSUER`（`/.well-known/openid-configuration` の手前まで）、`OIDC_CLIENT_ID`、`OIDC_CLIENT_SECRET`、`OIDC_PROVIDER_NAME`（ボタンの表示名）を書く
+- Cloudflare Access を使う場合は、Zero Trust で「SaaS アプリケーション」→「OIDC」を作る。`OIDC_ISSUER` は `https://<チーム名>.cloudflareaccess.com/cdn-cgi/access/sso/oidc/<クライアント ID>`
+
 ## 5. 確認
 
 - `https://vectana.example.com/api/health` が `{"status":"ok"}` を返す

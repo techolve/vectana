@@ -32,6 +32,14 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7
     invitation_expire_days: int = 7
 
+    # SSO (OpenID Connect). Enabled when issuer, client ID and secret are all set.
+    # Register {web_url}/api/auth/oidc/callback as the redirect URI with the provider.
+    # Accounts are still created by invitation; SSO signs in existing users by email.
+    oidc_issuer: str = ""
+    oidc_client_id: str = ""
+    oidc_client_secret: str = ""
+    oidc_provider_name: str = "SSO"  # Label on the login button
+
     # OSV
     osv_base_url: str = "https://api.osv.dev"
     osv_timeout_seconds: float = 30.0
