@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-11-01
+
+### Added
+
+- Sign in with OpenID Connect (SSO)
+
+### Changed
+
+- Manage tools and tasks with mise
+
+### Documentation
+
+- Image is public; link to the documentation site
+- Add screenshot tooling for vectana-docs
+- Credit OSV.dev and endoflife.date; declare AGPL-3.0 in package metadata
+
+### Fixed
+
+- Define the sans/mono font stacks
+
 ## [1.0.0] - 2026-10-25
 
 ### Added
@@ -62,6 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add Date and Message-ID headers
 
+[1.1.0]: https://github.com/techolve/vectana/compare/v1.0.0..v1.1.0
 [1.0.0]: https://github.com/techolve/vectana/compare/v0.1.5..v1.0.0
 [0.1.5]: https://github.com/techolve/vectana/compare/v0.1.4..v0.1.5
 [0.1.4]: https://github.com/techolve/vectana/compare/v0.1.3..v0.1.4
