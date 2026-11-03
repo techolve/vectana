@@ -1,10 +1,24 @@
-# デプロイ手順（VPS + Cloudflare Tunnel）
+# デプロイ手順（Cloudflare Containers）
+
+メンテナー向けのリリース手順。利用者向けのインストール手順（Docker Compose でのセルフホスト）は https://docs.vectana.techolve.org/self-hosting/install にまとめてある。
+
+techolve の本番（https://vectana.techolve.org）は Cloudflare Containers で動いている。
+
+```
+User ──HTTPS──▶ Worker ──▶ App コンテナ（uvicorn: API + Next.js の静的ファイル）──▶ PostgreSQL
+                  │
+                  └─ Cron ─▶ Scan コンテナ（python -m app.worker --once）──▶ OSV.dev / endoflife.date
+                                                                          └▶ メール / Discord / Slack
+```
+
+- Worker と Containers の設定は、このリポジトリではなく techolve のインフラ用リポジトリ（techolve-cloud、非公開）の `vectana/` にある
+- App と Scan は同じイメージ `heki0824/vectana` から起動する。違うのは起動コマンドだけ
+- コンテナはどちらも寝かせる前提（`sleepAfter`）。App は Worker への HTTP で、Scan は Cron Trigger（6時間ごと）で起きる。Scan は `--once` で1回スキャンしたら終わる
+- コンテナのディスクは使い捨て。状態は全部 PostgreSQL（PlanetScale Postgres）に置く
 
 ## 1. イメージを Docker Hub に push（手元で実行）
 
-`heki0824/vectana` は **Public** リポジトリ。push には heki0824 でのログインが必要。VPS は amd64 なので、マルチアーキテクチャでビルドする。
-
-利用者向けのインストール手順は https://docs.vectana.techolve.org/self-hosting/install にまとめてある。このファイルはメンテナー向けのリリース手順。
+`heki0824/vectana` は **Public** リポジトリ。push には heki0824 でのログインが必要。Cloudflare Containers は amd64 なので、マルチアーキテクチャでビルドする。
 
 ```bash
 docker login -u heki0824
@@ -12,65 +26,75 @@ docker buildx build --platform linux/amd64,linux/arm64 -f docker/Dockerfile \
   -t heki0824/vectana:X.Y.Z -t heki0824/vectana:latest --push .
 ```
 
-別の名前空間に移す場合は、`.env` の `VECTANA_IMAGE` でイメージ名を変えられる。
-
-## 2. VPS で起動
+CHANGELOG を更新して、GitHub にタグ `vX.Y.Z` を打つ。
 
 ```bash
-mkdir -p ~/vectana && cd ~/vectana
-# compose.prod.yaml と .env.example をコピーしてくる
-cp .env.example .env   # POSTGRES_PASSWORD / SECRET_KEY / WEB_URL / メール設定を埋める
-docker compose -f compose.prod.yaml up -d
-docker compose -f compose.prod.yaml exec app python -m app.cli create-admin --email you@example.com --company "親会社名"
+mise run changelog -- --tag vX.Y.Z
+git tag vX.Y.Z && git push origin vX.Y.Z
 ```
 
-`SECRET_KEY` は `openssl rand -hex 32` で生成する。未設定だとアプリが起動しない。
+## 2. マイグレーション（スキーマが変わったときだけ）
 
-## 3. Cloudflare Tunnel
+Containers には compose の `migrate` サービスにあたるものがないので、手元から本番 DB に向けて流す。新しいイメージをデプロイする**前**にやる。
 
-cloudflared の `config.yml` の `ingress` に、既存の gitlab / redmine の行と同じ形で追加して再起動する。
-
-```yaml
-  - hostname: vectana.example.com
-    service: http://localhost:8000
+```bash
+docker run --rm \
+  -e DATABASE_URL='postgresql+asyncpg://<user>:<password>@<host>:5432/vectana?ssl=verify-full' \
+  -e PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt \
+  heki0824/vectana:X.Y.Z alembic upgrade head
 ```
 
-`WEB_URL` は `https://vectana.example.com` にする（招待メールや通知のリンクに使われる）。
+## 3. Worker をデプロイ（techolve-cloud で実行）
 
-## 4. メール（Cloudflare）
+`vectana/wrangler.jsonc` の `containers[].image` を2つとも新しいタグに上げてデプロイする。
 
-- **受信**: Email Routing で `vectana@<ドメイン>` を普段使っているメールアドレスに転送する。返信やバウンスもそこで読める
-- **送信**: Cloudflare Email Service（ベータ版）。任意の宛先に送るには **Workers Paid プラン** が必要。ダッシュボードで送信ドメインを認証してから、次のどちらかを設定する
-  - REST API: `MAIL_BACKEND=cloudflare`、`CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_API_TOKEN`（メール送信の権限を付けたトークン）、`MAIL_FROM=vectana@<ドメイン>`
-  - SMTP: `MAIL_BACKEND=smtp`、`SMTP_HOST=smtp.mx.cloudflare.net`、`SMTP_PORT=465`、`SMTP_USE_TLS=true`、ユーザー名とパスワードは Cloudflare の SMTP 設定画面で確認する
-- Workers Paid にしない場合は、Resend などの SMTP リレーを `MAIL_BACKEND=smtp` で使う（DNS は Cloudflare に登録する）
-- **自前の docker-mailserver を使う場合（techolve の VPS はこれ）**: Vectana の `app` と `worker` を mailserver の外部ネットワーク `shared-mail` につなぐ。`/srv/vectana/compose.override.yaml` に次を置く（compose が自動で読み込む）。mailserver の `mynetworks` に Docker のネットワーク（172.16.0.0/12）が入っているので、SMTP 認証はいらない
+```bash
+npx wrangler deploy -c vectana/wrangler.jsonc --secrets-file ~/.config/techolve/secrets/vectana.json
+```
 
-  ```yaml
-  services:
-    app:
-      networks: [default, shared-mail]
-    worker:
-      networks: [default, shared-mail]
-  networks:
-    shared-mail:
-      external: true
-  ```
+- 秘密情報（`DB_USER` `DB_PASSWORD` `SECRET_KEY` `CLOUDFLARE_API_TOKEN` `OIDC_CLIENT_SECRET`）はリポジトリに置かず、secrets ファイルから渡す
+- Worker が環境変数を組み立ててコンテナに渡す。`DATABASE_URL` は `?ssl=verify-full` 付きで、asyncpg が CA を見つけられるように `PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt` も渡す
+- **環境変数だけを変えたとき**は、コンテナのインスタンス名を変えないと古い環境変数のまま動き続ける
 
-  `.env` は `MAIL_BACKEND=smtp`、`MAIL_FROM=Vectana <no-reply@techolve.org>`、`SMTP_HOST=mailserver`、`SMTP_PORT=25`、`SMTP_START_TLS=false`
-- メールの準備ができるまでは `MAIL_BACKEND=none` にしておけば起動できる。その場合、招待は管理画面に表示されるリンクを直接共有する
+## 4. 環境変数
 
-## SSO（任意）
+| 変数 | 内容 |
+|---|---|
+| `DATABASE_URL` | PostgreSQL の接続先（Worker が `DB_HOST` `DB_NAME` `DB_USER` `DB_PASSWORD` から組み立てる） |
+| `SECRET_KEY` | JWT の署名鍵。`openssl rand -hex 32` で生成する。未設定だとアプリが起動しない |
+| `WEB_URL` | 公開 URL。招待メールや通知のリンクに使われる |
+| `GROUP_NAME` | グループ名 |
+| `MAIL_BACKEND` / `MAIL_FROM` | メール送信（下記） |
+| `OIDC_*` | SSO（下記） |
+
+### メール
+
+- **送信**: Cloudflare Email Sending の REST API を使う。`MAIL_BACKEND=cloudflare`、`CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_API_TOKEN`（メール送信の権限を付けたトークン）、`MAIL_FROM=Vectana <no-reply@<ドメイン>>`。送信ドメインはダッシュボードで認証しておく。任意の宛先に送るには Workers Paid プランが必要
+- **受信**: Email Routing で、返信やバウンスを普段のメールアドレスに転送する
+- Containers は SMTP を受けられないので、自前のメールサーバーは使えない。SMTP リレー（Resend など）を使うなら `MAIL_BACKEND=smtp` と `SMTP_*` を設定する
+- メールの準備ができるまでは `MAIL_BACKEND=none` でも起動できる。その場合、招待は管理画面に表示されるリンクを直接共有する
+
+### SSO（任意）
 
 OpenID Connect に対応した ID プロバイダーがあれば、ログイン画面に「〇〇 でログイン」ボタンを出せる。アカウントは今までどおり招待で作り、SSO は**メールアドレスが一致する既存ユーザー**をログインさせるだけ。
 
 - プロバイダーに登録するリダイレクト URI: `https://vectana.example.com/api/auth/oidc/callback`
 - スコープ: `openid email profile`
-- `.env` に `OIDC_ISSUER`（`/.well-known/openid-configuration` の手前まで）、`OIDC_CLIENT_ID`、`OIDC_CLIENT_SECRET`、`OIDC_PROVIDER_NAME`（ボタンの表示名）を書く
-- Cloudflare Access を使う場合は、Zero Trust で「SaaS アプリケーション」→「OIDC」を作る。`OIDC_ISSUER` は `https://<チーム名>.cloudflareaccess.com/cdn-cgi/access/sso/oidc/<クライアント ID>`
+- `OIDC_ISSUER`（`/.well-known/openid-configuration` の手前まで）、`OIDC_CLIENT_ID`、`OIDC_CLIENT_SECRET`、`OIDC_PROVIDER_NAME`（ボタンの表示名）を設定する
+- techolve の本番は Cloudflare Access を使っている。Zero Trust で「SaaS アプリケーション」→「OIDC」を作る。`OIDC_ISSUER` は `https://<チーム名>.cloudflareaccess.com/cdn-cgi/access/sso/oidc/<クライアント ID>`
 
-## 5. 確認
+## 5. 最初の管理者（初回だけ）
 
-- `https://vectana.example.com/api/health` が `{"status":"ok"}` を返す
-- `docker compose -f compose.prod.yaml logs worker` に `Scanned ... package(s)` が出ている
-- バックアップ: `docker compose -f compose.prod.yaml exec db pg_dump -U vectana vectana > backup.sql`
+手元から本番 DB に向けて実行する。
+
+```bash
+docker run --rm -e DATABASE_URL=... -e PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt \
+  -e SECRET_KEY=... heki0824/vectana:X.Y.Z \
+  python -m app.cli create-admin --email you@example.com --company "親会社名"
+```
+
+## 6. 確認
+
+- `/api/health` は DB を使わないので、これだけでは DB 接続を確認できない。DB を使うエンドポイントも叩く（例: 間違ったパスワードで `POST /api/auth/login` して 401 が返る）
+- スキャン: `npx wrangler tail techolve-vectana` で Cron の起動を見て、Cloudflare ダッシュボードの Containers のログに `Scanned ... package(s)` が出ていることを確認する
+- バックアップ: PlanetScale のバックアップに加えて、必要なら手元から `pg_dump` を取る
