@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.models.task import SprintStatus, TaskKind, TaskStatus
+from app.models.task import SprintStatus, TaskKind, TaskPriority, TaskStatus
 from app.schemas.org import UserBrief
 from app.schemas.project import UpgradeOut
 
@@ -13,6 +13,7 @@ class TaskBody(BaseModel):
     kind: TaskKind = TaskKind.development
     description: str | None = None
     status: TaskStatus = TaskStatus.todo
+    priority: TaskPriority | None = None
     assignee_id: UUID | None = None
     start_date: date | None = None
     due_date: date | None = None
@@ -38,6 +39,7 @@ class TaskUpdate(BaseModel):
     kind: TaskKind | None = None
     description: str | None = None
     status: TaskStatus | None = None
+    priority: TaskPriority | None = None
     assignee_id: UUID | None = None
     start_date: date | None = None
     due_date: date | None = None
@@ -76,6 +78,7 @@ class TaskOut(BaseModel):
     title: str
     description: str | None
     status: str
+    priority: str | None
     assignee: UserBrief | None
     start_date: date | None
     due_date: date | None  # set on the task
@@ -91,6 +94,9 @@ class TaskOut(BaseModel):
     position: float
     estimate_hours: float | None
     auto_created: bool
+    # The linked GitHub / GitLab issue.
+    issue_number: int | None
+    issue_url: str | None
     security: SecurityOut | None = None
     created_at: datetime
     updated_at: datetime | None

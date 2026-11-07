@@ -3,6 +3,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -22,6 +23,7 @@ from app.models.package import Severity
 from app.models.user import User
 from app.schemas.auth import (
     AcceptInvitation,
+    AccountsBody,
     LocaleBody,
     LoginRequest,
     MeResponse,
@@ -93,7 +95,34 @@ async def me(actor: CurrentActor, session: Session) -> MeResponse:
         managed_department_ids=sorted(actor.managed_department_ids, key=str),
         group_name=settings.group_name,
         locale=user.locale,
+        github_login=user.github_login,
+        gitlab_username=user.gitlab_username,
     )
+
+
+@router.put("/accounts", response_model=AccountsBody, summary="GitHub・GitLab のアカウント名")
+async def set_accounts(body: AccountsBody, actor: CurrentActor, session: Session) -> AccountsBody:
+    """Used to match issue assignees with Vectana users."""
+    names = (("github_login", body.github_login), ("gitlab_username", body.gitlab_username))
+    for field, value in names:
+        if value:
+            taken = (
+                await session.exec(
+                    select(User).where(
+                        func.lower(getattr(User, field)) == value.lower(),
+                        User.id != actor.user.id,
+                    )
+                )
+            ).first()
+            if taken:
+                raise HTTPException(
+                    status.HTTP_409_CONFLICT, "This account name is used by another user"
+                )
+    actor.user.github_login = body.github_login
+    actor.user.gitlab_username = body.gitlab_username
+    session.add(actor.user)
+    await session.commit()
+    return body
 
 
 @router.put("/locale", status_code=status.HTTP_204_NO_CONTENT, summary="表示言語の保存")

@@ -41,6 +41,9 @@ class MeResponse(BaseModel):
     managed_department_ids: list[UUID]
     group_name: str
     locale: str
+    # Account names on GitHub / GitLab, used to map issue assignees.
+    github_login: str | None = None
+    gitlab_username: str | None = None
 
 
 class PasswordChange(BaseModel):
@@ -71,6 +74,19 @@ class AcceptInvitation(BaseModel):
 
 class LocaleBody(BaseModel):
     locale: Literal["ja", "en"]
+
+
+class AccountsBody(BaseModel):
+    """GitHub / GitLab account names. Empty clears the name."""
+
+    github_login: str | None = Field(default=None, max_length=100)
+    gitlab_username: str | None = Field(default=None, max_length=100)
+
+    @field_validator("github_login", "gitlab_username")
+    @classmethod
+    def clean(cls, v: str | None) -> str | None:
+        v = (v or "").strip().lstrip("@")
+        return v or None
 
 
 class PersonalTokenBody(BaseModel):

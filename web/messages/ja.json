@@ -109,6 +109,11 @@
       "todo": "未着手",
       "in_progress": "対応中",
       "done": "完了"
+    },
+    "taskPriority": {
+      "high": "高",
+      "medium": "中",
+      "low": "低"
     }
   },
   "login": {
@@ -268,7 +273,8 @@
       "tasks": "タスク",
       "security": "セキュリティ対応 {count}",
       "activity": "商談メモ",
-      "actuals": "見積と実績"
+      "actuals": "見積と実績",
+      "repos": "リポジトリ連携"
     },
     "noMatches": "ヒットした脆弱性はありません"
   },
@@ -365,7 +371,11 @@
     "change": "変更",
     "passwordChanged": "パスワードを変更しました",
     "languageTitle": "表示言語",
-    "languageHint": "メールもこの言語で届きます"
+    "languageHint": "メールもこの言語で届きます",
+    "accountsTitle": "GitHub・GitLab のアカウント",
+    "accountsHint": "連携したリポジトリの Issue の担当者を、Vectana のタスクの担当者に対応付けるために使います。",
+    "githubLogin": "GitHub のユーザー名",
+    "gitlabUsername": "GitLab のユーザー名"
   },
   "admin": {
     "title": "組織管理",
@@ -720,7 +730,10 @@
       "zoomWeek": "週",
       "unscheduled": "開始日・期限を入れるとガントに表示されます"
     },
-    "estimateActual": "見積 / 実績"
+    "estimateActual": "見積 / 実績",
+    "priority": "優先度",
+    "noPriority": "なし",
+    "openIssue": "Issue を開く"
   },
   "sprints": {
     "new": "スプリントを作成",
@@ -970,5 +983,52 @@
     "monthLabel": "{year}年{month}月分",
     "addItem": "回を追加",
     "sum": "合計 {sum} / 見積 {total}"
+  },
+  "repos": {
+    "description": "GitHub・GitLab（セルフホスト含む）のリポジトリを連携すると、Issue とタスク、マイルストーンとスプリントが双方向に同期され、既定ブランチへの push と毎日1回、lockfile・SBOM を自動で取り込みます。",
+    "add": "リポジトリを連携",
+    "empty": "連携しているリポジトリはありません",
+    "provider": "サービス",
+    "repo": "リポジトリ",
+    "repoHintGithub": "owner/name の形式",
+    "repoHintGitlab": "group/project の形式（サブグループも可）",
+    "enterprise": "GitHub Enterprise Server を使う",
+    "selfHosted": "セルフホストの GitLab を使う",
+    "baseUrl": "URL",
+    "baseUrlHintGithub": "API の URL（https://ホスト名/api/v3）",
+    "baseUrlHintGitlab": "GitLab の URL（https://ホスト名）",
+    "token": "アクセストークン",
+    "tokenHintGithub": "Fine-grained token: Contents 読み取り、Issues 読み書き、Webhooks 読み書き（Webhook を自動登録する場合）",
+    "tokenHintGitlab": "Project access token（api スコープ、Maintainer 以上で Webhook を自動登録）",
+    "syncIssues": "Issue とタスクを同期する",
+    "securityIssues": "自動作成されたセキュリティ対応タスクを Issue にする",
+    "registerWebhook": "Webhook を自動で登録する",
+    "importPaths": "取り込むファイル",
+    "importPathsHint": "空欄ならリポジトリ全体から対応形式のファイルを探します。1行に1つ、* や ** が使えます",
+    "link": "連携する",
+    "linked": "連携しました。lockfile と Issue をバックグラウンドで取り込んでいます",
+    "saved": "保存しました",
+    "webhookOn": "Webhook 登録済み",
+    "webhookOff": "Webhook 未登録",
+    "importNow": "今すぐ取り込む",
+    "syncNow": "Issue を取り込む",
+    "delete": "連携を解除",
+    "confirmDelete": "{repo} の連携を解除しますか？タスクや取り込んだパッケージは残ります。",
+    "lastImport": "最後の取り込み",
+    "lastEvent": "最後の通知",
+    "never": "まだありません",
+    "allFiles": "すべて",
+    "imported": "{files} ファイルを取り込みました",
+    "synced": "タスク {tasks} 件、スプリント {sprints} 件を同期しました",
+    "noFiles": "対応形式のファイルが見つかりませんでした",
+    "fileResult": "追加 {added}・削除 {removed}（全 {total}）",
+    "removedSources": "リポジトリから消えた {count} ファイル分を削除しました",
+    "savePaths": "保存",
+    "changeToken": "トークンを変更",
+    "saveToken": "保存",
+    "manualWebhookGithub": "Webhook を自動登録できませんでした。リポジトリの Settings → Webhooks で、下の URL とシークレットを登録してください（Content type: application/json、イベント: Pushes・Issues・Milestones・Pull requests）。",
+    "manualWebhookGitlab": "Webhook を自動登録できませんでした。プロジェクトの設定 → Webhooks で、下の URL をシークレットトークン付きで登録してください（トリガー: プッシュ、Issue、マージリクエスト）。",
+    "webhookUrl": "Webhook の URL",
+    "webhookSecret": "シークレット"
   }
 }

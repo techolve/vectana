@@ -55,6 +55,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * GitHub・GitLab のアカウント名
+         * @description Used to match issue assignees with Vectana users.
+         */
+        put: operations["set_accounts_api_auth_accounts_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/locale": {
         parameters: {
             query?: never;
@@ -1381,6 +1401,104 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{project_id}/repo-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** リポジトリ連携の一覧 */
+        get: operations["list_links_api_projects__project_id__repo_links_get"];
+        put?: never;
+        /**
+         * リポジトリを連携
+         * @description Checks the token by reading the repository, registers the webhook when
+         *     allowed, then imports dependency files and open issues in the background.
+         */
+        post: operations["create_link_api_projects__project_id__repo_links_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/repo-links/{link_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * 連携の解除
+         * @description Removes the webhook when Vectana registered it. Tasks keep their issue
+         *     links as plain URLs; imported packages stay until the next upload.
+         */
+        delete: operations["delete_link_api_repo_links__link_id__delete"];
+        options?: never;
+        head?: never;
+        /** リポジトリ連携の更新 */
+        patch: operations["update_link_api_repo_links__link_id__patch"];
+        trace?: never;
+    };
+    "/api/repo-links/{link_id}/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 今すぐ取り込む */
+        post: operations["import_now_api_repo_links__link_id__import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/repo-links/{link_id}/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Issue を取り込む
+         * @description Bring in open issues and milestones as tasks and sprints.
+         */
+        post: operations["sync_now_api_repo_links__link_id__sync_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/repo-hooks/{link_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** GitHub / GitLab の Webhook 受信 */
+        post: operations["receive_hook_api_repo_hooks__link_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -1410,6 +1528,16 @@ export interface components {
             password: string;
             /** Display Name */
             display_name?: string | null;
+        };
+        /**
+         * AccountsBody
+         * @description GitHub / GitLab account names. Empty clears the name.
+         */
+        AccountsBody: {
+            /** Github Login */
+            github_login?: string | null;
+            /** Gitlab Username */
+            gitlab_username?: string | null;
         };
         /** ActivityBody */
         ActivityBody: {
@@ -2583,6 +2711,10 @@ export interface components {
             group_name: string;
             /** Locale */
             locale: string;
+            /** Github Login */
+            github_login?: string | null;
+            /** Gitlab Username */
+            gitlab_username?: string | null;
         };
         /** MemberBody */
         MemberBody: {
@@ -3078,6 +3210,128 @@ export interface components {
             /** Refresh Token */
             refresh_token: string;
         };
+        /** RepoImportFile */
+        RepoImportFile: {
+            /** Path */
+            path: string;
+            result: components["schemas"]["ImportResult"] | null;
+            /** Error */
+            error: string | null;
+        };
+        /** RepoImportOut */
+        RepoImportOut: {
+            /** Sha */
+            sha: string;
+            /** Files */
+            files: components["schemas"]["RepoImportFile"][];
+            /** Removed Sources */
+            removed_sources: number;
+        };
+        /** RepoLinkBody */
+        RepoLinkBody: {
+            provider: components["schemas"]["RepoProvider"];
+            /** Base Url */
+            base_url?: string | null;
+            /**
+             * Repo
+             * @description owner/name, group/project
+             */
+            repo: string;
+            /** Token */
+            token: string;
+            /**
+             * Sync Issues
+             * @default true
+             */
+            sync_issues: boolean;
+            /**
+             * Security Issues
+             * @default true
+             */
+            security_issues: boolean;
+            /** Import Paths */
+            import_paths?: string[];
+            /**
+             * Register Webhook
+             * @default true
+             */
+            register_webhook: boolean;
+        };
+        /** RepoLinkOut */
+        RepoLinkOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Provider */
+            provider: string;
+            /** Base Url */
+            base_url: string;
+            /** Repo */
+            repo: string;
+            /** Html Url */
+            html_url: string;
+            /** Default Branch */
+            default_branch: string;
+            /** Sync Issues */
+            sync_issues: boolean;
+            /** Security Issues */
+            security_issues: boolean;
+            /** Import Paths */
+            import_paths: string[];
+            /** Webhook Url */
+            webhook_url: string;
+            /** Webhook Registered */
+            webhook_registered: boolean;
+            /** Webhook Secret */
+            webhook_secret: string | null;
+            /** Last Import At */
+            last_import_at: string | null;
+            /** Last Import Sha */
+            last_import_sha: string | null;
+            /** Last Event At */
+            last_event_at: string | null;
+            /** Last Error */
+            last_error: string | null;
+            /** Last Error At */
+            last_error_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** RepoLinkUpdate */
+        RepoLinkUpdate: {
+            /** Token */
+            token?: string | null;
+            /** Default Branch */
+            default_branch?: string | null;
+            /** Sync Issues */
+            sync_issues?: boolean | null;
+            /** Security Issues */
+            security_issues?: boolean | null;
+            /** Import Paths */
+            import_paths?: string[] | null;
+        };
+        /**
+         * RepoProvider
+         * @enum {string}
+         */
+        RepoProvider: "github" | "gitlab";
+        /** RepoSyncOut */
+        RepoSyncOut: {
+            /** Tasks */
+            tasks: number;
+            /** Sprints */
+            sprints: number;
+        };
         /** RuntimeBody */
         RuntimeBody: {
             /** Product */
@@ -3331,6 +3585,7 @@ export interface components {
             description?: string | null;
             /** @default todo */
             status: components["schemas"]["TaskStatus"];
+            priority?: components["schemas"]["TaskPriority"] | null;
             /** Assignee Id */
             assignee_id?: string | null;
             /** Start Date */
@@ -3385,6 +3640,8 @@ export interface components {
             description: string | null;
             /** Status */
             status: string;
+            /** Priority */
+            priority: string | null;
             assignee: components["schemas"]["UserBrief"] | null;
             /** Start Date */
             start_date: string | null;
@@ -3412,6 +3669,10 @@ export interface components {
             estimate_hours: number | null;
             /** Auto Created */
             auto_created: boolean;
+            /** Issue Number */
+            issue_number: number | null;
+            /** Issue Url */
+            issue_url: string | null;
             security?: components["schemas"]["SecurityOut"] | null;
             /**
              * Created At
@@ -3462,6 +3723,8 @@ export interface components {
             description: string | null;
             /** Status */
             status: string;
+            /** Priority */
+            priority: string | null;
             assignee: components["schemas"]["UserBrief"] | null;
             /** Start Date */
             start_date: string | null;
@@ -3489,6 +3752,10 @@ export interface components {
             estimate_hours: number | null;
             /** Auto Created */
             auto_created: boolean;
+            /** Issue Number */
+            issue_number: number | null;
+            /** Issue Url */
+            issue_url: string | null;
             security?: components["schemas"]["SecurityOut"] | null;
             /**
              * Created At
@@ -3500,6 +3767,11 @@ export interface components {
             /** Completed At */
             completed_at: string | null;
         };
+        /**
+         * TaskPriority
+         * @enum {string}
+         */
+        TaskPriority: "high" | "medium" | "low";
         /**
          * TaskStatus
          * @enum {string}
@@ -3513,6 +3785,7 @@ export interface components {
             /** Description */
             description?: string | null;
             status?: components["schemas"]["TaskStatus"] | null;
+            priority?: components["schemas"]["TaskPriority"] | null;
             /** Assignee Id */
             assignee_id?: string | null;
             /** Start Date */
@@ -3957,6 +4230,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeResponse"];
+                };
+            };
+        };
+    };
+    set_accounts_api_auth_accounts_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountsBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountsBody"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -7283,6 +7589,231 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_links_api_projects__project_id__repo_links_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepoLinkOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_link_api_projects__project_id__repo_links_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RepoLinkBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepoLinkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_link_api_repo_links__link_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_link_api_repo_links__link_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RepoLinkUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepoLinkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_now_api_repo_links__link_id__import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepoImportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sync_now_api_repo_links__link_id__sync_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepoSyncOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    receive_hook_api_repo_hooks__link_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */

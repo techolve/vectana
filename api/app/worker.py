@@ -4,6 +4,9 @@ python -m app.worker          # run forever on SCAN_INTERVAL_MINUTES
 python -m app.worker --once   # scan once and exit (cron / manual check)
 python -m app.worker --report # send this week's organization report now and exit
 
+Linked GitHub / GitLab repositories are re-imported once a day (checked
+hourly), in case a push webhook was missed.
+
 The weekly organization report is checked hourly and sent once per week on the
 weekday set in system settings (see app.services.report).
 """
@@ -33,6 +36,17 @@ async def weekly_report(force: bool = False) -> int:
         return 0
 
 
+async def repo_import() -> int:
+    """Daily import from linked repositories, in case a push webhook was missed."""
+    from app.routers.repo import import_due_links
+
+    try:
+        return await import_due_links()
+    except Exception:
+        logger.exception("Repository import failed")
+        return 0
+
+
 async def run_forever() -> None:
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
@@ -45,6 +59,9 @@ async def run_forever() -> None:
     )
     scheduler.add_job(
         weekly_report, "interval", hours=1, id="report", max_instances=1, coalesce=True
+    )
+    scheduler.add_job(
+        repo_import, "interval", hours=1, id="repo-import", max_instances=1, coalesce=True
     )
     scheduler.start()
     logger.info("Worker started; scanning every %d minute(s)", settings.scan_interval_minutes)

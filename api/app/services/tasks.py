@@ -191,6 +191,7 @@ async def sync(session: AsyncSession, project_ids: list[UUID] | None = None) -> 
     numbers: dict[UUID, int] = {}
     positions: dict[UUID, float] = {}
     created = 0
+    changed: list[Task] = []  # created or completed: their issues follow
     for key in sorted(groups, key=lambda k: (str(k[0]), k[1], k[2], k[3])):
         group = groups[key]
         project_id = key[0]
@@ -210,6 +211,7 @@ async def sync(session: AsyncSession, project_ids: list[UUID] | None = None) -> 
             await session.flush()
             open_tasks[key] = task
             created += 1
+            changed.append(task)
         _link(task, group, session)
     await session.flush()
 
@@ -243,7 +245,13 @@ async def sync(session: AsyncSession, project_ids: list[UUID] | None = None) -> 
                 t.completed_at = now
                 t.updated_at = now
                 session.add(t)
+                changed.append(t)
     await session.commit()
+    if changed:
+        from app.services.repo import sync as repo_sync
+
+        for t in changed:
+            await repo_sync.push_task(session, t)
     return created
 
 

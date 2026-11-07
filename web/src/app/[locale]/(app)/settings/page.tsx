@@ -31,6 +31,7 @@ export default function SettingsPage() {
         <LanguageCard />
         {data && <PrefsCard initial={data} />}
         <PasswordCard />
+        <AccountsCard />
         <PersonalTokensCard />
       </div>
     </>
@@ -79,6 +80,53 @@ function PrefsCard({ initial }: { initial: Prefs }) {
                   label: t("common.atLeast", { severity: s }),
                 }))}
               />
+            </LabeledField>
+            <div>
+              <Button type="submit">{t("common.save")}</Button>
+            </div>
+          </FieldGroup>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+/** GitHub / GitLab account names: issues assigned to them become this user's tasks. */
+function AccountsCard() {
+  const t = useTranslations();
+  const me = useMe();
+  const [github, setGithub] = useState(me.github_login ?? "");
+  const [gitlab, setGitlab] = useState(me.gitlab_username ?? "");
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      const r = await api<{ github_login: string | null; gitlab_username: string | null }>("/auth/accounts", {
+        method: "PUT",
+        json: { github_login: github, gitlab_username: gitlab },
+      });
+      setGithub(r.github_login ?? "");
+      setGitlab(r.gitlab_username ?? "");
+      toast.success(t("common.saved"));
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("settings.accountsTitle")}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={save}>
+          <FieldGroup>
+            <p className="text-sm text-muted-foreground">{t("settings.accountsHint")}</p>
+            <LabeledField label={t("settings.githubLogin")} htmlFor="github-login">
+              <Input id="github-login" maxLength={100} placeholder="octocat" value={github} onChange={(e) => setGithub(e.target.value)} />
+            </LabeledField>
+            <LabeledField label={t("settings.gitlabUsername")} htmlFor="gitlab-username">
+              <Input id="gitlab-username" maxLength={100} value={gitlab} onChange={(e) => setGitlab(e.target.value)} />
             </LabeledField>
             <div>
               <Button type="submit">{t("common.save")}</Button>

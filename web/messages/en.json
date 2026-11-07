@@ -109,6 +109,11 @@
       "todo": "To do",
       "in_progress": "In progress",
       "done": "Done"
+    },
+    "taskPriority": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
     }
   },
   "login": {
@@ -268,7 +273,8 @@
       "tasks": "Tasks",
       "security": "Security {count}",
       "activity": "Deal notes",
-      "actuals": "Estimate vs actual"
+      "actuals": "Estimate vs actual",
+      "repos": "Repositories"
     },
     "noMatches": "No vulnerabilities found"
   },
@@ -365,7 +371,11 @@
     "change": "Change",
     "passwordChanged": "Password changed",
     "languageTitle": "Language",
-    "languageHint": "Emails are sent in this language too"
+    "languageHint": "Emails are sent in this language too",
+    "accountsTitle": "GitHub and GitLab accounts",
+    "accountsHint": "Used to match the assignees of issues in linked repositories with Vectana task assignees.",
+    "githubLogin": "GitHub username",
+    "gitlabUsername": "GitLab username"
   },
   "admin": {
     "title": "Organization",
@@ -720,7 +730,10 @@
       "zoomWeek": "Week",
       "unscheduled": "Set a start and due date to show a task on the chart"
     },
-    "estimateActual": "Estimate / actual"
+    "estimateActual": "Estimate / actual",
+    "priority": "Priority",
+    "noPriority": "None",
+    "openIssue": "Open the issue"
   },
   "sprints": {
     "new": "New sprint",
@@ -970,5 +983,52 @@
     "monthLabel": "{month}/{year}",
     "addItem": "Add installment",
     "sum": "Total {sum} / estimate {total}"
+  },
+  "repos": {
+    "description": "Link a GitHub or GitLab (including self-hosted) repository to keep issues and tasks, and milestones and sprints, in step both ways. Lockfiles and SBOMs are imported on every push to the default branch and once a day.",
+    "add": "Link a repository",
+    "empty": "No repositories linked",
+    "provider": "Service",
+    "repo": "Repository",
+    "repoHintGithub": "owner/name",
+    "repoHintGitlab": "group/project (subgroups allowed)",
+    "enterprise": "Use GitHub Enterprise Server",
+    "selfHosted": "Use a self-hosted GitLab",
+    "baseUrl": "URL",
+    "baseUrlHintGithub": "The API URL (https://HOST/api/v3)",
+    "baseUrlHintGitlab": "Your GitLab's URL (https://HOST)",
+    "token": "Access token",
+    "tokenHintGithub": "Fine-grained token: Contents read, Issues read and write, Webhooks read and write (to register the webhook)",
+    "tokenHintGitlab": "Project access token with the api scope (Maintainer or above to register the webhook)",
+    "syncIssues": "Sync issues and tasks",
+    "securityIssues": "Open issues for security tasks created automatically",
+    "registerWebhook": "Register the webhook automatically",
+    "importPaths": "Files to import",
+    "importPathsHint": "Empty: supported files anywhere in the repository. One per line; * and ** work",
+    "link": "Link",
+    "linked": "Linked. Lockfiles and issues are being imported in the background",
+    "saved": "Saved",
+    "webhookOn": "Webhook registered",
+    "webhookOff": "Webhook not registered",
+    "importNow": "Import now",
+    "syncNow": "Import issues",
+    "delete": "Unlink",
+    "confirmDelete": "Unlink {repo}? Tasks and imported packages stay.",
+    "lastImport": "Last import",
+    "lastEvent": "Last event",
+    "never": "Never",
+    "allFiles": "All",
+    "imported": "Imported {files} files",
+    "synced": "Synced {tasks} tasks and {sprints} sprints",
+    "noFiles": "No supported files found",
+    "fileResult": "{added} added, {removed} removed ({total} in total)",
+    "removedSources": "Removed what {count} files gone from the repository contributed",
+    "savePaths": "Save",
+    "changeToken": "Change token",
+    "saveToken": "Save",
+    "manualWebhookGithub": "The webhook could not be registered. Add it under the repository's Settings → Webhooks with this URL and secret (content type application/json; events: Pushes, Issues, Milestones, Pull requests).",
+    "manualWebhookGitlab": "The webhook could not be registered. Add it under the project's Settings → Webhooks with this URL and secret token (triggers: push, issues, merge requests).",
+    "webhookUrl": "Webhook URL",
+    "webhookSecret": "Secret"
   }
 }

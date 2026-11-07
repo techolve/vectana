@@ -43,6 +43,9 @@ class User(SQLModel, table=True):
     )
     # UI and email language ("ja" / "en").
     locale: str = Field(default="ja", max_length=5)
+    # Account names on GitHub / GitLab, to match issue assignees.
+    github_login: str | None = Field(default=None, max_length=100, index=True)
+    gitlab_username: str | None = Field(default=None, max_length=100, index=True)
     created_at: datetime = created_at_field()
 
     def has_role(self, role: UserRole) -> bool:

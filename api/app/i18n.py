@@ -123,6 +123,16 @@ ERRORS_JA: dict[str, str] = {
     "Task not found": "タスクが見つかりません",
     "The same row appears twice": "同じ行が重複しています",
     "month must be YYYY-MM": "月は YYYY-MM の形式で指定してください",
+    # Repository links
+    "Repository link not found": "リポジトリ連携が見つかりません",
+    "This repository is already linked": "このリポジトリはすでに連携されています",
+    "Invalid webhook signature": "Webhook の署名が正しくありません",
+    "Invalid JSON": "JSON の形式が正しくありません",
+    "The access token cannot be read; enter it again": (
+        "アクセストークンを読み取れません。もう一度入力してください"
+    ),
+    "This account name is used by another user": "このアカウント名はほかのユーザーが使っています",
+    "Import failed": "取り込みに失敗しました",
     "Invalid request": "入力内容が正しくありません",
 }
 
@@ -134,6 +144,7 @@ PATTERNS_JA: list[tuple[re.Pattern[str], str]] = [
         r"対応していないファイルです（\1）。対応形式: \2",
     ),
     (re.compile(r"^Could not parse (.*?): (.*)$"), r"\1 を読み込めませんでした: \2"),
+    (re.compile(r"^Cannot read the repository: (.*)$"), r"リポジトリを読み取れません: \1"),
 ]
 
 
@@ -226,6 +237,15 @@ TEXTS: dict[str, dict[str, str]] = {
     "report.col.due": {"ja": "期限", "en": "Due"},
     "report.col.days_over": {"ja": "超過日数", "en": "Days over"},
     "report.col.days_left": {"ja": "残り日数", "en": "Days left"},
+    "repo.issue.upgradeTo": {
+        "ja": "{name} を {version} に更新",
+        "en": "Upgrade {name} to {version}",
+    },
+    "repo.issue.upgrade": {"ja": "{name} を更新", "en": "Upgrade {name}"},
+    "repo.issue.footer": {
+        "ja": "---\nVectana のタスク: {url}",
+        "en": "---\nVectana task: {url}",
+    },
     "invoice.col.planned_on": {"ja": "請求予定日", "en": "Planned on"},
     "invoice.col.project": {"ja": "プロジェクト", "en": "Project"},
     "invoice.col.customer": {"ja": "顧客", "en": "Customer"},

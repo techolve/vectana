@@ -1,17 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { ExternalLinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
 import {
   api,
   TASK_KINDS,
+  TASK_PRIORITIES,
   TASK_STATUSES,
   type Member,
   type Sprint,
   type Task,
   type TaskKind,
+  type TaskPriority,
   type TaskStatus,
   type UserBrief,
 } from "@/lib/api";
@@ -47,6 +50,41 @@ export function TaskKindBadge({ kind }: { kind: TaskKind }) {
 export function TaskStatusBadge({ status }: { status: TaskStatus }) {
   const t = useTranslations("labels.taskStatus");
   return <span className={cn("rounded px-1.5 py-0.5 text-[11px] font-semibold whitespace-nowrap", STATUS_STYLE[status])}>{t(status)}</span>;
+}
+
+export const PRIORITY_STYLE: Record<TaskPriority, string> = {
+  high: "bg-red-500/15 text-red-700 dark:text-red-400",
+  medium: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
+  low: "bg-muted text-muted-foreground",
+};
+
+export function TaskPriorityBadge({ priority }: { priority: TaskPriority | null }) {
+  const t = useTranslations("labels.taskPriority");
+  if (!priority) return null;
+  return (
+    <span className={cn("rounded px-1.5 py-0.5 text-[11px] font-semibold whitespace-nowrap", PRIORITY_STYLE[priority])}>
+      {t(priority)}
+    </span>
+  );
+}
+
+/** The GitHub / GitLab issue a task is kept in step with. */
+export function IssueLink({ task, className }: { task: Pick<Task, "issue_number" | "issue_url">; className?: string }) {
+  const t = useTranslations("tasks");
+  if (!task.issue_number || !task.issue_url) return null;
+  return (
+    <a
+      href={task.issue_url}
+      target="_blank"
+      rel="noreferrer"
+      title={t("openIssue")}
+      onClick={(e) => e.stopPropagation()}
+      className={cn("inline-flex items-center gap-0.5 font-mono text-[11px] text-muted-foreground hover:text-foreground hover:underline", className)}
+    >
+      #{task.issue_number}
+      <ExternalLinkIcon className="size-3" />
+    </a>
+  );
 }
 
 /** What a task says on screen. A security task reads as the upgrade it stands for. */
@@ -125,6 +163,7 @@ export function TaskDialog({
   const [title, setTitle] = useState(task?.title ?? "");
   const [kind, setKind] = useState<TaskKind>(task?.kind ?? draft?.kind ?? "development");
   const [status, setStatus] = useState<TaskStatus>(task?.status ?? draft?.status ?? "todo");
+  const [priority, setPriority] = useState<string>(task?.priority ?? "");
   const [assignee, setAssignee] = useState(task?.assignee?.id ?? "");
   const [startDate, setStartDate] = useState(task?.start_date ?? draft?.start_date ?? "");
   const [dueDate, setDueDate] = useState(task?.due_date ?? draft?.due_date ?? "");
@@ -150,6 +189,7 @@ export function TaskDialog({
       title,
       kind,
       status,
+      priority: priority || null,
       assignee_id: assignee || null,
       start_date: startDate || null,
       due_date: milestone ? startDate || dueDate || null : dueDate || null,
@@ -189,7 +229,10 @@ export function TaskDialog({
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{task ? `#${task.number} ${titleOf(task)}` : t("tasks.add")}</DialogTitle>
+          <DialogTitle className="flex flex-wrap items-center gap-2">
+            {task ? `#${task.number} ${titleOf(task)}` : t("tasks.add")}
+            {task && <IssueLink task={task} className="text-xs" />}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={save}>
           <fieldset disabled={!canWrite}>
@@ -203,7 +246,7 @@ export function TaskDialog({
                   placeholder={t("tasks.titlePlaceholder")}
                 />
               </LabeledField>
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <LabeledField label={t("tasks.kind")}>
                   <OptionSelect
                     value={kind}
@@ -216,6 +259,16 @@ export function TaskDialog({
                     value={status}
                     onValueChange={(v) => setStatus(v as TaskStatus)}
                     options={TASK_STATUSES.map((s) => ({ value: s, label: t(`labels.taskStatus.${s}`) }))}
+                  />
+                </LabeledField>
+                <LabeledField label={t("tasks.priority")}>
+                  <OptionSelect
+                    value={priority}
+                    onValueChange={setPriority}
+                    options={[
+                      { value: "", label: t("tasks.noPriority") },
+                      ...TASK_PRIORITIES.map((p) => ({ value: p, label: t(`labels.taskPriority.${p}`) })),
+                    ]}
                   />
                 </LabeledField>
                 <LabeledField label={t("tasks.assignee")}>
