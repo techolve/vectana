@@ -36,6 +36,7 @@ export function usePageCrumb(label: string | null | undefined) {
 }
 
 const SECTIONS = {
+  "/org": "nav.org",
   "/projects": "nav.projects",
   "/vulnerabilities": "nav.vulnerabilities",
   "/eol": "nav.eol",

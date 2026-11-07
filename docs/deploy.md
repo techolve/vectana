@@ -64,6 +64,7 @@ npx wrangler deploy -c vectana/wrangler.jsonc --secrets-file ~/.config/techolve/
 | `SECRET_KEY` | JWT の署名鍵。`openssl rand -hex 32` で生成する。未設定だとアプリが起動しない |
 | `WEB_URL` | 公開 URL。招待メールや通知のリンクに使われる |
 | `GROUP_NAME` | グループ名 |
+| `REPORT_TIMEZONE` / `REPORT_HOUR` | 週次の組織レポートを送る時間帯（既定 `Asia/Tokyo` の 9 時以降）。曜日とオン/オフは管理画面で設定する |
 | `MAIL_BACKEND` / `MAIL_FROM` | メール送信（下記） |
 | `OIDC_*` | SSO（下記） |
 

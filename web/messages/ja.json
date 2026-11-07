@@ -43,7 +43,8 @@
     "eol": "EOL",
     "platform": "メニュー",
     "myProjects": "プロジェクト",
-    "more": "すべて表示"
+    "more": "すべて表示",
+    "org": "組織別"
   },
   "labels": {
     "role": {
@@ -373,7 +374,22 @@
     "eolTitle": "EOL の警告",
     "eolWarningDays": "サポート終了の何日前から警告するか",
     "eolWarningHint": "この日数以内に EOL を迎えるものを「まもなく終了」として表示・通知します（1〜730日）",
-    "days": "日"
+    "days": "日",
+    "slaTitle": "脆弱性の対応期限（SLA）",
+    "slaHint": "検出からこの日数を過ぎても「未対応」「確認済み」のままの脆弱性を「期限超過」として集計します（1〜3650日）",
+    "reportTitle": "週次レポート",
+    "reportEnabled": "グループ管理者・会社管理者・部署長に、担当範囲の集計を週1回メールで送る",
+    "reportWeekday": "送信する曜日",
+    "reportHint": "サーバーで設定した時刻（既定は日本時間 9 時）以降に送ります。メール通知をオフにしている人には送りません。",
+    "weekdays": {
+      "0": "月曜日",
+      "1": "火曜日",
+      "2": "水曜日",
+      "3": "木曜日",
+      "4": "金曜日",
+      "5": "土曜日",
+      "6": "日曜日"
+    }
   },
   "upgrade": {
     "column": "推奨バージョン",
@@ -386,6 +402,44 @@
       "major": "major",
       "unknown": "不明"
     }
+  },
+  "org": {
+    "title": "組織別ダッシュボード",
+    "description": "会社・部署ごとの未対応の脆弱性、期限超過、EOL までの日数です。部署の数字には配下の部署を含みます。",
+    "allCompanies": "すべての会社",
+    "csv": "CSV ダウンロード",
+    "overdue": "期限超過",
+    "eolReached": "EOL 到達",
+    "eolApproaching": "EOL 接近",
+    "units": "会社・部署別",
+    "slaNote": "期限超過 = 検出から CRITICAL {critical}日 / HIGH {high}日 / MEDIUM {medium}日 / LOW {low}日 を過ぎても未対応・確認済みのままの脆弱性",
+    "empty": "表示できるプロジェクトがありません",
+    "unit": "会社・部署",
+    "projects": "プロジェクト",
+    "open": "未対応",
+    "eol": "EOL",
+    "nearestEol": "直近の EOL",
+    "expand": "開く",
+    "collapse": "閉じる",
+    "unassigned": "（部署未設定）",
+    "partial": "一部のみ",
+    "partialHint": "「一部のみ」の行は、あなたが見られるプロジェクトだけの集計です。",
+    "none": "なし",
+    "oldestOverdue": "最長 {days} 日超過",
+    "overdueTab": "期限超過（{count}）",
+    "eolTab": "EOL が近いもの（{count}）",
+    "noOverdue": "期限超過の脆弱性はありません",
+    "noEol": "EOL 到達・接近のものはありません",
+    "severity": "重大度",
+    "project": "プロジェクト",
+    "package": "パッケージ",
+    "vuln": "脆弱性",
+    "due": "期限",
+    "daysOver": "超過日数",
+    "product": "製品",
+    "eolDate": "EOL 日",
+    "daysLeft": "あと {days} 日",
+    "daysPassed": "{days} 日超過"
   },
   "triage": {
     "assignee": "担当者",

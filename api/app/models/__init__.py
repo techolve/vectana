@@ -6,6 +6,7 @@ from app.models.notification import NotificationDelivery, NotificationPref
 from app.models.organization import Company, Department, UserDepartment
 from app.models.package import Package, VulnMatch, VulnMatchEvent
 from app.models.project import Project, ProjectMember, ProjectWebhook
+from app.models.report import ReportDelivery
 from app.models.token import ApiToken
 from app.models.user import User
 
@@ -24,6 +25,7 @@ __all__ = [
     "Project",
     "ProjectMember",
     "ProjectWebhook",
+    "ReportDelivery",
     "User",
     "UserDepartment",
     "VulnMatch",

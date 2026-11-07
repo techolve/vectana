@@ -47,3 +47,10 @@ class ProductOut(BaseModel):
 
 class SystemSettings(BaseModel):
     eol_warning_days: int = Field(ge=1, le=730)
+    sla_critical_days: int = 7
+    sla_high_days: int = 30
+    sla_medium_days: int = 90
+    sla_low_days: int = 180
+    sla_unknown_days: int = 90
+    report_enabled: bool = True
+    report_weekday: int = 0  # 0 = Monday

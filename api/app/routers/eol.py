@@ -23,6 +23,7 @@ from app.core.database import get_session
 from app.models.eol import AppSettings, EolFinding, EolStatus, Runtime
 from app.models.project import Project
 from app.schemas.eol import EolFindingOut, ProductOut, RuntimeBody, RuntimeOut, SystemSettings
+from app.schemas.report import SystemSettingsUpdate
 from app.services import eol
 from app.services.scanner import scan_and_notify
 
@@ -196,24 +197,30 @@ async def refresh_project(
 # --- System settings -------------------------------------------------------------
 
 
+def _settings_out(row: AppSettings) -> SystemSettings:
+    return SystemSettings.model_validate(row, from_attributes=True)
+
+
 @router.get("/settings", response_model=SystemSettings, summary="システム設定")
 async def get_settings(_: CurrentActor, session: Session) -> SystemSettings:
-    return SystemSettings(eol_warning_days=await eol.warning_days(session))
+    return _settings_out(await session.get(AppSettings, 1) or AppSettings(id=1))
 
 
 @router.put("/settings", response_model=SystemSettings, summary="システム設定の更新")
 async def put_settings(
-    body: SystemSettings, tasks: BackgroundTasks, _: GroupAdmin, session: Session
+    body: SystemSettingsUpdate, tasks: BackgroundTasks, _: GroupAdmin, session: Session
 ) -> SystemSettings:
     row = await session.get(AppSettings, 1) or AppSettings(id=1)
-    changed = row.eol_warning_days != body.eol_warning_days
-    row.eol_warning_days = body.eol_warning_days
+    changes = body.model_dump(exclude_none=True)
+    changed = "eol_warning_days" in changes and row.eol_warning_days != changes["eol_warning_days"]
+    for key, value in changes.items():
+        setattr(row, key, value)
     session.add(row)
     await session.commit()
     if changed and settings.scan_on_change:
         # Re-evaluate every finding against the new window (no OSV scan needed).
         tasks.add_task(_refresh_all_eol)
-    return body
+    return _settings_out(row)
 
 
 async def _refresh_all_eol() -> None:
