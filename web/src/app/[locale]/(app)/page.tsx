@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { BugIcon, CalendarClockIcon, FolderIcon, PackageIcon } from "lucide-react";
+import {
+  AlarmClockIcon,
+  BugIcon,
+  CalendarClockIcon,
+  FolderIcon,
+  PackageIcon,
+  UserCheckIcon,
+  UserXIcon,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
@@ -68,6 +76,28 @@ export default function DashboardPage() {
             />
           </div>
 
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <StatCard
+              icon={UserCheckIcon}
+              label={t("dashboard.mine")}
+              value={data.triage.mine}
+              href={{ pathname: "/vulnerabilities/", query: { status: "open,ack", assignee: "me" } }}
+            />
+            <StatCard
+              icon={AlarmClockIcon}
+              label={t("dashboard.overdue")}
+              value={data.triage.overdue}
+              accent={data.triage.overdue ? EOL_STYLE.eol : undefined}
+              href={{ pathname: "/vulnerabilities/", query: { status: "open,ack", overdue: "true" } }}
+            />
+            <StatCard
+              icon={UserXIcon}
+              label={t("dashboard.unassigned")}
+              value={data.triage.unassigned}
+              href={{ pathname: "/vulnerabilities/", query: { status: "open", assignee: "none" } }}
+            />
+          </div>
+
           <Card>
             <CardHeader>
               <CardTitle>{t("dashboard.health")}</CardTitle>
@@ -96,22 +126,26 @@ export default function DashboardPage() {
                   { value: "eol", label: t("dashboard.tabEol", { count: data.eol.length }) },
                 ]}
               />
-              {tab === "vulns" &&
-                (data.recent.length === 0 ? (
-                  <Empty>
-                    {t("dashboard.empty")}{" "}
-                    {data.package_count === 0 &&
-                      t.rich("dashboard.emptyHint", {
-                        link: (chunks) => (
-                          <Link href="/projects/" className="underline">
-                            {chunks}
-                          </Link>
-                        ),
-                      })}
-                  </Empty>
-                ) : (
-                  <MatchTable matches={data.recent} onChanged={reload} showProject />
-                ))}
+              {tab === "vulns" && (
+                <MatchTable
+                  matches={data.recent}
+                  onChanged={reload}
+                  showProject
+                  empty={
+                    <>
+                      {t("dashboard.empty")}{" "}
+                      {data.package_count === 0 &&
+                        t.rich("dashboard.emptyHint", {
+                          link: (chunks) => (
+                            <Link href="/projects/" className="underline">
+                              {chunks}
+                            </Link>
+                          ),
+                        })}
+                    </>
+                  }
+                />
+              )}
               {tab === "eol" &&
                 (data.eol.length === 0 ? <Empty>{t("dashboard.eolEmpty")}</Empty> : <EolTable findings={data.eol} showProject />)}
             </CardContent>

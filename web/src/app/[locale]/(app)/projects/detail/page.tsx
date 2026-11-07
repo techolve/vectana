@@ -12,7 +12,7 @@ import { useApi } from "@/lib/hooks";
 import { usePageCrumb } from "@/components/app-shell";
 import { departmentPath } from "@/lib/org";
 import { Button } from "@/components/ui/button";
-import { Empty, ErrorText, PageHeader, PageTabs, SeverityCountsInline } from "@/components/common";
+import { ErrorText, PageHeader, PageTabs, SeverityCountsInline } from "@/components/common";
 import { MatchTable } from "@/components/match-table";
 import { EolBadge } from "@/components/eol-table";
 import { EolPanel } from "@/components/project/eol-panel";
@@ -98,13 +98,9 @@ function ProjectDetail() {
         <p className="-mt-3 mb-4 text-sm whitespace-pre-wrap text-muted-foreground">{project.description}</p>
       )}
       <PageTabs tabs={tabs} value={tab} onChange={setTab} />
-      {tab === "vulns" &&
-        matches &&
-        (matches.length === 0 ? (
-          <Empty>{t("project.noMatches")}</Empty>
-        ) : (
-          <MatchTable matches={matches} onChanged={refreshAll} canTriage={canWrite} />
-        ))}
+      {tab === "vulns" && matches && (
+        <MatchTable matches={matches} onChanged={refreshAll} canTriage={canWrite} empty={t("project.noMatches")} />
+      )}
       {tab === "eol" && <EolPanel projectId={project.id} canWrite={canWrite} onChanged={reload} />}
       {tab === "packages" && <PackagesPanel projectId={project.id} canWrite={canWrite} onChanged={refreshAll} />}
       {tab === "members" && companies && <MembersPanel projectId={project.id} canManage={canManage} companies={companies} />}

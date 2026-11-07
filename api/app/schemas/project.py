@@ -1,12 +1,13 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.models.package import ECOSYSTEMS, Severity
+from app.models.package import ECOSYSTEMS, MatchStatus, Severity
 from app.models.project import ProjectRole, WebhookType
 from app.schemas.eol import EolFindingOut
+from app.schemas.org import UserBrief
 
 
 class ProjectBody(BaseModel):
@@ -169,17 +170,55 @@ class MatchOut(BaseModel):
     first_seen_at: datetime
     # Recommended upgrade for the package (across all its unresolved vulns).
     upgrade: UpgradeOut | None = None
+    assignee: UserBrief | None = None
+    due_date: date | None = None
+    updated_at: datetime | None = None
+    comment_count: int = 0
 
 
 class MatchUpdate(BaseModel):
-    status: str
+    """Partial update: only the fields sent are changed (null clears)."""
 
-    @field_validator("status")
+    status: MatchStatus | None = None
+    assignee_id: UUID | None = None
+    due_date: date | None = None
+
+
+class CommentBody(BaseModel):
+    body: str
+
+    @field_validator("body")
     @classmethod
-    def valid(cls, v: str) -> str:
-        if v not in ("open", "ack", "ignored"):
-            raise ValueError("status must be open, ack or ignored")
+    def not_blank(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("must not be blank")
+        if len(v) > 10000:
+            raise ValueError("must be at most 10000 characters")
         return v
+
+
+class MatchEventOut(BaseModel):
+    id: UUID
+    kind: str  # comment | status | assignee | due_date
+    user: UserBrief | None  # None: system or deleted user
+    old_value: str | None
+    new_value: str | None
+    # For assignee changes: the users behind old_value / new_value.
+    old_user: UserBrief | None = None
+    new_user: UserBrief | None = None
+    body: str | None
+    created_at: datetime
+
+
+class MatchDetail(MatchOut):
+    events: list[MatchEventOut] = []
+
+
+class TriageCounts(BaseModel):
+    mine: int = 0  # unresolved and assigned to the caller
+    overdue: int = 0  # unresolved and past due
+    unassigned: int = 0  # open and nobody assigned
 
 
 class DashboardOut(BaseModel):
@@ -187,6 +226,7 @@ class DashboardOut(BaseModel):
     package_count: int
     open_counts: SeverityCounts
     eol_counts: EolCounts
+    triage: TriageCounts = TriageCounts()
     projects: list[ProjectOut]
     recent: list[MatchOut]
     eol: list[EolFindingOut]

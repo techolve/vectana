@@ -4,7 +4,7 @@ from app.models.eol import AppSettings, EolDelivery, EolFinding, Runtime
 from app.models.invitation import Invitation
 from app.models.notification import NotificationDelivery, NotificationPref
 from app.models.organization import Company, Department, UserDepartment
-from app.models.package import Package, VulnMatch
+from app.models.package import Package, VulnMatch, VulnMatchEvent
 from app.models.project import Project, ProjectMember, ProjectWebhook
 from app.models.report import ReportDelivery
 from app.models.token import ApiToken
@@ -29,4 +29,5 @@ __all__ = [
     "User",
     "UserDepartment",
     "VulnMatch",
+    "VulnMatchEvent",
 ]

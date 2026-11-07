@@ -10,11 +10,10 @@ from fastapi import (
     Depends,
     Form,
     HTTPException,
-    Query,
     UploadFile,
     status,
 )
-from sqlalchemy import case, func
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -32,15 +31,14 @@ from app.core.database import get_session
 from app.core.tokens import Caller, caller_project, get_caller
 from app.models.eol import EolFinding, EolStatus, Runtime
 from app.models.organization import Company, CompanyType, Department
-from app.models.package import MatchStatus, Package, Severity, VulnMatch
+from app.models.package import MatchStatus, Package, VulnMatch
 from app.models.project import Project, ProjectMember, ProjectRole, ProjectWebhook
 from app.models.user import User
+from app.routers.vulnerability import upgrade_out
 from app.schemas.project import (
     DashboardOut,
     EolCounts,
     ImportResult,
-    MatchOut,
-    MatchUpdate,
     MemberBody,
     MemberOut,
     MemberUpdate,
@@ -51,7 +49,6 @@ from app.schemas.project import (
     ProjectUpdate,
     SeverityCounts,
     SkippedTool,
-    UpgradeOut,
     WebhookBody,
     WebhookOut,
 )
@@ -536,7 +533,7 @@ async def _package_out(session: AsyncSession, packages: list[Package]) -> list[P
             source=p.source,
             last_scanned_at=p.last_scanned_at,
             open_vulns=open_counts.get(p.id, 0),
-            upgrade=_upgrade_out(upgrades.get(p.id)),
+            upgrade=upgrade_out(upgrades.get(p.id)),
         )
         for p in packages
     ]
@@ -756,100 +753,13 @@ async def scan_project(
     return {"packages": len(ids)}
 
 
-# --- Vulnerability matches ---------------------------------------------------
-
-
-def _match_query(actor: Actor):  # type: ignore[no-untyped-def]
-    return (
-        select(VulnMatch, Package, Project)
-        .join(Package, col(Package.id) == VulnMatch.package_id)
-        .join(Project, col(Project.id) == Package.project_id)
-        .where(visible_projects_clause(actor))
-    )
-
-
-def _upgrade_out(u: upgrade.Upgrade | None) -> UpgradeOut | None:
-    if u is None:
-        return None
-    return UpgradeOut(version=u.version, bump=u.bump, unfixed=u.unfixed)
-
-
-def _match_out(
-    m: VulnMatch, pkg: Package, project: Project, up: upgrade.Upgrade | None = None
-) -> MatchOut:
-    return MatchOut(
-        id=m.id,
-        project_id=project.id,
-        project_name=project.name,
-        package_id=pkg.id,
-        ecosystem=pkg.ecosystem,
-        package_name=pkg.name,
-        package_version=pkg.version,
-        vuln_id=m.vuln_id,
-        aliases=[str(a) for a in m.aliases],
-        summary=m.summary,
-        severity=m.severity,
-        cvss_score=m.cvss_score,
-        fixed_version=m.fixed_version,
-        status=m.status,
-        first_seen_at=m.first_seen_at,
-        upgrade=_upgrade_out(up),
-    )
-
-
-async def _matches_out(
-    session: AsyncSession, rows: list[tuple[VulnMatch, Package, Project]]
-) -> list[MatchOut]:
-    upgrades = await upgrade.for_packages(session, {p.id: p.version for _, p, _ in rows})
-    return [_match_out(m, p, pr, upgrades.get(p.id)) for m, p, pr in rows]
-
-
-SEVERITY_ORDER = case(
-    {s: i for i, s in enumerate(["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"])},
-    value=col(VulnMatch.severity),
-    else_=9,
-)
-
-
-@router.get("/vulnerabilities", response_model=list[MatchOut], summary="脆弱性ヒット一覧")
-async def list_matches(
-    actor: CurrentActor,
-    session: Session,
-    project_id: Annotated[UUID | None, Query()] = None,
-    status_: Annotated[str | None, Query(alias="status")] = "open",
-    severity: Annotated[Severity | None, Query()] = None,
-    limit: Annotated[int, Query(ge=1, le=1000)] = 500,
-) -> list[MatchOut]:
-    query = _match_query(actor)
-    if project_id is not None:
-        query = query.where(Project.id == project_id)
-    if status_:
-        query = query.where(VulnMatch.status == status_)
-    if severity is not None:
-        query = query.where(VulnMatch.severity == severity)
-    query = query.order_by(SEVERITY_ORDER, col(VulnMatch.first_seen_at).desc()).limit(limit)
-    return await _matches_out(session, list((await session.exec(query)).all()))
-
-
-@router.patch("/vulnerabilities/{match_id}", response_model=MatchOut, summary="対応状況の更新")
-async def update_match(
-    match_id: UUID, body: MatchUpdate, actor: CurrentActor, session: Session
-) -> MatchOut:
-    match = await session.get(VulnMatch, match_id)
-    if match is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
-    package = await session.get(Package, match.package_id)
-    assert package is not None
-    project = await accessible_project(package.project_id, actor, session, Level.write)
-    match.status = body.status
-    session.add(match)
-    await session.commit()
-    return (await _matches_out(session, [(match, package, project)]))[0]
+# --- Dashboard ---------------------------------------------------------------
 
 
 @router.get("/dashboard", response_model=DashboardOut, summary="ダッシュボード")
 async def dashboard(actor: CurrentActor, session: Session) -> DashboardOut:
     from app.routers.eol import list_findings
+    from app.routers.vulnerability import list_matches, triage_counts
 
     projects = list(
         (
@@ -881,7 +791,8 @@ async def dashboard(actor: CurrentActor, session: Session) -> DashboardOut:
         package_count=sum(r.package_count for r in rows),
         open_counts=totals,
         eol_counts=eol_totals,
+        triage=await triage_counts(actor, session),
         projects=rows,
-        recent=await list_matches(actor, session, None, "open", None, 20),
+        recent=await list_matches(actor, session, None, "open", None, None, False, 20),
         eol=await list_findings(actor, session, None, [EolStatus.eol, EolStatus.approaching], 20),
     )
