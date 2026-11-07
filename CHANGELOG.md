@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-11-07
+
+### Added
+
+- Project management: customers, deal stages, estimates and multiple roles (sales, accounting, PMO)
+- Tasks with a Gantt chart, scrum board with burndown and velocity, and a maintenance list
+- Security tasks created automatically per package upgrade, with the recommended version
+- Timesheets, estimate vs actual, deal notes and staged billing
+- GitHub and GitLab integration: issues and tasks, milestones and sprints, lockfile import on push
+- Vulnerability triage with assignee, due date, comments and history
+- Organization dashboard and weekly report
+- Recommended upgrade version per vulnerable package
+- Project API tokens for CI; SBOM import; Go, Composer, Cargo and Gradle lockfiles
+- MCP server for AI clients (`@techolve/vectana-mcp`) and personal tokens
+- Publish the Docker image from GitHub Actions on a version tag
+
+### Changed
+
+- `python -m app.worker --once` also imports linked repositories and sends the weekly report when due
+- One overdue rule across the app
+
 ## [1.1.0] - 2026-11-01
 
 ### Added
@@ -82,6 +103,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add Date and Message-ID headers
 
+[1.2.0]: https://github.com/techolve/vectana/compare/v1.1.0..v1.2.0
 [1.1.0]: https://github.com/techolve/vectana/compare/v1.0.0..v1.1.0
 [1.0.0]: https://github.com/techolve/vectana/compare/v0.1.5..v1.0.0
 [0.1.5]: https://github.com/techolve/vectana/compare/v0.1.4..v0.1.5

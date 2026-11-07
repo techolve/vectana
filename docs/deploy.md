@@ -13,24 +13,30 @@ User ──HTTPS──▶ Worker ──▶ App コンテナ（uvicorn: API + Nex
 
 - Worker と Containers の設定は、このリポジトリではなく techolve のインフラ用リポジトリ（techolve-cloud、非公開）の `vectana/` にある
 - App と Scan は同じイメージ `heki0824/vectana` から起動する。違うのは起動コマンドだけ
-- コンテナはどちらも寝かせる前提（`sleepAfter`）。App は Worker への HTTP で、Scan は Cron Trigger（6時間ごと）で起きる。Scan は `--once` で1回スキャンしたら終わる
+- コンテナはどちらも寝かせる前提（`sleepAfter`）。App は Worker への HTTP で、Scan は Cron Trigger（6時間ごと）で起きる。Scan は `--once` で1回まわしたら終わる（期限が来ていればリポジトリ連携の取り込み → スキャン → 週次レポート）
+- GitHub・GitLab の Webhook（`/api/repo-hooks/*`）も Worker 経由で App に届く。Cloudflare Access などで `/api/` を保護する場合は、このパスを除外する
 - コンテナのディスクは使い捨て。状態は全部 PostgreSQL（PlanetScale Postgres）に置く
 
-## 1. イメージを Docker Hub に push（手元で実行）
+## 1. リリース（タグを打つと自動で公開）
 
-`heki0824/vectana` は **Public** リポジトリ。push には heki0824 でのログインが必要。Cloudflare Containers は amd64 なので、マルチアーキテクチャでビルドする。
+1. バージョンを上げる PR を作る: `api/pyproject.toml` `api/app/__init__.py` `api/uv.lock` `web/package.json`（と lock）、MCP を出すなら `mcp/package.json`（と lock）と `mcp/src/server.ts`。CHANGELOG も更新する（`mise run changelog -- --tag vX.Y.Z` で下書きして整える）
+2. マージしたら main にタグを打つ
+
+```bash
+git tag vX.Y.Z && git push origin vX.Y.Z          # Docker Hub（.github/workflows/docker-publish.yml）
+git tag mcp-vX.Y.Z && git push origin mcp-vX.Y.Z  # npm（.github/workflows/mcp-publish.yml）
+```
+
+- `vX.Y.Z` で `heki0824/vectana:X.Y.Z` と `:latest` を linux/amd64・linux/arm64 で push する。リポジトリの Secrets に `DOCKERHUB_USERNAME`（heki0824）と `DOCKERHUB_TOKEN`（Docker Hub の Access Token、Read & Write）が必要
+- `mcp-vX.Y.Z` で `@techolve/vectana-mcp` を npm に公開する（Trusted Publishing。トークン不要）
+- どちらもタグとバージョンが合わないと失敗する
+
+手元から push する場合（ワークフローが使えないとき）:
 
 ```bash
 docker login -u heki0824
 docker buildx build --platform linux/amd64,linux/arm64 -f docker/Dockerfile \
   -t heki0824/vectana:X.Y.Z -t heki0824/vectana:latest --push .
-```
-
-CHANGELOG を更新して、GitHub にタグ `vX.Y.Z` を打つ。
-
-```bash
-mise run changelog -- --tag vX.Y.Z
-git tag vX.Y.Z && git push origin vX.Y.Z
 ```
 
 ## 2. マイグレーション（スキーマが変わったときだけ）

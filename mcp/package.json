@@ -1,6 +1,6 @@
 {
   "name": "@techolve/vectana-mcp",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "MCP server (stdio) for Vectana: vulnerabilities, EOL, SBOM import, projects, customers and estimates",
   "keywords": [
     "mcp",
