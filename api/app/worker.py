@@ -1,7 +1,8 @@
 """Background worker: periodically scans every package and sends notifications.
 
 python -m app.worker          # run forever on SCAN_INTERVAL_MINUTES
-python -m app.worker --once   # scan once and exit (cron / manual check)
+python -m app.worker --once   # one round and exit (cron / manual check): repository
+                              # import when due, scan, weekly report when due
 python -m app.worker --report # send this week's organization report now and exit
 
 Linked GitHub / GitLab repositories are re-imported once a day (checked
@@ -77,6 +78,15 @@ async def run_forever() -> None:
     scheduler.shutdown(wait=False)
 
 
+async def run_once() -> int:
+    """One round for cron-driven deployments (e.g. Cloudflare Containers, which
+    sleep between runs): what run_forever does on its schedules, each when due."""
+    await repo_import()  # first, so newly imported packages are scanned now
+    sent = await scan_and_notify()
+    await weekly_report()
+    return sent
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--once", action="store_true", help="scan once and exit")
@@ -88,7 +98,7 @@ def main() -> None:
         sent = asyncio.run(weekly_report(force=True))
         logger.info("Done (%d report(s) sent)", sent)
     elif args.once:
-        sent = asyncio.run(scan_and_notify())
+        sent = asyncio.run(run_once())
         logger.info("Done (%d digest(s) sent)", sent)
     else:
         asyncio.run(run_forever())

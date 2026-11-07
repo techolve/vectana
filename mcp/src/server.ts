@@ -4,7 +4,7 @@ import { VectanaClient } from "./client.ts";
 import { registerTools } from "./tools/define.ts";
 import { allTools } from "./tools/index.ts";
 
-export const VERSION = "1.1.0";
+export const VERSION = "1.2.0";
 
 const INSTRUCTIONS = `Vectana tracks the dependencies of software projects, their vulnerabilities (from OSV) and end-of-life dates (from endoflife.date), and manages projects, deals, customers and estimates.
 Every call runs with the permissions of the user who issued the token: call whoami to see who that is.
