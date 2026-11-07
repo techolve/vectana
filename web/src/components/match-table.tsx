@@ -7,6 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { api, type Match } from "@/lib/api";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { OptionSelect, SeverityBadge, useFormatDate } from "@/components/common";
+import { UpgradeHint } from "@/components/upgrade-hint";
 
 const STATUSES = ["open", "ack", "ignored"] as const;
 
@@ -64,6 +65,7 @@ export function MatchTable({
             <TableCell className="font-mono text-xs">
               <div className="text-muted-foreground">{m.ecosystem}</div>
               {m.package_name}@{m.package_version}
+              {m.upgrade?.version && <UpgradeHint upgrade={m.upgrade} className="mt-0.5 flex" />}
             </TableCell>
             <TableCell className="font-mono text-xs">{m.fixed_version ?? "-"}</TableCell>
             <TableCell className="max-w-md whitespace-normal">
