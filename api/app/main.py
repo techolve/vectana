@@ -13,7 +13,9 @@ from app import __version__
 from app.core.config import settings
 from app.i18n import request_locale, translate_error, validation_message
 from app.routers import (
+    activity,
     auth,
+    billing,
     customer,
     eol,
     estimate,
@@ -23,6 +25,7 @@ from app.routers import (
     project,
     report,
     task,
+    timesheet,
     token,
     vulnerability,
 )
@@ -63,6 +66,9 @@ app.include_router(project.router)
 app.include_router(customer.router)
 app.include_router(estimate.router)
 app.include_router(task.router)
+app.include_router(timesheet.router)
+app.include_router(activity.router)
+app.include_router(billing.router)
 app.include_router(token.router)
 app.include_router(personal_token.router)
 app.include_router(eol.router)

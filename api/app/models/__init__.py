@@ -12,6 +12,7 @@ from app.models.report import ReportDelivery
 from app.models.task import Sprint, Task
 from app.models.token import ApiToken, PersonalToken
 from app.models.user import User
+from app.models.work import Activity, Invoice, TimeEntry, TimesheetWeek
 
 __all__ = [
     "ApiToken",
@@ -36,6 +37,10 @@ __all__ = [
     "ReportDelivery",
     "Sprint",
     "Task",
+    "Activity",
+    "Invoice",
+    "TimeEntry",
+    "TimesheetWeek",
     "User",
     "UserDepartment",
     "VulnMatch",
