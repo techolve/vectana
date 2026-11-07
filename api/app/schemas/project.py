@@ -172,6 +172,8 @@ class MatchOut(BaseModel):
     upgrade: UpgradeOut | None = None
     assignee: UserBrief | None = None
     due_date: date | None = None
+    # The SLA deadline, when no due date is set (overdue falls back to it).
+    sla_due_date: date | None = None
     updated_at: datetime | None = None
     comment_count: int = 0
 

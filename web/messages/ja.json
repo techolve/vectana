@@ -412,7 +412,7 @@
     "eolReached": "EOL 到達",
     "eolApproaching": "EOL 接近",
     "units": "会社・部署別",
-    "slaNote": "期限超過 = 検出から CRITICAL {critical}日 / HIGH {high}日 / MEDIUM {medium}日 / LOW {low}日 を過ぎても未対応・確認済みのままの脆弱性",
+    "slaNote": "期限超過 = 個別の期限、なければ検出から CRITICAL {critical}日 / HIGH {high}日 / MEDIUM {medium}日 / LOW {low}日 を過ぎても未対応・確認済みのままの脆弱性",
     "empty": "表示できるプロジェクトがありません",
     "unit": "会社・部署",
     "projects": "プロジェクト",
@@ -457,6 +457,7 @@
     "emptyValue": "なし",
     "changedStatus": "が状態を「{from}」→「{to}」に変更",
     "changedAssignee": "が担当者を「{from}」→「{to}」に変更",
-    "changedDueDate": "が期限を「{from}」→「{to}」に変更"
+    "changedDueDate": "が期限を「{from}」→「{to}」に変更",
+    "slaHint": "個別の期限がないため、重大度別の対応期限（SLA）から計算した日付です"
   }
 }

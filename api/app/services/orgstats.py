@@ -2,15 +2,16 @@
 company and department, limited to the projects a viewer can see.
 
 "Overdue" means an open or acknowledged vulnerability past its remediation
-deadline: ``first_seen_at`` + the SLA days for its severity (system settings).
+deadline: its own ``due_date`` when one is set, otherwise ``first_seen_at`` +
+the SLA days for its severity (system settings).
 """
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from uuid import UUID
 
-from sqlalchemy import func
+from sqlalchemy import ColumnElement, and_, func, or_
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -54,6 +55,41 @@ def _aware(ts: datetime) -> datetime:
 def due_date(severity: str, first_seen_at: datetime, sla: dict[str, int]) -> date:
     days = sla.get(severity, sla[Severity.UNKNOWN.value])
     return (_aware(first_seen_at) + timedelta(days=days)).astimezone(UTC).date()
+
+
+def effective_due(match: VulnMatch, sla: dict[str, int]) -> date:
+    """The match's own due date, or the SLA deadline when none is set."""
+    return match.due_date or due_date(match.severity, match.first_seen_at, sla)
+
+
+def overdue_clause(sla: dict[str, int], today: date) -> ColumnElement[bool]:
+    """SQL condition on ``VulnMatch``: unresolved and past its effective due date.
+
+    Same rule as ``effective_due(...) < today``: an SLA deadline has passed
+    once ``first_seen_at`` is earlier than today's UTC midnight minus the SLA."""
+    midnight = datetime.combine(today, time.min, tzinfo=UTC)
+    known = [s.value for s in Severity]
+    by_severity = [
+        and_(
+            col(VulnMatch.severity) == s,
+            col(VulnMatch.first_seen_at) < midnight - timedelta(days=d),
+        )
+        for s, d in sla.items()
+    ]
+    unknown_cutoff = midnight - timedelta(days=sla[Severity.UNKNOWN.value])
+    by_severity.append(
+        and_(
+            col(VulnMatch.severity).not_in(known),
+            col(VulnMatch.first_seen_at) < unknown_cutoff,
+        )
+    )
+    return and_(
+        col(VulnMatch.status).in_(UNRESOLVED),
+        or_(
+            and_(col(VulnMatch.due_date).is_not(None), col(VulnMatch.due_date) < today),
+            and_(col(VulnMatch.due_date).is_(None), or_(*by_severity)),
+        ),
+    )
 
 
 @dataclass
@@ -157,7 +193,7 @@ async def org_dashboard(
                 .where(col(Package.project_id).in_(ids), col(VulnMatch.status).in_(UNRESOLVED))
             )
         ).all():
-            due = due_date(match.severity, match.first_seen_at, sla)
+            due = effective_due(match, sla)
             if due >= today:
                 continue
             late = (today - due).days

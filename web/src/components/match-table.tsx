@@ -119,7 +119,13 @@ export function MatchTable({
                   )}
                 </TableCell>
                 <TableCell className={cn("text-xs whitespace-nowrap", isOverdue(m) && "font-medium text-destructive")}>
-                  {m.due_date ?? "-"}
+                  {m.due_date ?? (m.sla_due_date ? (
+                    <span title={t("triage.slaHint")}>
+                      {m.sla_due_date} <span className="text-[10px] opacity-70">SLA</span>
+                    </span>
+                  ) : (
+                    "-"
+                  ))}
                   {isOverdue(m) && <div>{t("triage.overdue")}</div>}
                 </TableCell>
                 <TableCell>
