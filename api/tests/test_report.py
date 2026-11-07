@@ -331,3 +331,45 @@ async def test_weekly_report_can_be_disabled_or_forced(
     assert await report.send_weekly_reports(session, MONDAY_MORNING) == 0
     # A manual run (python -m app.worker --report) still sends.
     assert await report.send_weekly_reports(session, MONDAY_MORNING, force=True) == 4
+
+
+async def test_overdue_matches_across_screens(
+    client: AsyncClient,
+    org: Org,
+    session: AsyncSession,
+    data: dict,  # type: ignore[type-arg]
+) -> None:
+    """The organization page, the vulnerabilities list and the dashboard count
+    the same overdue items: own due date first, SLA otherwise."""
+    from sqlmodel import select
+
+    matches = {m.vuln_id: m for m in (await session.exec(select(VulnMatch))).all()}
+    matches["GHSA-HIGH-31"].due_date = TODAY + timedelta(days=14)
+    matches["GHSA-MEDIUM-90"].due_date = TODAY - timedelta(days=2)
+    session.add_all(matches.values())
+    await session.commit()
+
+    for user in (org.group_admin, org.company_admin, org.head, org.affiliate_admin):
+        h = auth(user)
+        org_view = (await client.get("/api/org-dashboard", headers=h)).json()
+        listed = (
+            await client.get(
+                "/api/vulnerabilities", params={"status": "", "overdue": "true"}, headers=h
+            )
+        ).json()
+        dash = (await client.get("/api/dashboard", headers=h)).json()
+        expected = {i["vuln_id"] for i in org_view["overdue"]}
+        assert {m["vuln_id"] for m in listed} == expected, user.email
+        assert dash["triage"]["overdue"] == org_view["totals"]["overdue"] == len(expected)
+
+    listed = (
+        await client.get(
+            "/api/vulnerabilities", params={"status": ""}, headers=auth(org.group_admin)
+        )
+    ).json()
+    by_id = {m["vuln_id"]: m for m in listed}
+    # Without its own date, the SLA deadline is shown; with one, it isn't.
+    crit = by_id["GHSA-CRITICAL-10"]
+    assert crit["due_date"] is None
+    assert crit["sla_due_date"] == (NOW - timedelta(days=3)).date().isoformat()
+    assert by_id["GHSA-HIGH-31"]["sla_due_date"] is None

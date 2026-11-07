@@ -412,7 +412,7 @@
     "eolReached": "EOL reached",
     "eolApproaching": "EOL approaching",
     "units": "By company and department",
-    "slaNote": "Overdue = still open or acknowledged after CRITICAL {critical} / HIGH {high} / MEDIUM {medium} / LOW {low} days from detection",
+    "slaNote": "Overdue = still open or acknowledged after its own due date, or, without one, CRITICAL {critical} / HIGH {high} / MEDIUM {medium} / LOW {low} days from detection",
     "empty": "No projects to show",
     "unit": "Company / department",
     "projects": "Projects",
@@ -457,6 +457,7 @@
     "emptyValue": "none",
     "changedStatus": "changed status from “{from}” to “{to}”",
     "changedAssignee": "changed assignee from “{from}” to “{to}”",
-    "changedDueDate": "changed due date from “{from}” to “{to}”"
+    "changedDueDate": "changed due date from “{from}” to “{to}”",
+    "slaHint": "No due date set, so this is the deadline from the severity SLA"
   }
 }

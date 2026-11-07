@@ -242,6 +242,7 @@ export type Match = {
   upgrade: Upgrade | null;
   assignee: UserBrief | null;
   due_date: string | null; // YYYY-MM-DD
+  sla_due_date: string | null; // SLA deadline when due_date is unset
   updated_at: string | null;
   comment_count: number;
 };
@@ -268,8 +269,13 @@ export function todayISO(): string {
 }
 
 /** Unresolved and past its due date. */
-export function isOverdue(m: Pick<Match, "status" | "due_date">): boolean {
-  return m.status !== "ignored" && !!m.due_date && m.due_date < todayISO();
+/** The match's own due date, or the SLA deadline when none is set. */
+export function effectiveDue(m: Pick<Match, "due_date" | "sla_due_date">): string | null {
+  return m.due_date ?? m.sla_due_date ?? null;
+}
+export function isOverdue(m: Pick<Match, "status" | "due_date" | "sla_due_date">): boolean {
+  const due = effectiveDue(m);
+  return m.status !== "ignored" && !!due && due < todayISO();
 }
 export type EolCounts = { eol: number; approaching: number };
 export type EolStatus = "eol" | "approaching" | "supported" | "unknown";
