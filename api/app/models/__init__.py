@@ -10,7 +10,7 @@ from app.models.package import Package, VulnMatch, VulnMatchEvent
 from app.models.project import Project, ProjectMember, ProjectWebhook
 from app.models.report import ReportDelivery
 from app.models.task import Sprint, Task
-from app.models.token import ApiToken
+from app.models.token import ApiToken, PersonalToken
 from app.models.user import User
 
 __all__ = [
@@ -29,6 +29,7 @@ __all__ = [
     "NotificationDelivery",
     "NotificationPref",
     "Package",
+    "PersonalToken",
     "Project",
     "ProjectMember",
     "ProjectWebhook",

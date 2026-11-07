@@ -63,6 +63,8 @@ ERRORS_JA: dict[str, str] = {
     "Invalid API token": "APIトークンが正しくありません",
     "Invalid token": "認証情報が正しくありません",
     "Invalid token type": "認証情報が正しくありません",
+    "This token is read-only": "このトークンは読み取り専用です",
+    "Personal tokens cannot manage tokens": "個人用トークンではトークンを管理できません",
     "Invalid assignee": "担当者の指定が正しくありません",
     "Invitation has expired": "招待の有効期限が切れています",
     "Invitation not found": "招待が見つかりません",

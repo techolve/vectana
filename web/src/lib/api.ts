@@ -347,6 +347,16 @@ export type ApiToken = {
   last_used_at: string | null;
   created_at: string;
 };
+export type TokenScope = "read" | "write";
+export type PersonalToken = {
+  id: string;
+  name: string;
+  scope: TokenScope;
+  prefix: string;
+  expires_at: string | null;
+  last_used_at: string | null;
+  created_at: string;
+};
 export type UpgradeBump = "patch" | "minor" | "major" | "unknown";
 /** Lowest version that fixes every unresolved (not ignored) vulnerability of a package. */
 export type Upgrade = {

@@ -1,7 +1,8 @@
+from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 def _check_password(v: str) -> str:
@@ -69,3 +70,34 @@ class AcceptInvitation(BaseModel):
 
 class LocaleBody(BaseModel):
     locale: Literal["ja", "en"]
+
+
+class PersonalTokenBody(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    # read: GET only. write: everything the user may do.
+    scope: Literal["read", "write"] = "read"
+    # None = never expires.
+    expires_in_days: int | None = Field(default=None, ge=1, le=3650)
+
+    @field_validator("name")
+    @classmethod
+    def not_blank(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("must not be blank")
+        return v
+
+
+class PersonalTokenOut(BaseModel):
+    id: UUID
+    name: str
+    scope: str
+    prefix: str
+    expires_at: datetime | None
+    last_used_at: datetime | None
+    created_at: datetime
+
+
+class PersonalTokenCreated(PersonalTokenOut):
+    # The secret. Shown once: only its hash is stored.
+    token: str

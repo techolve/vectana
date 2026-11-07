@@ -4,20 +4,19 @@ A token looks like ``vct_<43 url-safe chars>``. Only its SHA-256 is stored:
 the secret has 256 bits of entropy, so a slow hash adds nothing.
 """
 
-import hashlib
 import secrets
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.access import Actor, Level, accessible_project, load_actor
-from app.core.auth import bearer, user_from_access_token
+from app.core.auth import bearer, hash_secret, user_from_bearer
 from app.core.database import get_session
 from app.models.project import Project
 from app.models.token import ApiToken
@@ -31,7 +30,7 @@ def generate() -> str:
 
 
 def hash_token(token: str) -> str:
-    return hashlib.sha256(token.encode()).hexdigest()
+    return hash_secret(token)
 
 
 def _aware(dt: datetime) -> datetime:
@@ -56,20 +55,21 @@ async def token_from_secret(secret: str, session: AsyncSession) -> ApiToken:
 
 @dataclass
 class Caller:
-    """Either a signed-in user or a project API token."""
+    """Either a user (signed in, or by personal token) or a project API token."""
 
     actor: Actor | None = None
     token: ApiToken | None = None
 
 
 async def get_caller(
+    request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> Caller:
     secret = credentials.credentials
     if secret.startswith(TOKEN_PREFIX):
         return Caller(token=await token_from_secret(secret, session))
-    user = await user_from_access_token(secret, session)
+    user = await user_from_bearer(secret, session, request.method)
     return Caller(actor=await load_actor(user, session))
 
 

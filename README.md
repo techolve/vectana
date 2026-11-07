@@ -8,6 +8,7 @@
 - 権限: グループ管理者 / 会社管理者 / 部署長（配下の部署のプロジェクト）/ メンバーと BP（アサインされたプロジェクトだけ）
 - パッケージ登録: 手入力、lockfile の取り込み（`package-lock.json` `pnpm-lock.yaml` `uv.lock` `poetry.lock` `requirements*.txt` `pubspec.lock` `go.mod` `go.sum` `composer.lock` `Cargo.lock` `gradle.lockfile`）、または SBOM（CycloneDX / SPDX）の取り込み
 - CI 連携: プロジェクト単位の API トークンで、CI から lockfile や SBOM を自動登録できる
+- AI 連携: 個人用トークンと [MCP サーバ](mcp/README.md)で、Claude などから脆弱性のトリアージやプロジェクト・見積・タスクの操作ができる
 
 ## 構成
 
@@ -15,6 +16,7 @@
 |---|---|
 | `api/` | FastAPI。API と worker（`python -m app.worker`）を含む |
 | `web/` | Next.js（静的書き出し）。ビルドしたものを FastAPI が配信する |
+| `mcp/` | AI クライアント向けの MCP サーバ（TypeScript、stdio） |
 | `docker/Dockerfile` | アプリのイメージ（1つ）|
 | `compose.yaml` | ローカル用（db / migrate / app / worker / mailpit）|
 | `compose.prod.yaml` | 本番用（Docker Hub のイメージを使う）|
