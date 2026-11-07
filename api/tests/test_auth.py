@@ -87,7 +87,6 @@ async def test_invitation_expired(client: AsyncClient, session: AsyncSession, or
         Invitation(
             email="late@example.com",
             company_id=org.parent.id,
-            role="member",
             token="expired-token",
             expires_at=datetime.now(UTC) - timedelta(minutes=1),
         )

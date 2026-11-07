@@ -5,7 +5,7 @@ import { CopyIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useLocale, useTranslations } from "next-intl";
 
-import { api, type Company, type Department, type Invitation, type Me, type UserDepartment } from "@/lib/api";
+import { api, type Company, type Department, type Invitation, type Role, type UserDepartment } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import { routing } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Empty, LabeledField, OptionSelect, useFormatDate } from "@/components/common";
 import { DepartmentPicker } from "@/components/admin/department-picker";
-import { roleOptions } from "@/components/admin/users-panel";
+import { RoleBadges, RolesPicker, roleOptions } from "@/components/admin/users-panel";
 import { useMe } from "@/components/app-shell";
 
 export function InvitationsPanel({
@@ -34,7 +34,7 @@ export function InvitationsPanel({
   const company = companies.find((c) => c.id === companyId);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState<string>("member");
+  const [roles, setRoles] = useState<Role[]>([]);
   const [depts, setDepts] = useState<UserDepartment[]>([]);
   const [lastUrl, setLastUrl] = useState<string | null>(null);
   const [inviteLocale, setInviteLocale] = useState<string>(useLocale());
@@ -44,7 +44,7 @@ export function InvitationsPanel({
     try {
       const inv = await api<Invitation>("/invitations", {
         method: "POST",
-        json: { email, display_name: name || null, company_id: companyId, role, departments: depts, locale: inviteLocale },
+        json: { email, display_name: name || null, company_id: companyId, roles, departments: depts, locale: inviteLocale },
       });
       if (inv.email_sent) {
         toast.success(t("invitations.sent", { email: inv.email }));
@@ -76,17 +76,13 @@ export function InvitationsPanel({
             <LabeledField label={t("invitations.displayName")} htmlFor="invite-name">
               <Input id="invite-name" value={name} onChange={(e) => setName(e.target.value)} />
             </LabeledField>
-            <LabeledField label={t("invitations.role")}>
-              <OptionSelect
-                value={role}
-                onValueChange={setRole}
-                options={roleOptions(me, company).map((r) => ({ value: r, label: t(`labels.role.${r}`) }))}
-              />
-            </LabeledField>
             <LabeledField label={t("invitations.language")}>
               <OptionSelect value={inviteLocale} onValueChange={setInviteLocale} options={localeOptions} />
             </LabeledField>
           </div>
+          <LabeledField label={t("invitations.role")}>
+            <RolesPicker value={roles} onChange={setRoles} options={roleOptions(me, company)} />
+          </LabeledField>
           <LabeledField label={t("invitations.departments")}>
             <DepartmentPicker departments={departments} companyId={companyId} value={depts} onChange={setDepts} />
           </LabeledField>
@@ -124,7 +120,9 @@ export function InvitationsPanel({
             {pending.map((i) => (
               <TableRow key={i.id}>
                 <TableCell>{i.email}</TableCell>
-                <TableCell className="text-xs">{t(`labels.role.${i.role as Me["role"]}`)}</TableCell>
+                <TableCell className="text-xs">
+                  <RoleBadges roles={i.roles} />
+                </TableCell>
                 <TableCell className="text-xs">{formatDate(i.expires_at)}</TableCell>
                 <TableCell className="text-right">
                   <Button

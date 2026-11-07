@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
-import type { Company, Department } from "@/lib/api";
+import { hasRole, type Company, type Department } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import { ErrorText, OptionSelect, PageHeader, PageTabs } from "@/components/common";
 import { useMe } from "@/components/app-shell";
@@ -18,10 +18,10 @@ type Tab = "companies" | "departments" | "users" | "invitations" | "system";
 export default function AdminPage() {
   const t = useTranslations();
   const me = useMe();
-  const [tab, setTab] = useState<Tab>(me.role === "group_admin" ? "companies" : "departments");
+  const [tab, setTab] = useState<Tab>(hasRole(me, "group_admin") ? "companies" : "departments");
   const { data: companies, reload: reloadCompanies } = useApi<Company[]>("/companies");
   const { data: departments, reload: reloadDepartments } = useApi<Department[]>("/departments");
-  const manageable = (companies ?? []).filter((c) => me.role === "group_admin" || c.id === me.company_id);
+  const manageable = (companies ?? []).filter((c) => hasRole(me, "group_admin") || c.id === me.company_id);
   const [picked, setPicked] = useState<string | null>(null);
   const companyId = picked ?? me.company_id ?? manageable[0]?.id ?? "";
 
@@ -47,7 +47,7 @@ export default function AdminPage() {
           { value: "departments", label: t("admin.tabs.departments") },
           { value: "users", label: t("admin.tabs.users") },
           { value: "invitations", label: t("admin.tabs.invitations") },
-          ...(me.role === "group_admin" ? [{ value: "system" as const, label: t("admin.tabs.system") }] : []),
+          ...(hasRole(me, "group_admin") ? [{ value: "system" as const, label: t("admin.tabs.system") }] : []),
         ]}
       />
       {tab === "companies" && <CompaniesPanel companies={companies} onChanged={reloadCompanies} />}

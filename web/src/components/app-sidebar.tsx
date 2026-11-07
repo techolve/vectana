@@ -4,6 +4,7 @@ import {
   BugIcon,
   Building2Icon,
   CalendarClockIcon,
+  ContactIcon,
   FolderIcon,
   LayoutDashboardIcon,
   MoreHorizontalIcon,
@@ -37,13 +38,16 @@ const PROJECT_LIMIT = 8;
 export function AppSidebar({ me, ...props }: { me: Me } & React.ComponentProps<typeof Sidebar>) {
   const t = useTranslations();
   const pathname = usePathname();
-  const { data: projects } = useApi<Project[]>("/projects");
+  const { data: all } = useApi<Project[]>("/projects");
+  // Deals and archived projects stay on the project list only.
+  const projects = all?.filter((p) => !p.archived && !p.is_deal);
   const projectId = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("id");
 
   const nav = [
     { href: "/", label: t("nav.dashboard"), icon: LayoutDashboardIcon },
     { href: "/org/", label: t("nav.org"), icon: NetworkIcon },
     { href: "/projects/", label: t("nav.projects"), icon: FolderIcon },
+    ...(me.can_see_customers ? [{ href: "/customers/", label: t("nav.customers"), icon: ContactIcon }] : []),
     { href: "/vulnerabilities/", label: t("nav.vulnerabilities"), icon: BugIcon },
     { href: "/eol/", label: t("nav.eol"), icon: CalendarClockIcon },
     ...(me.can_manage_org ? [{ href: "/admin/", label: t("nav.admin"), icon: Building2Icon }] : []),

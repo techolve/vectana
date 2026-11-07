@@ -125,15 +125,21 @@ export type Severity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN";
 export const SEVERITIES: Severity[] = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"];
 export type SeverityCounts = Record<Severity, number>;
 
+/** Global roles; a user holds any number of them (none = plain member). */
+export type Role = "group_admin" | "company_admin" | "sales" | "accounting" | "pmo";
+export const ROLES: Role[] = ["group_admin", "company_admin", "sales", "accounting", "pmo"];
+
 export type Me = {
   id: string;
   email: string;
   display_name: string | null;
-  role: "group_admin" | "company_admin" | "member";
+  roles: Role[];
   company_id: string | null;
   company_name: string | null;
   is_partner: boolean;
   can_manage_org: boolean;
+  can_sell: boolean; // create customers and estimates
+  can_see_customers: boolean;
   managed_department_ids: string[];
   group_name: string;
   locale: string;
@@ -147,10 +153,11 @@ export type User = {
   id: string;
   email: string;
   display_name: string | null;
-  role: Me["role"];
+  roles: Role[];
   is_active: boolean;
   company_id: string | null;
   departments: UserDepartment[];
+  unit_cost: number | null; // yen per person-day; only for admins, sales and accounting
 };
 export type UserBrief = Pick<User, "id" | "email" | "display_name" | "company_id">;
 export type Invitation = {
@@ -158,7 +165,7 @@ export type Invitation = {
   email: string;
   display_name: string | null;
   company_id: string;
-  role: string;
+  roles: Role[];
   locale: string;
   status: string;
   created_at: string;
@@ -167,6 +174,37 @@ export type Invitation = {
   accept_url?: string | null;
 };
 
+export type ProjectStatus =
+  | "inquiry"
+  | "proposal"
+  | "negotiation"
+  | "won"
+  | "development"
+  | "maintenance"
+  | "on_hold"
+  | "lost";
+export const PROJECT_STATUSES: ProjectStatus[] = [
+  "inquiry",
+  "proposal",
+  "negotiation",
+  "won",
+  "development",
+  "maintenance",
+  "on_hold",
+  "lost",
+];
+export const SALES_STATUSES: ProjectStatus[] = ["inquiry", "proposal", "negotiation"];
+export const DELIVERY_STATUSES: ProjectStatus[] = ["won", "development", "maintenance"];
+export type ProjectMethod = "waterfall" | "scrum";
+/** Tabs of the project list. */
+export type ProjectTab = "sales" | "active" | "maintenance" | "closed";
+export function projectTab(p: Pick<Project, "status" | "archived" | "is_deal">): ProjectTab {
+  if (p.archived) return "closed";
+  if (p.status === "maintenance") return "maintenance";
+  if (p.status ? SALES_STATUSES.includes(p.status) : p.is_deal) return "sales";
+  return "active";
+}
+
 export type Project = {
   id: string;
   company_id: string;
@@ -174,6 +212,28 @@ export type Project = {
   name: string;
   description: string | null;
   created_at: string;
+  method: ProjectMethod;
+  archived: boolean;
+  is_deal: boolean;
+  manager: UserBrief | null;
+  starts_on: string | null;
+  ends_on: string | null;
+  // Sales fields: null for partner (BP) users.
+  status: ProjectStatus | null;
+  customer: { id: string; name: string } | null;
+  sales_owner: UserBrief | null;
+  ordered_on: string | null;
+  expected_amount: number | null;
+  probability: number | null;
+  next_action: string | null;
+  next_action_on: string | null;
+  lost_reason: string | null;
+  competitor: string | null;
+  estimate_count: number | null;
+  open_estimate_amount: number | null;
+  won_amount: number | null;
+  monthly_amount: number | null;
+  can_sell: boolean;
   package_count: number;
   open_counts: SeverityCounts;
   eol_counts: EolCounts;
@@ -181,6 +241,85 @@ export type Project = {
   my_level: "read" | "write" | "manage" | null;
 };
 export type ProjectRole = "owner" | "member" | "viewer";
+
+export type Contact = {
+  id: string;
+  name: string;
+  title: string | null;
+  email: string | null;
+  phone: string | null;
+  is_primary: boolean;
+};
+export type Customer = {
+  id: string;
+  company_id: string;
+  name: string;
+  industry: string | null;
+  address: string | null;
+  phone: string | null;
+  website: string | null;
+  payment_terms: string | null;
+  billing_contact: string | null;
+  notes: string | null;
+  sales_owner: UserBrief | null;
+  created_at: string;
+  primary_contact: string | null;
+  project_count: number;
+  pipeline_amount: number;
+  can_edit: boolean;
+};
+export type CustomerDetail = Customer & { contacts: Contact[] };
+
+export type EstimateKind = "initial" | "additional" | "maintenance" | "other";
+export const ESTIMATE_KINDS: EstimateKind[] = ["initial", "additional", "maintenance", "other"];
+export type EstimateStatus = "draft" | "submitted" | "won" | "lost";
+export const ESTIMATE_STATUSES: EstimateStatus[] = ["draft", "submitted", "won", "lost"];
+export type EstimateLine = {
+  id: string;
+  label: string;
+  user: UserBrief | null;
+  days: number;
+  unit_cost: number | null; // hidden unless the caller may see per-person costs
+  cost: number | null;
+};
+export type Estimate = {
+  id: string;
+  project_id: string;
+  title: string;
+  kind: EstimateKind;
+  status: EstimateStatus;
+  billing: "one_time" | "monthly";
+  amount: number | null;
+  effort_days: number | null;
+  margin: number | null;
+  cost: number | null;
+  issued_on: string | null;
+  due_on: string | null;
+  valid_until: string | null;
+  decided_on: string | null;
+  lost_reason: string | null;
+  competitor: string | null;
+  notes: string | null;
+  lines: EstimateLine[];
+  created_at: string;
+  updated_at: string | null;
+};
+
+export function hasRole(me: Pick<Me, "roles">, role: Role): boolean {
+  return me.roles.includes(role);
+}
+
+/** What a pipeline card or a deal row shows as its amount. */
+export function dealAmount(p: Pick<Project, "open_estimate_amount" | "won_amount" | "expected_amount">): number | null {
+  if (p.open_estimate_amount) return p.open_estimate_amount;
+  if (p.won_amount) return p.won_amount;
+  return p.expected_amount;
+}
+
+/** ¥1,234,000 */
+export function yen(amount: number | null | undefined): string {
+  return amount == null ? "—" : `¥${amount.toLocaleString("ja-JP")}`;
+}
 export type Member = {
   id: string;
   user_id: string;

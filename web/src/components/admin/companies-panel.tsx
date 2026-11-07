@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
-import { api, type Company, type CompanyType } from "@/lib/api";
+import { api, hasRole, type Company, type CompanyType } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -16,7 +16,7 @@ const TYPES: CompanyType[] = ["parent", "affiliate", "partner"];
 export function CompaniesPanel({ companies, onChanged }: { companies: Company[]; onChanged: () => void }) {
   const t = useTranslations();
   const me = useMe();
-  const editable = me.role === "group_admin";
+  const editable = hasRole(me, "group_admin");
   const [name, setName] = useState("");
   const [type, setType] = useState<string>("affiliate");
   const typeOptions = TYPES.map((v) => ({ value: v, label: t(`labels.companyType.${v}`) }));

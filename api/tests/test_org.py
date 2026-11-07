@@ -30,6 +30,8 @@ async def test_company_admin_scoped_to_own_company(client: AsyncClient, org: Org
         "ca@example.com",
         "head@example.com",
         "m@example.com",
+        "sales@example.com",
+        "acc@example.com",
     }
 
 
@@ -55,7 +57,11 @@ async def test_department_with_children_not_deletable(client: AsyncClient, org: 
 async def test_partner_users_are_members_only(client: AsyncClient, org: Org) -> None:
     r = await client.post(
         "/api/invitations",
-        json={"email": "x@bp.example", "company_id": str(org.partner.id), "role": "company_admin"},
+        json={
+            "email": "x@bp.example",
+            "company_id": str(org.partner.id),
+            "roles": ["company_admin"],
+        },
         headers=auth(org.group_admin),
     )
     assert r.status_code == 422
@@ -63,7 +69,9 @@ async def test_partner_users_are_members_only(client: AsyncClient, org: Org) -> 
 
 async def test_company_admin_cannot_grant_group_admin(client: AsyncClient, org: Org) -> None:
     r = await client.patch(
-        f"/api/users/{org.member.id}", json={"role": "group_admin"}, headers=auth(org.company_admin)
+        f"/api/users/{org.member.id}",
+        json={"roles": ["group_admin"]},
+        headers=auth(org.company_admin),
     )
     assert r.status_code == 403
 

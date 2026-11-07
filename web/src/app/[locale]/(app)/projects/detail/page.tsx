@@ -9,7 +9,10 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { api, type Company, type Department, type Match, type Project } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
-import { usePageCrumb } from "@/components/app-shell";
+import { useMe, usePageCrumb } from "@/components/app-shell";
+import { ProjectStatusBadge } from "@/components/sales/status";
+import { OverviewPanel, StatusStepper } from "@/components/project/overview-panel";
+import { EstimatesPanel } from "@/components/project/estimates-panel";
 import { departmentPath } from "@/lib/org";
 import { Button } from "@/components/ui/button";
 import { ErrorText, PageHeader, PageTabs, SeverityCountsInline } from "@/components/common";
@@ -22,13 +25,14 @@ import { WebhooksPanel } from "@/components/project/webhooks-panel";
 import { TokensPanel } from "@/components/project/tokens-panel";
 import { SettingsPanel } from "@/components/project/settings-panel";
 
-type Tab = "vulns" | "eol" | "packages" | "members" | "webhooks" | "tokens" | "settings";
+type Tab = "overview" | "estimates" | "vulns" | "eol" | "packages" | "members" | "webhooks" | "tokens" | "settings";
 
 function ProjectDetail() {
   const t = useTranslations();
   const id = useSearchParams().get("id");
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("vulns");
+  const me = useMe();
+  const [tab, setTab] = useState<Tab>("overview");
   const { data: project, error, reload } = useApi<Project>(id ? `/projects/${id}` : null);
   const { data: matches, reload: reloadMatches } = useApi<Match[]>(id ? `/vulnerabilities?project_id=${id}&status=` : null);
   const { data: companies } = useApi<Company[]>("/companies");
@@ -58,6 +62,10 @@ function ProjectDetail() {
   }
 
   const tabs: { value: Tab; label: React.ReactNode }[] = [
+    { value: "overview", label: t("project.tabs.overview") },
+    ...(me.is_partner
+      ? []
+      : [{ value: "estimates" as const, label: t("project.tabs.estimates", { count: project.estimate_count ?? 0 }) }]),
     { value: "vulns", label: t("project.tabs.vulns") },
     { value: "eol", label: t("project.tabs.eol") },
     { value: "packages", label: t("project.tabs.packages", { count: project.package_count }) },
@@ -77,7 +85,9 @@ function ProjectDetail() {
         title={project.name}
         description={
           <span className="flex flex-wrap items-center gap-2">
+            <ProjectStatusBadge status={project.status} />
             <span>
+              {project.customer ? `${project.customer.name} ・ ` : ""}
               {company?.name}
               {project.department_id && departments ? ` / ${departmentPath(departments, project.department_id)}` : ""}
             </span>
@@ -97,7 +107,12 @@ function ProjectDetail() {
       {project.description && (
         <p className="-mt-3 mb-4 text-sm whitespace-pre-wrap text-muted-foreground">{project.description}</p>
       )}
+      <div className="mb-4">
+        <StatusStepper project={project} />
+      </div>
       <PageTabs tabs={tabs} value={tab} onChange={setTab} />
+      {tab === "overview" && <OverviewPanel project={project} canManage={canManage} onSaved={reload} />}
+      {tab === "estimates" && !me.is_partner && <EstimatesPanel project={project} onChanged={reload} />}
       {tab === "vulns" && matches && (
         <MatchTable matches={matches} onChanged={refreshAll} canTriage={canWrite} empty={t("project.noMatches")} />
       )}

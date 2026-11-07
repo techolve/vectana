@@ -70,7 +70,7 @@ for (const u of d.users) {
       email: u.email,
       display_name: u.name,
       company_id: companies[u.company].id,
-      role: u.role,
+      roles: u.role === "member" ? [] : [u.role],
       locale,
       departments: (u.departments ?? []).map(([name, extra], i) => ({
         department_id: depts[name].id,

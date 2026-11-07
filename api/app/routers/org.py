@@ -72,13 +72,23 @@ async def _get_company(company_id: UUID, session: AsyncSession) -> Company:
     return company
 
 
-def _check_role(actor: Actor, role: UserRole, company: Company) -> None:
-    if role == UserRole.group_admin and not actor.is_group_admin:
+def _check_roles(
+    actor: Actor, roles: list[UserRole], company: Company | None, current: list[str] | None = None
+) -> list[str]:
+    """Validate a new role set and return it de-duplicated in enum order.
+
+    Only group admins grant or take away group admin. Partner (BP) users get
+    no global role at all, so in particular never sales.
+    """
+    wanted = set(roles)
+    had_group_admin = UserRole.group_admin in (current or [])
+    if (UserRole.group_admin in wanted) != had_group_admin and not actor.is_group_admin:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Only group admins can grant this role")
-    if company.type == CompanyType.partner and role != UserRole.member:
+    if company is not None and company.type == CompanyType.partner and wanted:
         raise HTTPException(
             status.HTTP_422_UNPROCESSABLE_CONTENT, "Partner users can only be members"
         )
+    return [r.value for r in UserRole if r in wanted]
 
 
 async def _validate_departments(
@@ -145,12 +155,8 @@ async def update_company(
 ) -> CompanyOut:
     company = await _get_company(company_id, session)
     if body.type == CompanyType.partner and company.type != CompanyType.partner:
-        admins = (
-            await session.exec(
-                select(User.id).where(User.company_id == company_id, User.role != UserRole.member)
-            )
-        ).first()
-        if admins:
+        users = (await session.exec(select(User).where(User.company_id == company_id))).all()
+        if any(u.roles for u in users):
             raise HTTPException(
                 status.HTTP_422_UNPROCESSABLE_CONTENT,
                 "Demote this company's administrators before making it a partner",
@@ -291,7 +297,9 @@ async def delete_department(dept_id: UUID, actor: OrgAdmin, session: Session) ->
 # --- Users -------------------------------------------------------------------
 
 
-async def _user_out(users: list[User], session: AsyncSession) -> list[UserOut]:
+async def _user_out(
+    users: list[User], session: AsyncSession, actor: Actor | None = None
+) -> list[UserOut]:
     ids = [u.id for u in users]
     rows = (
         (
@@ -314,10 +322,11 @@ async def _user_out(users: list[User], session: AsyncSession) -> list[UserOut]:
             id=u.id,
             email=u.email,
             display_name=u.display_name,
-            role=u.role,
+            roles=list(u.roles or []),
             is_active=u.is_active,
             company_id=u.company_id,
             departments=by_user.get(u.id, []),
+            unit_cost=u.unit_cost if actor and actor.can_see_unit_cost(u.company_id) else None,
         )
         for u in users
     ]
@@ -334,7 +343,7 @@ async def list_users(
         query = query.where(User.company_id == actor.user.company_id)
     elif company_id is not None:
         query = query.where(User.company_id == company_id)
-    return await _user_out(list((await session.exec(query)).all()), session)
+    return await _user_out(list((await session.exec(query)).all()), session, actor)
 
 
 @router.get("/users/directory", response_model=list[UserBrief], summary="アサイン用ユーザー検索")
@@ -364,23 +373,25 @@ async def update_user(
     user = await session.get(User, user_id)
     if user is None or (not actor.is_group_admin and user.company_id != actor.user.company_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
-    if user.role == UserRole.group_admin and not actor.is_group_admin:
+    if user.has_role(UserRole.group_admin) and not actor.is_group_admin:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Cannot modify a group admin")
-    if user.id == actor.user.id and (
-        (body.role is not None and body.role != user.role) or body.is_active is False
-    ):
+    fields = body.model_dump(exclude_unset=True)
+    if body.roles is not None:
+        company = await session.get(Company, user.company_id) if user.company_id else None
+        roles = _check_roles(actor, body.roles, company, user.roles)
+        if user.id == actor.user.id and set(roles) != set(user.roles or []):
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT,
+                "You cannot change your own role or disable yourself",
+            )
+        user.roles = roles
+    if user.id == actor.user.id and body.is_active is False:
         raise HTTPException(
             status.HTTP_422_UNPROCESSABLE_CONTENT,
             "You cannot change your own role or disable yourself",
         )
-
-    if body.role is not None:
-        company = await session.get(Company, user.company_id) if user.company_id else None
-        if company is not None:
-            _check_role(actor, body.role, company)
-        elif body.role == UserRole.group_admin and not actor.is_group_admin:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "Only group admins can grant this role")
-        user.role = body.role
+    if "unit_cost" in fields:
+        user.unit_cost = body.unit_cost
     if body.display_name is not None:
         user.display_name = body.display_name
     if body.is_active is not None:
@@ -401,7 +412,7 @@ async def update_user(
             )
     session.add(user)
     await session.commit()
-    return (await _user_out([user], session))[0]
+    return (await _user_out([user], session, actor))[0]
 
 
 # --- Invitations -------------------------------------------------------------
@@ -413,7 +424,7 @@ def _invitation_out(inv: Invitation, **extra: object) -> InvitationOut:
         email=inv.email,
         display_name=inv.display_name,
         company_id=inv.company_id,
-        role=inv.role,
+        roles=list(inv.roles or []),
         locale=inv.locale,
         status=inv.status,
         created_at=inv.created_at,
@@ -449,7 +460,7 @@ async def create_invitation(
 ) -> InvitationOut:
     _ensure_company_scope(actor, body.company_id)
     company = await _get_company(body.company_id, session)
-    _check_role(actor, body.role, company)
+    roles = _check_roles(actor, body.roles, company)
     await _validate_departments(body.departments, company.id, session)
 
     email = body.email.lower()
@@ -470,7 +481,7 @@ async def create_invitation(
         email=email,
         display_name=body.display_name,
         company_id=company.id,
-        role=body.role,
+        roles=roles,
         locale=body.locale or request_locale(request),
         department_ids=[e.model_dump(mode="json") for e in body.departments],
         token=secrets.token_urlsafe(32),

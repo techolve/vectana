@@ -77,6 +77,9 @@ class Org:
     head: User  # head of 開発本部
     member: User  # parent member in 第1開発部
     bp: User  # partner user
+    seller: User  # parent, 営業
+    accounting: User  # parent, 経理
+    pmo: User  # affiliate, PMO
 
 
 MakeUser = Callable[..., Awaitable[User]]
@@ -87,13 +90,13 @@ def make_user(session: AsyncSession) -> MakeUser:
     async def _make(
         email: str,
         company: Company | None,
-        role: UserRole = UserRole.member,
+        role: UserRole | list[UserRole] | None = None,
         departments: list[tuple[Department, bool]] | None = None,
     ) -> User:
         user = User(
             email=email,
             hashed_password=hash_password("password123"),
-            role=role,
+            roles=[r.value for r in (role if isinstance(role, list) else [role] if role else [])],
             company_id=company.id if company else None,
         )
         session.add(user)
@@ -137,6 +140,9 @@ async def org(session: AsyncSession, make_user: MakeUser) -> Org:
         head=await make_user("head@example.com", parent, departments=[(dev, True)]),
         member=await make_user("m@example.com", parent, departments=[(dev1, False)]),
         bp=await make_user("bp@example.com", partner),
+        seller=await make_user("sales@example.com", parent, UserRole.sales),
+        accounting=await make_user("acc@example.com", parent, UserRole.accounting),
+        pmo=await make_user("pmo@example.com", affiliate, UserRole.pmo),
     )
 
 

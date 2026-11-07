@@ -10,6 +10,7 @@ from fastapi import (
     Depends,
     Form,
     HTTPException,
+    Query,
     UploadFile,
     status,
 )
@@ -32,7 +33,14 @@ from app.core.tokens import Caller, caller_project, get_caller
 from app.models.eol import EolFinding, EolStatus, Runtime
 from app.models.organization import Company, CompanyType, Department
 from app.models.package import MatchStatus, Package, VulnMatch
-from app.models.project import Project, ProjectMember, ProjectRole, ProjectWebhook
+from app.models.project import (
+    ARCHIVED_STATUSES,
+    DELIVERY_STATUSES,
+    Project,
+    ProjectMember,
+    ProjectRole,
+    ProjectWebhook,
+)
 from app.models.user import User
 from app.routers.vulnerability import upgrade_out
 from app.schemas.project import (
@@ -52,7 +60,8 @@ from app.schemas.project import (
     WebhookBody,
     WebhookOut,
 )
-from app.services import eol, lockfile, toolfile, upgrade
+from app.schemas.sales import CustomerBrief
+from app.services import deals, eol, lockfile, toolfile, upgrade
 from app.services.notify import digest
 from app.services.scanner import scan_and_notify
 
@@ -138,13 +147,15 @@ async def _last_scans(session: AsyncSession, project_ids: list[UUID]) -> dict[UU
     return {pid: ts for pid, ts in rows if ts is not None}
 
 
-async def project_rows(session: AsyncSession, projects: list[Project]) -> list[ProjectOut]:
+async def project_rows(
+    session: AsyncSession, projects: list[Project], actor: Actor | None = None
+) -> list[ProjectOut]:
     ids = [p.id for p in projects]
     counts = await _open_counts(session, ids)
     packages = await _package_counts(session, ids)
     eol_counts = await _eol_counts(session, ids)
     scans = await _last_scans(session, ids)
-    return [
+    rows = [
         _project_out(
             p,
             counts[p.id],
@@ -154,6 +165,44 @@ async def project_rows(session: AsyncSession, projects: list[Project]) -> list[P
         )
         for p in projects
     ]
+    await _fill_people_and_money(session, projects, rows, actor)
+    return rows
+
+
+async def _fill_people_and_money(
+    session: AsyncSession,
+    projects: list[Project],
+    rows: list[ProjectOut],
+    actor: Actor | None,
+) -> None:
+    users = await deals.users_by_id(
+        session, {p.manager_id for p in projects} | {p.sales_owner_id for p in projects}
+    )
+    for p, row in zip(projects, rows, strict=True):
+        row.manager = deals.brief(users.get(p.manager_id) if p.manager_id else None)
+    # Partner (BP) users see tasks and vulnerabilities only.
+    if actor is None or not actor.sees_money:
+        return
+    customers = await deals.customers_by_id(session, {p.customer_id for p in projects})
+    totals = await deals.estimate_totals(session, [p.id for p in projects])
+    for p, row in zip(projects, rows, strict=True):
+        customer = customers.get(p.customer_id) if p.customer_id else None
+        t = totals[p.id]
+        row.status = p.status
+        row.customer = CustomerBrief(id=customer.id, name=customer.name) if customer else None
+        row.sales_owner = deals.brief(users.get(p.sales_owner_id) if p.sales_owner_id else None)
+        row.ordered_on = p.ordered_on
+        row.expected_amount = p.expected_amount
+        row.probability = p.probability
+        row.next_action = p.next_action
+        row.next_action_on = p.next_action_on
+        row.lost_reason = p.lost_reason
+        row.competitor = p.competitor
+        row.estimate_count = t.count
+        row.open_estimate_amount = t.open_amount
+        row.won_amount = t.won_amount
+        row.monthly_amount = t.monthly_amount
+        row.can_sell = actor.can_sell(p.company_id)
 
 
 def _project_out(
@@ -171,6 +220,11 @@ def _project_out(
         name=p.name,
         description=p.description,
         created_at=p.created_at,
+        method=p.method,
+        archived=p.status in ARCHIVED_STATUSES,
+        is_deal=p.is_deal,
+        starts_on=p.starts_on,
+        ends_on=p.ends_on,
         package_count=packages,
         open_counts=counts,
         eol_counts=eol_counts or EolCounts(),
@@ -183,15 +237,31 @@ def _project_out(
 
 
 @router.get("/projects", response_model=list[ProjectOut], summary="プロジェクト一覧")
-async def list_projects(actor: CurrentActor, session: Session) -> list[ProjectOut]:
-    projects = list(
-        (
-            await session.exec(
-                select(Project).where(visible_projects_clause(actor)).order_by(Project.name)
-            )
-        ).all()
-    )
-    return await project_rows(session, projects)
+async def list_projects(
+    actor: CurrentActor,
+    session: Session,
+    customer_id: Annotated[UUID | None, Query()] = None,
+) -> list[ProjectOut]:
+    """Every visible project, archived (保留・失注) ones included; the web app
+    splits them into tabs."""
+    query = select(Project).where(visible_projects_clause(actor)).order_by(Project.name)
+    if customer_id is not None:
+        query = query.where(Project.customer_id == customer_id)
+    projects = list((await session.exec(query)).all())
+    return await project_rows(session, projects, actor)
+
+
+async def _check_department(
+    session: AsyncSession, department_id: UUID | None, company_id: UUID
+) -> None:
+    if department_id is None:
+        return
+    dept = await session.get(Department, department_id)
+    if dept is None or dept.company_id != company_id:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "Department must be in the same company",
+        )
 
 
 @router.post(
@@ -213,56 +283,121 @@ async def create_project(body: ProjectBody, actor: CurrentActor, session: Sessio
         )
     if company_id != actor.user.company_id and not actor.is_group_admin:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Not allowed for this company")
-    if body.department_id is not None:
-        dept = await session.get(Department, body.department_id)
-        if dept is None or dept.company_id != company_id:
-            raise HTTPException(
-                status.HTTP_422_UNPROCESSABLE_CONTENT,
-                "Department must be in the same company",
-            )
+    await _check_department(session, body.department_id, company_id)
+    deal_fields = SALES_FIELDS & body.model_dump(exclude_defaults=True).keys()
+    if (deal_fields or body.status not in DELIVERY_STATUSES) and not actor.can_sell(company_id):
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN, "Only sales and administrators can create deals"
+        )
+    await deals.check_customer(session, body.customer_id, company_id)
+    await deals.check_user(session, body.sales_owner_id)
+    await deals.check_user(session, body.manager_id)
 
     project = Project(
         company_id=company_id,
         department_id=body.department_id,
         name=body.name.strip(),
         description=body.description,
+        method=body.method,
+        customer_id=body.customer_id,
+        sales_owner_id=body.sales_owner_id,
+        manager_id=body.manager_id,
+        starts_on=body.starts_on,
+        ends_on=body.ends_on,
+        expected_amount=body.expected_amount,
+        probability=body.probability,
+        next_action=body.next_action,
+        next_action_on=body.next_action_on,
     )
+    deals.apply_status(project, body.status)
     session.add(project)
     await session.flush()
     # The creator owns the project so it is never orphaned from their view.
     session.add(ProjectMember(project_id=project.id, user_id=actor.user.id, role=ProjectRole.owner))
     await session.commit()
-    return _project_out(project, SeverityCounts(), 0, Level.manage)
+    row = (await project_rows(session, [project], actor))[0]
+    row.my_level = Level.manage.name
+    return row
 
 
 @router.get("/projects/{project_id}", response_model=ProjectOut, summary="プロジェクト詳細")
 async def get_project(project_id: UUID, actor: CurrentActor, session: Session) -> ProjectOut:
     project = await accessible_project(project_id, actor, session)
     level = await project_level(project, actor, session)
-    row = (await project_rows(session, [project]))[0]
+    row = (await project_rows(session, [project], actor))[0]
     row.my_level = level.name if level else None
     return row
+
+
+# Fields only sales (and admins) change: the deal side of a project.
+SALES_FIELDS = {
+    "customer_id",
+    "sales_owner_id",
+    "ordered_on",
+    "expected_amount",
+    "probability",
+    "next_action",
+    "next_action_on",
+    "lost_reason",
+    "competitor",
+}
 
 
 @router.patch("/projects/{project_id}", response_model=ProjectOut, summary="プロジェクトの更新")
 async def update_project(
     project_id: UUID, body: ProjectUpdate, actor: CurrentActor, session: Session
 ) -> ProjectOut:
-    project = await accessible_project(project_id, actor, session, Level.manage)
+    """Project managers edit delivery fields; status and the deal fields need
+    sales (or admin) rights, except moving between delivery statuses."""
+    project = await session.get(Project, project_id)
+    if project is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Project not found")
+    level = await project_level(project, actor, session)
+    if level is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Project not found")
     fields = body.model_dump(exclude_unset=True)
+    selling = actor.can_sell(project.company_id)
+    status_change = body.status is not None and body.status != project.status
+    delivery_move = (
+        status_change and project.status in DELIVERY_STATUSES and body.status in DELIVERY_STATUSES
+    )
+    needs_sales = bool(SALES_FIELDS & fields.keys()) or (status_change and not delivery_move)
+    other = fields.keys() - SALES_FIELDS - {"status"}
+    if needs_sales and not selling:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Insufficient permission")
+    if (other or delivery_move) and level < Level.manage:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Insufficient permission")
+
     if "department_id" in fields:
-        if body.department_id is not None:
-            dept = await session.get(Department, body.department_id)
-            if dept is None or dept.company_id != project.company_id:
-                raise HTTPException(
-                    status.HTTP_422_UNPROCESSABLE_CONTENT,
-                    "Department must be in the same company",
-                )
+        await _check_department(session, body.department_id, project.company_id)
         project.department_id = body.department_id
+    if "customer_id" in fields:
+        await deals.check_customer(session, body.customer_id, project.company_id)
+        project.customer_id = body.customer_id
+    for key in ("sales_owner_id", "manager_id"):
+        if key in fields:
+            await deals.check_user(session, fields[key])
+            setattr(project, key, fields[key])
     if body.name is not None:
         project.name = body.name.strip()
-    if "description" in fields:
-        project.description = body.description
+    for key in (
+        "description",
+        "ordered_on",
+        "starts_on",
+        "ends_on",
+        "expected_amount",
+        "probability",
+        "next_action",
+        "next_action_on",
+        "lost_reason",
+        "competitor",
+    ):
+        if key in fields:
+            setattr(project, key, fields[key])
+    if body.method is not None:
+        project.method = body.method
+    if body.status is not None:
+        deals.apply_status(project, body.status)
     session.add(project)
     await session.commit()
     return await get_project(project_id, actor, session)
@@ -768,7 +903,7 @@ async def dashboard(actor: CurrentActor, session: Session) -> DashboardOut:
             )
         ).all()
     )
-    rows = await project_rows(session, projects)
+    rows = await project_rows(session, projects, actor)
     totals = SeverityCounts()
     eol_totals = EolCounts()
     for row in rows:

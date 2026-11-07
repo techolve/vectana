@@ -13,7 +13,6 @@ from datetime import UTC, datetime
 from html import escape
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import or_
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -24,7 +23,7 @@ from app.models.eol import AppSettings
 from app.models.notification import NotificationPref
 from app.models.organization import UserDepartment
 from app.models.report import ReportDelivery
-from app.models.user import User, UserRole
+from app.models.user import ADMIN_ROLES, User
 from app.schemas.report import OrgDashboardOut, OrgRow
 from app.services.mailer import mail_enabled, send_email
 from app.services.orgstats import org_dashboard
@@ -52,15 +51,17 @@ async def recipients(session: AsyncSession) -> list[User]:
             .join(NotificationPref, col(NotificationPref.user_id) == User.id, isouter=True)
             .where(
                 col(User.is_active).is_(True),
-                or_(
-                    col(User.role).in_([UserRole.group_admin, UserRole.company_admin]),
-                    col(User.id).in_(heads),
-                ),
             )
             .order_by(User.email)
         )
     ).all()
-    return [user for user, pref in rows if pref is None or pref.email_enabled]
+    head_ids = set((await session.exec(heads)).all())
+    return [
+        user
+        for user, pref in rows
+        if (pref is None or pref.email_enabled)
+        and (user.id in head_ids or ADMIN_ROLES & set(user.roles or []))
+    ]
 
 
 def org_url(locale: str) -> str:
