@@ -120,8 +120,17 @@ export type Me = {
 
 export type CompanyType = "parent" | "affiliate" | "partner";
 export type Company = { id: string; name: string; type: CompanyType };
-export type Department = { id: string; company_id: string; parent_id: string | null; name: string };
-export type UserDepartment = { department_id: string; is_primary: boolean; is_head: boolean };
+export type Department = {
+  id: string;
+  company_id: string;
+  parent_id: string | null;
+  name: string;
+};
+export type UserDepartment = {
+  department_id: string;
+  is_primary: boolean;
+  is_head: boolean;
+};
 export type User = {
   id: string;
   email: string;
@@ -216,10 +225,44 @@ export type Match = {
   severity: Severity;
   cvss_score: number | null;
   fixed_version: string | null;
-  status: "open" | "ack" | "ignored";
+  status: MatchStatus;
   first_seen_at: string;
   upgrade: Upgrade | null;
+  assignee: UserBrief | null;
+  due_date: string | null; // YYYY-MM-DD
+  updated_at: string | null;
+  comment_count: number;
 };
+export type MatchStatus = "open" | "ack" | "ignored";
+export const MATCH_STATUSES: MatchStatus[] = ["open", "ack", "ignored"];
+export type MatchEvent = {
+  id: string;
+  kind: "comment" | "status" | "assignee" | "due_date";
+  user: UserBrief | null;
+  old_value: string | null;
+  new_value: string | null;
+  old_user: UserBrief | null;
+  new_user: UserBrief | null;
+  body: string | null;
+  created_at: string;
+};
+export type MatchDetail = Match & { events: MatchEvent[] };
+export type TriageCounts = {
+  mine: number;
+  overdue: number;
+  unassigned: number;
+};
+
+/** Today as YYYY-MM-DD in the browser's timezone. */
+export function todayISO(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Unresolved and past its due date. */
+export function isOverdue(m: Pick<Match, "status" | "due_date">): boolean {
+  return m.status !== "ignored" && !!m.due_date && m.due_date < todayISO();
+}
 export type EolCounts = { eol: number; approaching: number };
 export type EolStatus = "eol" | "approaching" | "supported" | "unknown";
 export const EOL_STATUSES: EolStatus[] = ["eol", "approaching", "supported", "unknown"];
@@ -237,8 +280,17 @@ export type EolFinding = {
   status: EolStatus;
   checked_at: string | null;
 };
-export type Runtime = { id: string; product: string; version: string; source: string };
-export type EolProduct = { name: string; label: string; category: string | null };
+export type Runtime = {
+  id: string;
+  product: string;
+  version: string;
+  source: string;
+};
+export type EolProduct = {
+  name: string;
+  label: string;
+  category: string | null;
+};
 export type SystemSettings = { eol_warning_days: number };
 
 export type Dashboard = {
@@ -246,6 +298,7 @@ export type Dashboard = {
   package_count: number;
   open_counts: SeverityCounts;
   eol_counts: EolCounts;
+  triage: TriageCounts;
   projects: Project[];
   recent: Match[];
   eol: EolFinding[];

@@ -122,7 +122,10 @@
     "tabVulns": "Vulnerabilities ({count})",
     "tabEol": "EOL ({count})",
     "eolEmpty": "Nothing has reached or is close to end of life.",
-    "noProjects": "You can't see any projects yet."
+    "noProjects": "You can't see any projects yet.",
+    "mine": "Assigned to me (unresolved)",
+    "overdue": "Overdue",
+    "unassigned": "Open and unassigned"
   },
   "matches": {
     "severity": "Severity",
@@ -137,7 +140,14 @@
     "title": "Vulnerabilities",
     "description": "Vulnerabilities found in the projects you can see",
     "allSeverities": "All severities",
-    "empty": "No matching vulnerabilities"
+    "empty": "No matching vulnerabilities",
+    "status": {
+      "unresolved": "Unresolved (open + acknowledged)",
+      "all": "All statuses"
+    },
+    "allAssignees": "All assignees",
+    "assignedToMe": "Assigned to me",
+    "anyDueDate": "Any due date"
   },
   "projects": {
     "title": "Projects",
@@ -376,5 +386,23 @@
       "major": "major",
       "unknown": "unknown"
     }
+  },
+  "triage": {
+    "assignee": "Assignee",
+    "dueDate": "Due date",
+    "unassigned": "Unassigned",
+    "meSuffix": "{name} (me)",
+    "overdue": "Overdue",
+    "open": "Details and comments",
+    "activity": "Comments and history",
+    "noActivity": "No comments or changes yet.",
+    "commentPlaceholder": "Write a plan or findings (Ctrl/⌘+Enter to post)",
+    "post": "Comment",
+    "confirmDelete": "Delete this comment?",
+    "someone": "(deleted user)",
+    "emptyValue": "none",
+    "changedStatus": "changed status from “{from}” to “{to}”",
+    "changedAssignee": "changed assignee from “{from}” to “{to}”",
+    "changedDueDate": "changed due date from “{from}” to “{to}”"
   }
 }

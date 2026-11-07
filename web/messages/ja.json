@@ -122,7 +122,10 @@
     "tabVulns": "脆弱性 ({count})",
     "tabEol": "EOL ({count})",
     "eolEmpty": "EOL 済み・間近のものはありません。",
-    "noProjects": "見えているプロジェクトはまだありません。"
+    "noProjects": "見えているプロジェクトはまだありません。",
+    "mine": "自分の担当（未完了）",
+    "overdue": "期限切れ",
+    "unassigned": "担当者未定の未対応"
   },
   "matches": {
     "severity": "重大度",
@@ -137,7 +140,14 @@
     "title": "脆弱性",
     "description": "見えているプロジェクトでヒットした脆弱性の一覧",
     "allSeverities": "すべての重大度",
-    "empty": "該当する脆弱性はありません"
+    "empty": "該当する脆弱性はありません",
+    "status": {
+      "unresolved": "未完了（未対応＋確認済み）",
+      "all": "すべての状態"
+    },
+    "allAssignees": "すべての担当者",
+    "assignedToMe": "自分の担当",
+    "anyDueDate": "期限: すべて"
   },
   "projects": {
     "title": "プロジェクト",
@@ -376,5 +386,23 @@
       "major": "major",
       "unknown": "不明"
     }
+  },
+  "triage": {
+    "assignee": "担当者",
+    "dueDate": "期限",
+    "unassigned": "未割り当て",
+    "meSuffix": "{name}（自分）",
+    "overdue": "期限切れ",
+    "open": "詳細・コメント",
+    "activity": "コメントと変更履歴",
+    "noActivity": "まだコメントや変更はありません。",
+    "commentPlaceholder": "対応方針や調査結果を書く（Ctrl/⌘+Enter で投稿）",
+    "post": "コメントする",
+    "confirmDelete": "このコメントを削除しますか？",
+    "someone": "（削除されたユーザー）",
+    "emptyValue": "なし",
+    "changedStatus": "が状態を「{from}」→「{to}」に変更",
+    "changedAssignee": "が担当者を「{from}」→「{to}」に変更",
+    "changedDueDate": "が期限を「{from}」→「{to}」に変更"
   }
 }

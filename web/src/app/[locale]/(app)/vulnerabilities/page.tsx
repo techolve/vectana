@@ -7,29 +7,37 @@ import { useTranslations } from "next-intl";
 import { SEVERITIES, type Match } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import { Input } from "@/components/ui/input";
-import { Empty, ErrorText, OptionSelect, PageHeader } from "@/components/common";
+import { ErrorText, OptionSelect, PageHeader } from "@/components/common";
 import { MatchTable } from "@/components/match-table";
-
-const STATUSES = ["open", "ack", "ignored"] as const;
 
 function VulnerabilityList() {
   const t = useTranslations();
   const params = useSearchParams();
   const [severity, setSeverity] = useState(params.get("severity") ?? "");
-  const [status, setStatus] = useState("open");
+  const [status, setStatus] = useState(params.get("status") ?? "open");
+  const [assignee, setAssignee] = useState(params.get("assignee") ?? "");
+  const [overdue, setOverdue] = useState(params.get("overdue") === "true" ? "true" : "");
   const [q, setQ] = useState("");
   const query = new URLSearchParams();
   if (severity) query.set("severity", severity);
   query.set("status", status);
+  if (assignee) query.set("assignee", assignee);
+  if (overdue) query.set("overdue", "true");
   const { data, error, reload } = useApi<Match[]>(`/vulnerabilities?${query}`);
 
   const needle = q.trim().toLowerCase();
   const filtered = (data ?? []).filter(
     (m) =>
       !needle ||
-      [m.project_name, m.package_name, m.vuln_id, ...m.aliases, m.summary ?? ""].some((s) =>
-        s.toLowerCase().includes(needle),
-      ),
+      [
+        m.project_name,
+        m.package_name,
+        m.vuln_id,
+        ...m.aliases,
+        m.summary ?? "",
+        m.assignee?.display_name ?? "",
+        m.assignee?.email ?? "",
+      ].some((s) => s.toLowerCase().includes(needle)),
   );
 
   return (
@@ -48,18 +56,37 @@ function VulnerabilityList() {
             <OptionSelect
               value={status}
               onValueChange={setStatus}
-              options={STATUSES.map((s) => ({ value: s, label: t(`labels.status.${s}`) }))}
+              // "open,ack" = still needs action; "" = everything.
+              options={[
+                { value: "open", label: t("labels.status.open") },
+                { value: "open,ack", label: t("vulns.status.unresolved") },
+                { value: "ack", label: t("labels.status.ack") },
+                { value: "ignored", label: t("labels.status.ignored") },
+                { value: "", label: t("vulns.status.all") },
+              ]}
+            />
+            <OptionSelect
+              value={assignee}
+              onValueChange={setAssignee}
+              options={[
+                { value: "", label: t("vulns.allAssignees") },
+                { value: "me", label: t("vulns.assignedToMe") },
+                { value: "none", label: t("triage.unassigned") },
+              ]}
+            />
+            <OptionSelect
+              value={overdue}
+              onValueChange={setOverdue}
+              options={[
+                { value: "", label: t("vulns.anyDueDate") },
+                { value: "true", label: t("triage.overdue") },
+              ]}
             />
           </>
         }
       />
       <ErrorText>{error}</ErrorText>
-      {data &&
-        (filtered.length === 0 ? (
-          <Empty>{t("vulns.empty")}</Empty>
-        ) : (
-          <MatchTable matches={filtered} onChanged={reload} showProject />
-        ))}
+      {data && <MatchTable matches={filtered} onChanged={reload} showProject empty={t("vulns.empty")} />}
     </>
   );
 }

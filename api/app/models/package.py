@@ -1,9 +1,9 @@
-from datetime import datetime
+from datetime import date, datetime
 from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import JSON, Column, UniqueConstraint
+from sqlalchemy import JSON, Column, Date, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
 from app.models.base import created_at_field, nullable_ts_field
@@ -86,3 +86,34 @@ class VulnMatch(SQLModel, table=True):
     fixed_version: str | None = Field(default=None, max_length=100)
     status: str = Field(default=MatchStatus.open, max_length=20)
     first_seen_at: datetime = created_at_field()
+    # Triage: who is handling it and by when.
+    assignee_id: UUID | None = Field(
+        default=None, foreign_key="users.id", index=True, ondelete="SET NULL"
+    )
+    due_date: date | None = Field(default=None, sa_column=Column(Date, nullable=True))
+    updated_at: datetime | None = nullable_ts_field()
+
+
+class MatchEventKind(StrEnum):
+    comment = "comment"
+    status = "status"
+    assignee = "assignee"
+    due_date = "due_date"
+
+
+class VulnMatchEvent(SQLModel, table=True):
+    """Timeline of a vulnerability match: comments and triage changes.
+
+    For changes, ``old_value`` / ``new_value`` hold the raw values (status
+    name, assignee user id, ISO date); for comments, ``body`` holds the text."""
+
+    __tablename__ = "vuln_match_events"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    match_id: UUID = Field(foreign_key="vuln_matches.id", index=True, ondelete="CASCADE")
+    user_id: UUID | None = Field(default=None, foreign_key="users.id", ondelete="SET NULL")
+    kind: str = Field(max_length=20)
+    old_value: str | None = Field(default=None, max_length=100)
+    new_value: str | None = Field(default=None, max_length=100)
+    body: str | None = Field(default=None)
+    created_at: datetime = created_at_field()
