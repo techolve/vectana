@@ -29,11 +29,13 @@ class MeResponse(BaseModel):
     id: UUID
     email: str
     display_name: str | None
-    role: str
+    roles: list[str]
     company_id: UUID | None
     company_name: str | None
     is_partner: bool
     can_manage_org: bool
+    can_sell: bool  # create customers and estimates
+    can_see_customers: bool
     managed_department_ids: list[UUID]
     group_name: str
     locale: str

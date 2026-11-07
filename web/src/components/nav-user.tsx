@@ -41,7 +41,9 @@ export function NavUser({ me }: { me: Me }) {
   const { isMobile } = useSidebar();
   const subtitle = me.is_partner
     ? `${me.company_name ?? ""} (${t("labels.partner")})`
-    : `${me.company_name ?? me.group_name} / ${t(`labels.role.${me.role}`)}`;
+    : `${me.company_name ?? me.group_name} / ${
+        me.roles.length ? me.roles.map((r) => t(`labels.role.${r}`)).join("・") : t("labels.role.member")
+      }`;
 
   const user = (
     <>

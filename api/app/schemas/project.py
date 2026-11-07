@@ -5,9 +5,10 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 
 from app.models.package import ECOSYSTEMS, MatchStatus, Severity
-from app.models.project import ProjectRole, WebhookType
+from app.models.project import ProjectMethod, ProjectRole, ProjectStatus, WebhookType
 from app.schemas.eol import EolFindingOut
 from app.schemas.org import UserBrief
+from app.schemas.sales import CustomerBrief
 
 
 class ProjectBody(BaseModel):
@@ -15,12 +16,38 @@ class ProjectBody(BaseModel):
     description: str | None = None
     company_id: UUID | None = None  # defaults to the caller's company
     department_id: UUID | None = None
+    # Internal projects start at development or maintenance; deals at inquiry.
+    status: ProjectStatus = ProjectStatus.development
+    method: ProjectMethod = ProjectMethod.waterfall
+    customer_id: UUID | None = None
+    sales_owner_id: UUID | None = None
+    manager_id: UUID | None = None
+    starts_on: date | None = None
+    ends_on: date | None = None
+    expected_amount: int | None = Field(default=None, ge=0)
+    probability: int | None = Field(default=None, ge=0, le=100)
+    next_action: str | None = Field(default=None, max_length=200)
+    next_action_on: date | None = None
 
 
 class ProjectUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
     department_id: UUID | None = None
+    status: ProjectStatus | None = None
+    method: ProjectMethod | None = None
+    customer_id: UUID | None = None
+    sales_owner_id: UUID | None = None
+    manager_id: UUID | None = None
+    ordered_on: date | None = None
+    starts_on: date | None = None
+    ends_on: date | None = None
+    expected_amount: int | None = Field(default=None, ge=0)
+    probability: int | None = Field(default=None, ge=0, le=100)
+    next_action: str | None = Field(default=None, max_length=200)
+    next_action_on: date | None = None
+    lost_reason: str | None = None
+    competitor: str | None = Field(default=None, max_length=200)
 
 
 class SeverityCounts(BaseModel):
@@ -43,6 +70,29 @@ class ProjectOut(BaseModel):
     name: str
     description: str | None
     created_at: datetime
+    method: str
+    archived: bool = False  # 保留・失注
+    # A deal (not ordered yet). Shown to everyone who can see the project.
+    is_deal: bool = False
+    manager: UserBrief | None = None
+    starts_on: date | None = None
+    ends_on: date | None = None
+    # Sales fields: None for partner (BP) users.
+    status: str | None = None
+    customer: CustomerBrief | None = None
+    sales_owner: UserBrief | None = None
+    ordered_on: date | None = None
+    expected_amount: int | None = None
+    probability: int | None = None
+    next_action: str | None = None
+    next_action_on: date | None = None
+    lost_reason: str | None = None
+    competitor: str | None = None
+    estimate_count: int | None = None
+    open_estimate_amount: int | None = None  # drafts and submitted, one-time
+    won_amount: int | None = None  # won one-time estimates (受注金額)
+    monthly_amount: int | None = None  # latest won monthly (maintenance) estimate
+    can_sell: bool = False  # caller may edit customers and estimates here
     package_count: int = 0
     open_counts: SeverityCounts = SeverityCounts()
     eol_counts: EolCounts = EolCounts()

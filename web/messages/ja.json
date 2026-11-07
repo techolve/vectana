@@ -44,13 +44,17 @@
     "platform": "メニュー",
     "myProjects": "プロジェクト",
     "more": "すべて表示",
-    "org": "組織別"
+    "org": "組織別",
+    "customers": "顧客"
   },
   "labels": {
     "role": {
       "group_admin": "グループ管理者",
       "company_admin": "会社管理者",
-      "member": "メンバー"
+      "member": "メンバー",
+      "sales": "営業",
+      "accounting": "経理",
+      "pmo": "PMO"
     },
     "companyType": {
       "parent": "親会社",
@@ -67,7 +71,33 @@
       "ack": "確認済み",
       "ignored": "無視"
     },
-    "partner": "BP"
+    "partner": "BP",
+    "projectStatus": {
+      "inquiry": "引き合い",
+      "proposal": "提案・見積",
+      "negotiation": "商談中",
+      "won": "受注",
+      "development": "開発中",
+      "maintenance": "運用・保守",
+      "on_hold": "保留",
+      "lost": "失注"
+    },
+    "method": {
+      "waterfall": "ウォーターフォール（ガント）",
+      "scrum": "スクラム（ボード）"
+    },
+    "estimateKind": {
+      "initial": "初回開発",
+      "additional": "追加開発",
+      "maintenance": "保守",
+      "other": "その他"
+    },
+    "estimateStatus": {
+      "draft": "作成中",
+      "submitted": "提出済み",
+      "won": "受注",
+      "lost": "失注"
+    }
   },
   "login": {
     "title": "Vectana にログイン",
@@ -163,7 +193,44 @@
     "descriptionField": "説明",
     "company": "会社",
     "department": "担当部署",
-    "departmentHint": "部署長は配下のプロジェクトを閲覧・管理できます"
+    "departmentHint": "部署長は配下のプロジェクトを閲覧・管理できます",
+    "descriptionSales": "引き合いから保守まで、すべてのプロジェクトをここで管理します。営業中のプロジェクトは営業・管理者・メンバーだけに表示されます。",
+    "tabs": {
+      "sales": "営業中",
+      "active": "進行中",
+      "maintenance": "保守",
+      "closed": "終了・アーカイブ"
+    },
+    "view": {
+      "table": "表",
+      "pipeline": "パイプライン"
+    },
+    "filter": {
+      "allCustomers": "顧客: すべて",
+      "allOwners": "担当: すべて",
+      "mine": "自分の担当"
+    },
+    "emptyTab": "このタブのプロジェクトはありません",
+    "customer": "顧客",
+    "status": "段階",
+    "amount": "見積金額",
+    "probability": "確度",
+    "probabilityShort": "確度 {value}",
+    "nextAction": "次のアクション",
+    "salesOwner": "営業担当",
+    "lostReason": "失注理由",
+    "monthly": "月額保守",
+    "perMonth": "月額 {amount}",
+    "method": "進め方",
+    "manager": "責任者",
+    "period": "期間",
+    "internal": "社内",
+    "noEstimate": "未見積",
+    "amountUnknown": "金額未定",
+    "expectedAmount": "見込み金額（円）",
+    "pipelineHint": "カードを別の列へドラッグすると段階が変わります。列の右上は件数と見積金額の合計です。",
+    "moved": "「{name}」を{status}にしました",
+    "statusHintInternal": "営業を通らない社内システムは開発中か運用・保守から始めます"
   },
   "project": {
     "notSpecified": "プロジェクトが指定されていません",
@@ -176,7 +243,9 @@
       "webhooks": "通知（Webhook）",
       "settings": "設定",
       "eol": "EOL",
-      "tokens": "CI 連携"
+      "tokens": "CI 連携",
+      "overview": "概要",
+      "estimates": "見積 {count}"
     },
     "noMatches": "ヒットした脆弱性はありません"
   },
@@ -320,7 +389,11 @@
     "head": "部署長",
     "displayName": "表示名",
     "allowLogin": "ログインを許可",
-    "departmentsField": "所属部署（兼務可）"
+    "departmentsField": "所属部署（兼務可）",
+    "unitCost": "単価（人日）",
+    "unitCostHint": "見積の原価計算に使います。管理者・営業・経理だけに表示されます",
+    "roleHint": "複数つけられます。どれもなければ、アサインされた PJ だけが見えます",
+    "partnerNoRoles": "協力会社（BP）のユーザーにはロールをつけられません"
   },
   "invitations": {
     "inviteTo": "{company} にユーザーを招待",
@@ -459,5 +532,107 @@
     "changedAssignee": "が担当者を「{from}」→「{to}」に変更",
     "changedDueDate": "が期限を「{from}」→「{to}」に変更",
     "slaHint": "個別の期限がないため、重大度別の対応期限（SLA）から計算した日付です"
+  },
+  "deals": {
+    "overdue": "期限切れ"
+  },
+  "overview": {
+    "basics": "基本情報",
+    "deal": "商談",
+    "money": "金額",
+    "orderedOn": "受注日",
+    "openEstimates": "提出中の見積",
+    "wonAmount": "受注金額",
+    "competitor": "競合",
+    "editTitle": "プロジェクト情報の編集",
+    "methodHint": "データはどちらも同じタスクです",
+    "startsOn": "開始日",
+    "endsOn": "終了日",
+    "nextActionOn": "次のアクションの期日"
+  },
+  "estimates": {
+    "description": "追加開発や保守更新も、このプロジェクトの見積として追加します。",
+    "add": "見積を追加",
+    "editTitle": "見積の編集",
+    "empty": "見積はまだありません",
+    "title": "見積",
+    "titlePlaceholder": "例：初回開発（第 1 版）",
+    "kind": "種類",
+    "amount": "金額（税抜）",
+    "amountMonthly": "月額（税抜）",
+    "effort": "工数",
+    "margin": "利益率",
+    "cost": "原価",
+    "status": "状態",
+    "date": "日付",
+    "statusHint": "受注にすると、営業中のプロジェクトは「受注」に進みます",
+    "billing": "請求",
+    "oneTime": "一括",
+    "monthly": "月額",
+    "issuedOn": "見積日",
+    "dueOnLabel": "提出期限",
+    "validUntilLabel": "契約期間の終わり",
+    "lines": "内訳（担当・工数）",
+    "addLine": "行を追加",
+    "lineLabel": "内容",
+    "linePlaceholder": "例：実装",
+    "person": "担当",
+    "unitCost": "単価（人日）",
+    "fromUser": "本人の単価",
+    "effortTotal": "工数（人日）",
+    "effortHint": "内訳を入れると、内訳の合計になります",
+    "summary": "合計 {days} 人日 ・ 原価 {cost} ・ 利益率 {margin}",
+    "days": "{days} 人日",
+    "perDay": "{amount}/人日",
+    "reason": "理由: {reason}",
+    "dueOn": "提出期限 {date}",
+    "validUntil": "契約 {date} まで",
+    "notes": "メモ",
+    "confirmDelete": "見積「{title}」を削除しますか？",
+    "costHidden": "人ごとの単価と原価は、営業・管理者・経理だけに表示されます。"
+  },
+  "customers": {
+    "title": "顧客",
+    "description": "取引先の会社と担当者を管理します。グループ会社・協力会社（組織管理の「会社」）とは別のマスタです。",
+    "notAllowed": "顧客は営業・管理者・経理・PMO だけが見られます",
+    "notSpecified": "顧客が指定されていません",
+    "add": "顧客を追加",
+    "filter": "会社名で絞り込み",
+    "empty": "顧客はまだありません",
+    "name": "会社名",
+    "company": "担当する自社",
+    "companyHint": "営業ロールは自社の顧客だけを扱えます",
+    "industry": "業種",
+    "primaryContact": "主担当",
+    "salesOwner": "担当営業",
+    "projects": "PJ",
+    "pipeline": "見積金額",
+    "pipelineHint": "見積金額は、営業中・進行中のプロジェクトの見積（提出中と受注）の合計です。",
+    "ownerLine": "担当営業 {name}",
+    "newProject": "プロジェクトを作成",
+    "info": "会社の情報",
+    "address": "所在地",
+    "phone": "電話",
+    "paymentTerms": "支払条件",
+    "billingContact": "請求書の送付先",
+    "website": "Web サイト",
+    "notes": "メモ",
+    "contacts": "担当者",
+    "addContact": "担当者を追加",
+    "editContact": "担当者の編集",
+    "noContacts": "担当者はまだいません",
+    "contactName": "名前",
+    "contactTitle": "部署・役職",
+    "email": "メール",
+    "primary": "主担当",
+    "primaryLabel": "主担当にする",
+    "projectsTitle": "プロジェクトと見積",
+    "projectsHint": "失注したものも分析用に残ります",
+    "noProjects": "この顧客のプロジェクトはまだありません",
+    "estimates": "見積",
+    "estimateCount": "{count} 件",
+    "editTitle": "顧客の編集",
+    "delete": "この顧客を削除",
+    "confirmDelete": "顧客「{name}」を削除しますか？プロジェクトがある顧客は削除できません。"
   }
 }

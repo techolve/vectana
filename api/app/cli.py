@@ -36,7 +36,10 @@ async def create_admin(email: str, name: str | None, company_name: str | None) -
 
         user = (await session.exec(select(User).where(User.email == email))).first()
         if user is not None:
-            user.role = UserRole.group_admin
+            user.roles = [
+                UserRole.group_admin.value,
+                *(r for r in user.roles if r != "group_admin"),
+            ]
             user.is_active = True
             session.add(user)
             await session.commit()
@@ -51,7 +54,7 @@ async def create_admin(email: str, name: str | None, company_name: str | None) -
                 email=email,
                 hashed_password=hash_password(password),
                 display_name=name,
-                role=UserRole.group_admin,
+                roles=[UserRole.group_admin.value],
                 company_id=company_id,
             )
         )

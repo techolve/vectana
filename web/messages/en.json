@@ -44,13 +44,17 @@
     "platform": "Menu",
     "myProjects": "Projects",
     "more": "View all",
-    "org": "By organization"
+    "org": "By organization",
+    "customers": "Customers"
   },
   "labels": {
     "role": {
       "group_admin": "Group admin",
       "company_admin": "Company admin",
-      "member": "Member"
+      "member": "Member",
+      "sales": "Sales",
+      "accounting": "Accounting",
+      "pmo": "PMO"
     },
     "companyType": {
       "parent": "Parent company",
@@ -67,7 +71,33 @@
       "ack": "Acknowledged",
       "ignored": "Ignored"
     },
-    "partner": "Partner"
+    "partner": "Partner",
+    "projectStatus": {
+      "inquiry": "Inquiry",
+      "proposal": "Proposal",
+      "negotiation": "Negotiation",
+      "won": "Won",
+      "development": "In development",
+      "maintenance": "Maintenance",
+      "on_hold": "On hold",
+      "lost": "Lost"
+    },
+    "method": {
+      "waterfall": "Waterfall (Gantt)",
+      "scrum": "Scrum (board)"
+    },
+    "estimateKind": {
+      "initial": "Initial build",
+      "additional": "Additional work",
+      "maintenance": "Maintenance",
+      "other": "Other"
+    },
+    "estimateStatus": {
+      "draft": "Draft",
+      "submitted": "Submitted",
+      "won": "Won",
+      "lost": "Lost"
+    }
   },
   "login": {
     "title": "Log in to Vectana",
@@ -152,7 +182,7 @@
   },
   "projects": {
     "title": "Projects",
-    "description": "Projects you can see (assigned or managed)",
+    "description": "Projects you can see (assigned or within your scope)",
     "new": "New project",
     "empty": "No projects yet",
     "name": "Name",
@@ -163,7 +193,44 @@
     "descriptionField": "Description",
     "company": "Company",
     "department": "Department",
-    "departmentHint": "Department heads can see and manage projects under their departments"
+    "departmentHint": "Department heads can see and manage projects under their departments",
+    "descriptionSales": "Every project from the first inquiry to maintenance. Deals are shown only to sales, administrators and their members.",
+    "tabs": {
+      "sales": "Deals",
+      "active": "In progress",
+      "maintenance": "Maintenance",
+      "closed": "Closed / archived"
+    },
+    "view": {
+      "table": "Table",
+      "pipeline": "Pipeline"
+    },
+    "filter": {
+      "allCustomers": "Customer: all",
+      "allOwners": "Owner: all",
+      "mine": "Mine"
+    },
+    "emptyTab": "No projects in this tab",
+    "customer": "Customer",
+    "status": "Stage",
+    "amount": "Estimate",
+    "probability": "Probability",
+    "probabilityShort": "{value} likely",
+    "nextAction": "Next action",
+    "salesOwner": "Sales owner",
+    "lostReason": "Reason lost",
+    "monthly": "Monthly fee",
+    "perMonth": "{amount}/month",
+    "method": "Method",
+    "manager": "Manager",
+    "period": "Period",
+    "internal": "Internal",
+    "noEstimate": "No estimate",
+    "amountUnknown": "No amount",
+    "expectedAmount": "Expected amount (JPY)",
+    "pipelineHint": "Drag a card to another column to change its stage. Each column shows its count and estimate total.",
+    "moved": "Moved \"{name}\" to {status}",
+    "statusHintInternal": "Internal projects without a sale start in development or maintenance"
   },
   "project": {
     "notSpecified": "No project specified",
@@ -176,7 +243,9 @@
       "webhooks": "Notifications (Webhook)",
       "settings": "Settings",
       "eol": "EOL",
-      "tokens": "CI"
+      "tokens": "CI",
+      "overview": "Overview",
+      "estimates": "Estimates {count}"
     },
     "noMatches": "No vulnerabilities found"
   },
@@ -320,7 +389,11 @@
     "head": "Head",
     "displayName": "Display name",
     "allowLogin": "Allow login",
-    "departmentsField": "Departments (multiple allowed)"
+    "departmentsField": "Departments (multiple allowed)",
+    "unitCost": "Unit cost (per day)",
+    "unitCostHint": "Used to cost estimates. Shown only to admins, sales and accounting",
+    "roleHint": "Pick any number. With none, the user sees only the projects they are assigned to",
+    "partnerNoRoles": "Partner (BP) users cannot have roles"
   },
   "invitations": {
     "inviteTo": "Invite a user to {company}",
@@ -459,5 +532,107 @@
     "changedAssignee": "changed assignee from “{from}” to “{to}”",
     "changedDueDate": "changed due date from “{from}” to “{to}”",
     "slaHint": "No due date set, so this is the deadline from the severity SLA"
+  },
+  "deals": {
+    "overdue": "overdue"
+  },
+  "overview": {
+    "basics": "Details",
+    "deal": "Deal",
+    "money": "Amounts",
+    "orderedOn": "Ordered on",
+    "openEstimates": "Open estimates",
+    "wonAmount": "Order amount",
+    "competitor": "Competitor",
+    "editTitle": "Edit project",
+    "methodHint": "Both use the same tasks",
+    "startsOn": "Start",
+    "endsOn": "End",
+    "nextActionOn": "Next action due"
+  },
+  "estimates": {
+    "description": "Additional work and maintenance renewals are added as new estimates of this project.",
+    "add": "Add estimate",
+    "editTitle": "Edit estimate",
+    "empty": "No estimates yet",
+    "title": "Estimate",
+    "titlePlaceholder": "e.g. Initial build (v1)",
+    "kind": "Kind",
+    "amount": "Amount (excl. tax)",
+    "amountMonthly": "Monthly (excl. tax)",
+    "effort": "Effort",
+    "margin": "Margin",
+    "cost": "Cost",
+    "status": "Status",
+    "date": "Date",
+    "statusHint": "Winning it moves a deal to Won",
+    "billing": "Billing",
+    "oneTime": "One-time",
+    "monthly": "Monthly",
+    "issuedOn": "Issued",
+    "dueOnLabel": "Due",
+    "validUntilLabel": "Contract ends",
+    "lines": "Breakdown (people and effort)",
+    "addLine": "Add row",
+    "lineLabel": "Work",
+    "linePlaceholder": "e.g. Implementation",
+    "person": "Person",
+    "unitCost": "Unit cost (per day)",
+    "fromUser": "Person's rate",
+    "effortTotal": "Effort (person-days)",
+    "effortHint": "With a breakdown, the rows add up instead",
+    "summary": "Total {days} person-days ・ cost {cost} ・ margin {margin}",
+    "days": "{days} d",
+    "perDay": "{amount}/day",
+    "reason": "Reason: {reason}",
+    "dueOn": "Due {date}",
+    "validUntil": "Until {date}",
+    "notes": "Notes",
+    "confirmDelete": "Delete estimate \"{title}\"?",
+    "costHidden": "Per-person unit costs and total cost are shown only to sales, administrators and accounting."
+  },
+  "customers": {
+    "title": "Customers",
+    "description": "Client companies and their contacts. Separate from the group and partner companies under Organization.",
+    "notAllowed": "Only sales, administrators, accounting and PMO can see customers",
+    "notSpecified": "No customer specified",
+    "add": "Add customer",
+    "filter": "Filter by name",
+    "empty": "No customers yet",
+    "name": "Company name",
+    "company": "Our company",
+    "companyHint": "Sales handle only their own company's customers",
+    "industry": "Industry",
+    "primaryContact": "Main contact",
+    "salesOwner": "Sales owner",
+    "projects": "Projects",
+    "pipeline": "Estimates",
+    "pipelineHint": "Estimates add up open and won estimates of deals and running projects.",
+    "ownerLine": "Sales owner {name}",
+    "newProject": "Create project",
+    "info": "Company",
+    "address": "Address",
+    "phone": "Phone",
+    "paymentTerms": "Payment terms",
+    "billingContact": "Send invoices to",
+    "website": "Website",
+    "notes": "Notes",
+    "contacts": "Contacts",
+    "addContact": "Add contact",
+    "editContact": "Edit contact",
+    "noContacts": "No contacts yet",
+    "contactName": "Name",
+    "contactTitle": "Department / title",
+    "email": "Email",
+    "primary": "Main",
+    "primaryLabel": "Main contact",
+    "projectsTitle": "Projects and estimates",
+    "projectsHint": "Lost deals stay here for later analysis",
+    "noProjects": "No projects for this customer yet",
+    "estimates": "Estimates",
+    "estimateCount": "{count}",
+    "editTitle": "Edit customer",
+    "delete": "Delete this customer",
+    "confirmDelete": "Delete customer \"{name}\"? Customers with projects cannot be deleted."
   }
 }

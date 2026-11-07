@@ -25,7 +25,7 @@ class Invitation(SQLModel, table=True):
     email: str = Field(max_length=255, index=True)
     display_name: str | None = Field(default=None, max_length=100)
     company_id: UUID = Field(foreign_key="companies.id", index=True, ondelete="CASCADE")
-    role: str = Field(max_length=20)
+    roles: list[Any] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
     department_ids: list[Any] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
     primary_department_id: UUID | None = Field(default=None)
     # Language of the invitation email and of the new account.

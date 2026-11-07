@@ -12,7 +12,18 @@ from starlette.exceptions import HTTPException
 from app import __version__
 from app.core.config import settings
 from app.i18n import request_locale, translate_error, validation_message
-from app.routers import auth, eol, oidc, org, project, report, token, vulnerability
+from app.routers import (
+    auth,
+    customer,
+    eol,
+    estimate,
+    oidc,
+    org,
+    project,
+    report,
+    token,
+    vulnerability,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
@@ -47,6 +58,8 @@ app.include_router(auth.router)
 app.include_router(oidc.router)
 app.include_router(org.router)
 app.include_router(project.router)
+app.include_router(customer.router)
+app.include_router(estimate.router)
 app.include_router(token.router)
 app.include_router(eol.router)
 app.include_router(vulnerability.router)

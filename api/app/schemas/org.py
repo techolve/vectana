@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 from app.models.organization import CompanyType
 from app.models.user import UserRole
@@ -51,17 +51,20 @@ class UserOut(BaseModel):
     id: UUID
     email: str
     display_name: str | None
-    role: str
+    roles: list[str]
     is_active: bool
     company_id: UUID | None
     departments: list[UserDepartmentOut]
+    # Only for admins, sales and accounting of the user's company.
+    unit_cost: int | None = None
 
 
 class UserUpdate(BaseModel):
     display_name: str | None = None
-    role: UserRole | None = None
+    roles: list[UserRole] | None = None
     is_active: bool | None = None
     departments: list[UserDepartmentIn] | None = None
+    unit_cost: int | None = Field(default=None, ge=0)
 
 
 class UserBrief(BaseModel):
@@ -75,7 +78,7 @@ class InvitationBody(BaseModel):
     email: EmailStr
     display_name: str | None = None
     company_id: UUID
-    role: UserRole = UserRole.member
+    roles: list[UserRole] = []
     departments: list[UserDepartmentIn] = []
     # Language of the invitation email and the new account; defaults to the caller's.
     locale: Literal["ja", "en"] | None = None
@@ -86,7 +89,7 @@ class InvitationOut(BaseModel):
     email: str
     display_name: str | None
     company_id: UUID
-    role: str
+    roles: list[str]
     locale: str
     status: str
     created_at: datetime

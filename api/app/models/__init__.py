@@ -1,6 +1,8 @@
 """Import every model so its table registers on SQLModel.metadata."""
 
+from app.models.customer import Customer, CustomerContact
 from app.models.eol import AppSettings, EolDelivery, EolFinding, Runtime
+from app.models.estimate import Estimate, EstimateLine
 from app.models.invitation import Invitation
 from app.models.notification import NotificationDelivery, NotificationPref
 from app.models.organization import Company, Department, UserDepartment
@@ -17,6 +19,10 @@ __all__ = [
     "EolFinding",
     "Runtime",
     "Company",
+    "Customer",
+    "CustomerContact",
+    "Estimate",
+    "EstimateLine",
     "Department",
     "Invitation",
     "NotificationDelivery",
