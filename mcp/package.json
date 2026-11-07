@@ -2,13 +2,27 @@
   "name": "@techolve/vectana-mcp",
   "version": "1.1.0",
   "description": "MCP server (stdio) for Vectana: vulnerabilities, EOL, SBOM import, projects, customers and estimates",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "vectana",
+    "vulnerability",
+    "sbom",
+    "osv",
+    "eol"
+  ],
+  "homepage": "https://docs.vectana.techolve.org/guides/ai",
+  "bugs": {
+    "url": "https://github.com/techolve/vectana/issues"
+  },
   "license": "AGPL-3.0-only",
   "type": "module",
   "bin": {
     "vectana-mcp": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=20"
@@ -18,11 +32,15 @@
     "url": "git+https://github.com/techolve/vectana.git",
     "directory": "mcp"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "node --test --import tsx test/*.test.ts",
-    "gen:types": "openapi-typescript ${VECTANA_OPENAPI:-../api/openapi.json} -o src/api-types.ts"
+    "gen:types": "openapi-typescript ${VECTANA_OPENAPI:-../api/openapi.json} -o src/api-types.ts",
+    "prepack": "cp ../LICENSE LICENSE && npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",

@@ -78,3 +78,21 @@ mise run mcp:types     # API の OpenAPI から src/api-types.ts を作り直す
 - ツールは機能ごとに `src/tools/<機能>.ts` に書き、`src/tools/index.ts` に追加します。
 - 列挙値は `apiEnum<Schemas["..."]>()` で書くと、API 側に値が増えたときに型チェックで気づけます。
 - API を変えたら `mise run mcp:types` を実行してください。CI は `src/api-types.ts` が最新かを確認します。
+
+## npm への公開
+
+`@techolve/vectana-mcp` として npm に公開します。
+
+1. 初回だけ手元で公開します（npm の `techolve` Organization のメンバーで、2 段階認証が必要）。`prepack` でビルドと LICENSE のコピーが走ります。
+
+   ```bash
+   cd mcp && npm ci && npm login && npm publish
+   ```
+
+2. npmjs.com のパッケージ設定 → Trusted Publisher で、GitHub Actions・`techolve/vectana`・ワークフロー `mcp-publish.yml` を登録します。
+3. 以降は `mcp/package.json` の `version` を上げてマージし、`mcp-v<version>` のタグを push すると [Publish MCP server](../.github/workflows/mcp-publish.yml) が公開します（npm トークンは不要です）。
+
+   ```bash
+   git tag mcp-v1.1.1 && git push origin mcp-v1.1.1
+   ```
+

@@ -1,0 +1,39 @@
+# Publishes mcp/ to npm as @techolve/vectana-mcp when a tag mcp-vX.Y.Z is pushed.
+# Uses npm Trusted Publishing (OIDC): no npm token is stored in GitHub. On
+# npmjs.com, add this repository and "mcp-publish.yml" as the package's
+# Trusted Publisher (Package settings → Trusted Publisher → GitHub Actions).
+name: Publish MCP server
+
+on:
+  push:
+    tags: ["mcp-v*"]
+
+permissions:
+  contents: read
+  id-token: write # OIDC for npm Trusted Publishing and provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mcp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+      # Trusted Publishing needs npm 11.5.1 or later.
+      - run: npm install -g npm@11
+      - run: npm ci
+      - name: Tag matches package.json version
+        run: |
+          version="$(node -p 'require("./package.json").version')"
+          if [ "mcp-v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $version" >&2
+            exit 1
+          fi
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm publish
