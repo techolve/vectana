@@ -6,12 +6,14 @@ const taskKind = apiEnum<Schemas["TaskKind"]>()(["development", "security", "oth
   "security = upgrade a package or runtime to fix vulnerabilities / EOL",
 );
 const taskStatus = apiEnum<Schemas["TaskStatus"]>()(["todo", "in_progress", "done"]);
+const taskPriority = apiEnum<Schemas["TaskPriority"]>()(["high", "medium", "low"]);
 
 // Fields shared by create and update. All optional; null clears on update.
 const taskFields = {
   kind: taskKind.optional(),
   description: z.string().nullable().optional(),
   status: taskStatus.optional(),
+  priority: taskPriority.nullable().optional(),
   assignee_id: id("Assignee user").nullable().optional(),
   start_date: date("Start date").nullable().optional(),
   due_date: date("Due date").nullable().optional(),
@@ -70,7 +72,7 @@ export const taskTools = [
     name: "update_task",
     title: "Update a task",
     description:
-      "Change a task: status, assignee, dates, sprint, points and so on. Only the fields you pass change; null clears a field.",
+      "Change a task: status, priority, assignee, dates, sprint, points and so on. Only the fields you pass change; null clears a field. Title, status, priority, assignee and sprint also reach a linked GitHub / GitLab issue.",
     write: true,
     idempotent: true,
     input: { task_id: id("Task"), title: z.string().min(1).max(300).optional(), ...taskFields },

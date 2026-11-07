@@ -17,7 +17,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Empty, ErrorText, LabeledField, OptionSelect } from "@/components/common";
 import { shortDate } from "@/components/sales/status";
-import { STATUS_STYLE, TaskKindBadge, type TaskDraft, useTaskTitle } from "@/components/task/task-common";
+import {
+  IssueLink,
+  STATUS_STYLE,
+  TaskKindBadge,
+  TaskPriorityBadge,
+  type TaskDraft,
+  useTaskTitle,
+} from "@/components/task/task-common";
 import { SecurityTags } from "@/components/task/task-list";
 
 export function ScrumBoard({
@@ -301,6 +308,8 @@ function Card_({
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <span className="tabular-nums">#{task.number}</span>
         {task.kind !== "development" && <TaskKindBadge kind={task.kind} />}
+        <TaskPriorityBadge priority={task.priority} />
+        <IssueLink task={task} />
         <span className="ml-auto font-medium tabular-nums">{task.points != null ? `${task.points} pt` : ""}</span>
       </div>
       <div className={cn("font-medium", task.status === "done" && "text-muted-foreground line-through")}>{titleOf(task)}</div>

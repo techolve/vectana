@@ -22,6 +22,7 @@ from app.models.work import Activity
 from app.schemas.work import ActivityBody, ActivityOut, ActivityTask, ActivityUpdate
 from app.services import deals
 from app.services import tasks as task_service
+from app.services.repo import sync as repo_sync
 
 router = APIRouter(prefix="/api", tags=["activities"])
 
@@ -158,6 +159,10 @@ async def create_activity(
         session.add(project)
     session.add(activity)
     await session.commit()
+    if activity.task_id is not None:
+        made = await session.get(Task, activity.task_id)
+        if made is not None:
+            await repo_sync.push_task(session, made)
     return (await _outs(session, [activity]))[0]
 
 

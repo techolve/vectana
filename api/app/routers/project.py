@@ -30,7 +30,7 @@ from app.core.access import (
 from app.core.config import settings
 from app.core.database import get_session
 from app.core.tokens import Caller, caller_project, get_caller
-from app.models.eol import EolFinding, EolStatus, Runtime
+from app.models.eol import EolFinding, EolStatus
 from app.models.organization import Company, CompanyType, Department
 from app.models.package import MatchStatus, Package, VulnMatch
 from app.models.project import (
@@ -57,12 +57,11 @@ from app.schemas.project import (
     ProjectOut,
     ProjectUpdate,
     SeverityCounts,
-    SkippedTool,
     WebhookBody,
     WebhookOut,
 )
 from app.schemas.sales import CustomerBrief
-from app.services import deals, eol, lockfile, toolfile, upgrade
+from app.services import deals, importer, upgrade
 from app.services import tasks as security_tasks
 from app.services.notify import digest
 from app.services.scanner import scan_and_notify
@@ -74,7 +73,7 @@ CurrentActor = Annotated[Actor, Depends(get_actor)]
 # Endpoints CI may call with a project API token.
 CurrentCaller = Annotated[Caller, Depends(get_caller)]
 
-MAX_LOCKFILE_BYTES = 10 * 1024 * 1024
+MAX_LOCKFILE_BYTES = importer.MAX_BYTES
 
 
 def _schedule_scan(tasks: BackgroundTasks, package_ids: list[UUID]) -> None:
@@ -793,111 +792,14 @@ async def import_lockfile(
             status.HTTP_422_UNPROCESSABLE_CONTENT,
             "source must be 1-80 characters of letters, digits and ._/@+-",
         )
-    if toolfile.is_tool_file(filename):
-        return await _import_tool_file(project_id, filename, raw, tasks, session)
     try:
-        parsed = lockfile.parse(filename, raw.decode("utf-8"))
-    except lockfile.UnsupportedLockfile as exc:
+        done = await importer.import_file(session, project_id, filename, raw, source)
+    except importer.ImportFailed as exc:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
-    except Exception as exc:
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_CONTENT, f"Could not parse {filename}: {exc}"
-        ) from exc
-
-    source_key = f"{parsed.kind}:{source or filename}"
-    existing = list(
-        (await session.exec(select(Package).where(Package.project_id == project_id))).all()
-    )
-    by_key = {(p.ecosystem, p.name, p.version): p for p in existing}
-    wanted = set(parsed.packages)
-
-    removed = 0
-    for p in existing:
-        if p.source == source_key and (p.ecosystem, p.name, p.version) not in wanted:
-            await session.delete(p)
-            removed += 1
-    added: list[Package] = []
-    for ecosystem, name, version in parsed.packages:
-        if (ecosystem, name, version) in by_key:
-            continue
-        pkg = Package(
-            project_id=project_id,
-            ecosystem=ecosystem,
-            name=name,
-            version=version,
-            source=source_key,
-        )
-        session.add(pkg)
-        added.append(pkg)
-    await session.commit()
-    if removed:
-        # Upgraded packages drop their old versions: complete what they fixed.
-        await security_tasks.sync(session, [project_id])
-    _schedule_scan(tasks, [p.id for p in added])
-    return ImportResult(
-        filename=filename,
-        format=parsed.format,
-        ecosystem=", ".join(parsed.ecosystems) or parsed.format,
-        added=len(added),
-        removed=removed,
-        total=len(wanted),
-        unsupported=parsed.unsupported,
-    )
-
-
-async def _import_tool_file(
-    project_id: UUID,
-    filename: str,
-    raw: bytes,
-    tasks: BackgroundTasks,
-    session: AsyncSession,
-) -> ImportResult:
-    try:
-        entries = toolfile.parse(filename, raw.decode("utf-8"))
-    except Exception as exc:
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_CONTENT, f"Could not parse {filename}: {exc}"
-        ) from exc
-    async with eol.make_client() as client:
-        index = toolfile.product_index(await eol.list_products(client))
-    known = set(index.values())
-
-    wanted: set[tuple[str, str]] = set()
-    skipped: list[SkippedTool] = []
-    for entry in entries:
-        res = toolfile.resolve(entry, index)
-        if res.product is None or res.product not in known:
-            reason = res.reason or "unsupported"
-            skipped.append(SkippedTool(tool=res.tool, version=res.version, reason=reason))
-        else:
-            wanted.add((res.product, res.version))
-
-    source = f"file:{filename}"
-    existing = list(
-        (await session.exec(select(Runtime).where(Runtime.project_id == project_id))).all()
-    )
-    have = {(r.product, r.version) for r in existing}
-    removed = 0
-    for r in existing:
-        if r.source == source and (r.product, r.version) not in wanted:
-            await session.delete(r)
-            removed += 1
-    added = 0
-    for product, version in sorted(wanted - have):
-        session.add(Runtime(project_id=project_id, product=product, version=version, source=source))
-        added += 1
-    await session.commit()
-    if settings.scan_on_change and (added or removed):
+    _schedule_scan(tasks, done.added_package_ids)
+    if done.runtimes_changed and settings.scan_on_change:
         tasks.add_task(scan_and_notify, None, [project_id])
-    return ImportResult(
-        filename=filename,
-        kind="runtimes",
-        ecosystem="endoflife.date",
-        added=added,
-        removed=removed,
-        total=len(wanted),
-        skipped=skipped,
-    )
+    return done.result
 
 
 @router.post(

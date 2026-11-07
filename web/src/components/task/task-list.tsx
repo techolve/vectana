@@ -11,7 +11,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Empty, OptionSelect, SeverityBadge } from "@/components/common";
 import { EolBadge } from "@/components/eol-table";
 import { userLabel } from "@/components/sales/status";
-import { DueLabel, Initials, TaskKindBadge, TaskStatusBadge, useTaskTitle } from "@/components/task/task-common";
+import {
+  DueLabel,
+  Initials,
+  IssueLink,
+  TaskKindBadge,
+  TaskPriorityBadge,
+  TaskStatusBadge,
+  useTaskTitle,
+} from "@/components/task/task-common";
 
 function addDays(iso: string, days: number): string {
   const d = new Date(`${iso}T00:00:00Z`);
@@ -147,7 +155,9 @@ export function TaskRow({ task, onOpen, showProject }: { task: Task; onOpen: (t:
         <div className="flex flex-wrap items-center gap-1.5">
           <span className={cn("font-medium", task.status === "done" && "text-muted-foreground line-through")}>{titleOf(task)}</span>
           <TaskKindBadge kind={task.kind} />
+          <TaskPriorityBadge priority={task.priority} />
           <SecurityTags task={task} />
+          <IssueLink task={task} />
         </div>
         {showProject && <div className="text-xs text-muted-foreground">{task.project_name} ・ #{task.number}</div>}
       </TableCell>

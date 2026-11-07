@@ -144,6 +144,8 @@ export type Me = {
   managed_department_ids: string[];
   group_name: string;
   locale: string;
+  github_login: string | null; // account names that issue assignees map to
+  gitlab_username: string | null;
 };
 
 export type CompanyType = "parent" | "affiliate" | "partner";
@@ -537,6 +539,8 @@ export type Dashboard = {
 
 export type TaskKind = "development" | "security" | "other";
 export const TASK_KINDS: TaskKind[] = ["development", "security", "other"];
+export type TaskPriority = "high" | "medium" | "low";
+export const TASK_PRIORITIES: TaskPriority[] = ["high", "medium", "low"];
 export type TaskStatus = "todo" | "in_progress" | "done";
 export const TASK_STATUSES: TaskStatus[] = ["todo", "in_progress", "done"];
 export type TaskSecurity = {
@@ -561,7 +565,10 @@ export type Task = {
   title: string;
   description: string | null;
   status: TaskStatus;
+  priority: TaskPriority | null;
   assignee: UserBrief | null;
+  issue_number: number | null; // linked GitHub / GitLab issue
+  issue_url: string | null;
   start_date: string | null;
   due_date: string | null;
   effective_due: string | null; // own due date, else (security) the earliest vulnerability's
@@ -709,3 +716,43 @@ export type Invoice = {
 export const ECOSYSTEMS = ["npm", "PyPI", "Pub", "Maven", "Go", "crates.io", "RubyGems", "Packagist", "NuGet"];
 
 export type Health = { status: string; version: string };
+
+export type ImportResult = {
+  filename: string;
+  kind: "packages" | "runtimes";
+  format: string | null;
+  ecosystem: string;
+  added: number;
+  removed: number;
+  total: number;
+  skipped: { tool: string; version: string; reason: "unsupported" | "unpinned" }[];
+  unsupported: Record<string, number>;
+};
+
+export type RepoProvider = "github" | "gitlab";
+export type RepoLink = {
+  id: string;
+  project_id: string;
+  provider: RepoProvider;
+  base_url: string;
+  repo: string;
+  html_url: string;
+  default_branch: string;
+  sync_issues: boolean;
+  security_issues: boolean;
+  import_paths: string[];
+  webhook_url: string;
+  webhook_registered: boolean;
+  webhook_secret: string | null; // project managers only
+  last_import_at: string | null;
+  last_import_sha: string | null;
+  last_event_at: string | null;
+  last_error: string | null;
+  last_error_at: string | null;
+  created_at: string;
+};
+export type RepoImport = {
+  sha: string;
+  files: { path: string; result: ImportResult | null; error: string | null }[];
+  removed_sources: number;
+};

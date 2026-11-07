@@ -48,6 +48,10 @@ from app.schemas.task import (
 from app.services import deals, upgrade
 from app.services import tasks as security_tasks
 from app.services.osv import _version_key
+from app.services.repo import sync as repo_sync
+
+# Changes that show on the linked issue.
+ISSUE_FIELDS = {"title", "kind", "status", "priority", "assignee_id", "sprint_id"}
 
 router = APIRouter(prefix="/api", tags=["tasks"])
 
@@ -110,6 +114,7 @@ async def task_rows(session: AsyncSession, tasks: list[Task]) -> list[TaskOut]:
                 title=t.title,
                 description=t.description,
                 status=t.status,
+                priority=t.priority,
                 assignee=deals.brief(users.get(t.assignee_id)) if t.assignee_id else None,
                 start_date=t.start_date,
                 due_date=t.due_date,
@@ -124,6 +129,8 @@ async def task_rows(session: AsyncSession, tasks: list[Task]) -> list[TaskOut]:
                 position=t.position,
                 estimate_hours=t.estimate_hours,
                 auto_created=t.auto_created,
+                issue_number=t.issue_number,
+                issue_url=t.issue_url,
                 security=security,
                 created_at=t.created_at,
                 updated_at=t.updated_at,
@@ -299,6 +306,7 @@ async def create_task(
         kind=body.kind,
         title=body.title,
         description=body.description,
+        priority=body.priority,
         assignee_id=body.assignee_id,
         start_date=body.start_date,
         due_date=body.start_date if body.is_milestone else body.due_date,
@@ -315,6 +323,7 @@ async def create_task(
     _check_dates(task)
     session.add(task)
     await session.commit()
+    await repo_sync.push_task(session, task)
     return (await task_rows(session, [task]))[0]
 
 
@@ -390,6 +399,7 @@ async def update_task(
     for key in (
         "title",
         "description",
+        "priority",
         "assignee_id",
         "start_date",
         "due_date",
@@ -413,6 +423,8 @@ async def update_task(
     task.updated_at = utcnow()
     session.add(task)
     await session.commit()
+    if fields.keys() & ISSUE_FIELDS:
+        await repo_sync.push_task(session, task)
     return await _detail(session, task)
 
 
@@ -505,6 +517,7 @@ async def create_security_task(
         task.created_by = actor.user.id
         session.add(task)
         await session.commit()
+    await repo_sync.push_task(session, task)
     return await _detail(session, task)
 
 
@@ -630,6 +643,7 @@ async def create_sprint(
     await _only_active(session, sprint)
     session.add(sprint)
     await session.commit()
+    await repo_sync.push_sprint(session, sprint)
     return (await _sprint_rows(session, [sprint]))[0]
 
 
@@ -680,6 +694,7 @@ async def update_sprint(
             session.add(t)
     session.add(sprint)
     await session.commit()
+    await repo_sync.push_sprint(session, sprint)
     return (await _sprint_rows(session, [sprint]))[0]
 
 

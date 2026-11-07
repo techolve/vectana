@@ -5,7 +5,7 @@ import { PlusIcon, Trash2Icon, UploadIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 
-import { api, ECOSYSTEMS, type Package } from "@/lib/api";
+import { api, ECOSYSTEMS, type ImportResult, type Package } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -13,18 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Empty, OptionSelect, useFormatDate } from "@/components/common";
 import { UpgradeHint } from "@/components/upgrade-hint";
-
-type ImportResult = {
-  filename: string;
-  kind: "packages" | "runtimes";
-  format: string | null;
-  ecosystem: string;
-  added: number;
-  removed: number;
-  total: number;
-  skipped: { tool: string; version: string; reason: "unsupported" | "unpinned" }[];
-  unsupported: Record<string, number>;
-};
 
 const LOCKFILES =
   "package-lock.json / pnpm-lock.yaml / uv.lock / poetry.lock / requirements*.txt / pubspec.lock / go.mod / go.sum / composer.lock / Cargo.lock / gradle.lockfile";

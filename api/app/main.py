@@ -23,6 +23,7 @@ from app.routers import (
     org,
     personal_token,
     project,
+    repo,
     report,
     task,
     timesheet,
@@ -74,6 +75,7 @@ app.include_router(personal_token.router)
 app.include_router(eol.router)
 app.include_router(vulnerability.router)
 app.include_router(report.router)
+app.include_router(repo.router)
 
 
 @app.exception_handler(HTTPException)

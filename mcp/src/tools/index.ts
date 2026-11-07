@@ -9,6 +9,7 @@ import { eolTools } from "./eol.ts";
 import { estimateTools } from "./estimates.ts";
 import { packageTools } from "./packages.ts";
 import { projectTools } from "./projects.ts";
+import { repoTools } from "./repos.ts";
 import { sprintTools } from "./sprints.ts";
 import { taskTools } from "./tasks.ts";
 import { vulnerabilityTools } from "./vulnerabilities.ts";
@@ -27,4 +28,5 @@ export const allTools: readonly ToolDef<any>[] = [
   ...taskTools,
   ...sprintTools,
   ...workTools,
+  ...repoTools,
 ];

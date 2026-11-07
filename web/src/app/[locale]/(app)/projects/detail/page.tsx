@@ -27,6 +27,7 @@ import { PackagesPanel } from "@/components/project/packages-panel";
 import { MembersPanel } from "@/components/project/members-panel";
 import { WebhooksPanel } from "@/components/project/webhooks-panel";
 import { TokensPanel } from "@/components/project/tokens-panel";
+import { ReposPanel } from "@/components/project/repos-panel";
 import { SettingsPanel } from "@/components/project/settings-panel";
 
 type Tab =
@@ -36,7 +37,7 @@ type Tab =
   | "activity"
   | "estimates"
   | "actuals"
-  | "vulns" | "eol" | "packages" | "members" | "webhooks" | "tokens" | "settings";
+  | "vulns" | "eol" | "packages" | "members" | "repos" | "webhooks" | "tokens" | "settings";
 
 function ProjectDetail() {
   const t = useTranslations();
@@ -89,6 +90,7 @@ function ProjectDetail() {
     { value: "members", label: t("project.tabs.members") },
     ...(canManage
       ? [
+          { value: "repos" as const, label: t("project.tabs.repos") },
           { value: "webhooks" as const, label: t("project.tabs.webhooks") },
           { value: "tokens" as const, label: t("project.tabs.tokens") },
           { value: "settings" as const, label: t("project.tabs.settings") },
@@ -142,6 +144,7 @@ function ProjectDetail() {
       {tab === "eol" && <EolPanel projectId={project.id} canWrite={canWrite} onChanged={reload} />}
       {tab === "packages" && <PackagesPanel projectId={project.id} canWrite={canWrite} onChanged={refreshAll} />}
       {tab === "members" && companies && <MembersPanel projectId={project.id} canManage={canManage} companies={companies} />}
+      {tab === "repos" && canManage && <ReposPanel projectId={project.id} canManage={canManage} />}
       {tab === "webhooks" && canManage && <WebhooksPanel projectId={project.id} />}
       {tab === "tokens" && canManage && <TokensPanel projectId={project.id} />}
       {tab === "settings" && canManage && departments && (

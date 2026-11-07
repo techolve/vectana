@@ -21,6 +21,12 @@ class TaskStatus(StrEnum):
     done = "done"  # 完了
 
 
+class TaskPriority(StrEnum):
+    high = "high"
+    medium = "medium"
+    low = "low"
+
+
 class SecuritySubject(StrEnum):
     package = "package"  # upgrade a dependency
     runtime = "runtime"  # upgrade a runtime / product (EOL)
@@ -45,6 +51,7 @@ class Task(SQLModel, table=True):
     title: str = Field(max_length=300)
     description: str | None = Field(default=None)
     status: str = Field(default=TaskStatus.todo, max_length=20, index=True)
+    priority: str | None = Field(default=None, max_length=10)  # TaskPriority
     assignee_id: UUID | None = Field(
         default=None, foreign_key="users.id", index=True, ondelete="SET NULL"
     )
@@ -69,6 +76,12 @@ class Task(SQLModel, table=True):
     subject_ecosystem: str | None = Field(default=None, max_length=30)
     subject_name: str | None = Field(default=None, max_length=300)
     auto_created: bool = Field(default=False)
+    # The GitHub issue / GitLab issue this task is kept in step with.
+    repo_link_id: UUID | None = Field(
+        default=None, foreign_key="repo_links.id", index=True, ondelete="SET NULL"
+    )
+    issue_number: int | None = Field(default=None)
+    issue_url: str | None = Field(default=None, max_length=500)
     created_by: UUID | None = Field(default=None, foreign_key="users.id", ondelete="SET NULL")
     created_at: datetime = created_at_field()
     updated_at: datetime | None = nullable_ts_field()
@@ -99,4 +112,9 @@ class Sprint(SQLModel, table=True):
     # Points planned for the sprint, frozen when it closes (unfinished tasks
     # then go back to the backlog).
     committed_points: float | None = Field(default=None)
+    # The milestone this sprint is kept in step with.
+    repo_link_id: UUID | None = Field(
+        default=None, foreign_key="repo_links.id", index=True, ondelete="SET NULL"
+    )
+    milestone_number: int | None = Field(default=None)
     created_at: datetime = created_at_field()

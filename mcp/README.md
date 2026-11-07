@@ -19,6 +19,7 @@ Claude などの AI クライアントから Vectana を操作するための [M
 | 実績工数 | `get_timesheet` `log_time` `save_timesheet` `submit_timesheet` `get_project_actuals` |
 | 商談メモ | `list_activities` `add_activity` `update_activity` |
 | 請求 | `list_project_invoices` `list_invoices` `plan_invoices` `update_invoice` |
+| リポジトリ連携 | `list_repo_links` `import_from_repo` `sync_repo_issues` |
 
 削除系の操作は、AI が誤って消さないよう用意していません（画面から行ってください）。
 
