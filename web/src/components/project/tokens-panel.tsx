@@ -40,7 +40,7 @@ jobs:
             ${origin}/api/projects/${projectId}/packages/import`;
 }
 
-function CopyBlock({ text, label }: { text: string; label: string }) {
+export function CopyBlock({ text, label }: { text: string; label: string }) {
   const t = useTranslations("tokens");
   async function copy() {
     await navigator.clipboard.writeText(text);

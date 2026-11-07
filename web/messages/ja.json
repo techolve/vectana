@@ -796,5 +796,21 @@
     "allFixed": "{version} にすれば、このパッケージの未対応の脆弱性はすべて解消します。",
     "markDone": "完了にする",
     "runtime": "ランタイム"
+  },
+  "personalTokens": {
+    "title": "個人用トークン（AI・スクリプト連携）",
+    "description": "Claude などの AI クライアントやスクリプトから、あなたの権限で Vectana を操作するためのトークンです。読み取り専用にすると、閲覧はできても変更はできません。",
+    "issue": "個人用トークンを発行",
+    "namePlaceholder": "用途（例: Claude Desktop）",
+    "scope": "権限",
+    "scopes": {
+      "read": "読み取りのみ",
+      "write": "読み書き"
+    },
+    "issuedOnce": "トークンを発行しました。この画面を閉じると二度と表示されないので、今すぐ保存してください。",
+    "empty": "個人用トークンはまだありません",
+    "confirmRevoke": "トークン「{name}」を失効させますか？このトークンを使っている AI クライアントやスクリプトは使えなくなります。",
+    "mcpExample": "MCP サーバの設定例（Claude Desktop・Claude Code など）",
+    "mcpNote": "Claude Code なら次のコマンドでも追加できます: {command}"
   }
 }

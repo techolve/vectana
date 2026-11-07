@@ -14,6 +14,8 @@ jobs:
       - uses: jdx/mise-action@v2
       - run: mise run setup
       - run: mise run check
+      # mcp/src/api-types.ts must match the API's OpenAPI schema.
+      - run: mise run mcp:types && git diff --exit-code mcp/src/api-types.ts
 
   image:
     runs-on: ubuntu-latest

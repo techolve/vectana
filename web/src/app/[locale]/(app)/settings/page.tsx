@@ -16,6 +16,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { LabeledField, OptionSelect, PageHeader } from "@/components/common";
 import { useMe } from "@/components/app-shell";
+import { PersonalTokensCard } from "@/components/personal-tokens";
 
 type Prefs = { email_enabled: boolean; min_severity: Severity };
 
@@ -30,6 +31,7 @@ export default function SettingsPage() {
         <LanguageCard />
         {data && <PrefsCard initial={data} />}
         <PasswordCard />
+        <PersonalTokensCard />
       </div>
     </>
   );

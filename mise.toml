@@ -23,9 +23,14 @@ description = "Install web dependencies"
 dir = "web"
 run = "npm ci"
 
+[tasks."mcp:install"]
+description = "Install MCP server dependencies"
+dir = "mcp"
+run = "npm ci"
+
 [tasks.setup]
 description = "Install all dependencies"
-depends = ["api:install", "web:install"]
+depends = ["api:install", "web:install", "mcp:install"]
 
 # --- Development ---------------------------------------------------------------
 
@@ -90,17 +95,39 @@ description = "Static export of the web app"
 dir = "web"
 run = "npm run build"
 
+[tasks."mcp:lint"]
+description = "TypeScript check of the MCP server"
+dir = "mcp"
+run = "npm run typecheck"
+
+[tasks."mcp:test"]
+description = "MCP server tests"
+dir = "mcp"
+run = "npm test"
+
+[tasks."mcp:build"]
+description = "Build the MCP server (mcp/dist)"
+dir = "mcp"
+run = "npm run build"
+
+[tasks."mcp:types"]
+description = "Regenerate mcp/src/api-types.ts from the API's OpenAPI schema"
+run = [
+  "cd api && SECRET_KEY=dev-only-secret-key-change-me-0123456789 DEBUG=true uv run python -c 'import json; from app.main import app; print(json.dumps(app.openapi()))' > ../mcp/openapi.json",
+  "cd mcp && npx openapi-typescript openapi.json -o src/api-types.ts && rm openapi.json",
+]
+
 [tasks.lint]
 description = "Lint everything"
-depends = ["api:lint", "web:lint"]
+depends = ["api:lint", "web:lint", "mcp:lint"]
 
 [tasks.test]
 description = "Run all tests"
-depends = ["api:test"]
+depends = ["api:test", "mcp:test"]
 
 [tasks.check]
 description = "Lint, test and build (what CI runs)"
-depends = ["lint", "test", "web:build"]
+depends = ["lint", "test", "web:build", "mcp:build"]
 
 # --- Release -------------------------------------------------------------------
 

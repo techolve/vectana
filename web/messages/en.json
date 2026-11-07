@@ -796,5 +796,21 @@
     "allFixed": "Upgrading to {version} fixes every open vulnerability of this package.",
     "markDone": "Mark done",
     "runtime": "Runtime"
+  },
+  "personalTokens": {
+    "title": "Personal tokens (AI and scripts)",
+    "description": "Tokens that let AI clients such as Claude, or your scripts, use Vectana with your permissions. A read-only token can view but not change anything.",
+    "issue": "Issue a personal token",
+    "namePlaceholder": "Purpose (e.g. Claude Desktop)",
+    "scope": "Access",
+    "scopes": {
+      "read": "Read only",
+      "write": "Read and write"
+    },
+    "issuedOnce": "Token issued. It will not be shown again once you close this, so save it now.",
+    "empty": "No personal tokens yet",
+    "confirmRevoke": "Revoke the token \"{name}\"? AI clients and scripts using it will stop working.",
+    "mcpExample": "MCP server settings (Claude Desktop, Claude Code and others)",
+    "mcpNote": "In Claude Code you can also add it with: {command}"
   }
 }
