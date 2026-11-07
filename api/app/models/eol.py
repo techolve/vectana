@@ -85,3 +85,13 @@ class AppSettings(SQLModel, table=True):
 
     id: int = Field(default=1, primary_key=True)
     eol_warning_days: int = Field(default=90)
+    # Remediation deadline per severity, in days after a vulnerability is first
+    # seen. An open or acknowledged match past it counts as overdue.
+    sla_critical_days: int = Field(default=7, sa_column_kwargs={"server_default": "7"})
+    sla_high_days: int = Field(default=30, sa_column_kwargs={"server_default": "30"})
+    sla_medium_days: int = Field(default=90, sa_column_kwargs={"server_default": "90"})
+    sla_low_days: int = Field(default=180, sa_column_kwargs={"server_default": "180"})
+    sla_unknown_days: int = Field(default=90, sa_column_kwargs={"server_default": "90"})
+    # Weekly organization report to admins and department heads.
+    report_enabled: bool = Field(default=True, sa_column_kwargs={"server_default": "true"})
+    report_weekday: int = Field(default=0, sa_column_kwargs={"server_default": "0"})  # 0 = Monday

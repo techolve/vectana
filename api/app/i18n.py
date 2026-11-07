@@ -171,6 +171,72 @@ TEXTS: dict[str, dict[str, str]] = {
     "eol.latest": {"ja": "（最新 {version}）", "en": " (latest {version})"},
     "eol.line.eol": {"ja": "{date} にサポート終了", "en": "ended on {date}"},
     "eol.line.approaching": {"ja": "{date} にサポート終了予定", "en": "ends on {date}"},
+    "report.unassigned": {"ja": "（部署未設定）", "en": "(No department)"},
+    "report.col.company": {"ja": "会社", "en": "Company"},
+    "report.col.department": {"ja": "部署", "en": "Department"},
+    "report.col.projects": {"ja": "プロジェクト数", "en": "Projects"},
+    "report.col.critical": {"ja": "CRITICAL", "en": "CRITICAL"},
+    "report.col.high": {"ja": "HIGH", "en": "HIGH"},
+    "report.col.medium": {"ja": "MEDIUM", "en": "MEDIUM"},
+    "report.col.low": {"ja": "LOW", "en": "LOW"},
+    "report.col.unknown": {"ja": "UNKNOWN", "en": "UNKNOWN"},
+    "report.col.overdue": {"ja": "期限超過", "en": "Overdue"},
+    "report.col.oldest_overdue_days": {
+        "ja": "最長超過日数",
+        "en": "Longest overdue (days)",
+    },
+    "report.col.eol": {"ja": "EOL到達", "en": "EOL reached"},
+    "report.col.eol_approaching": {"ja": "EOL接近", "en": "EOL approaching"},
+    "report.col.nearest_eol_date": {"ja": "直近のEOL日", "en": "Nearest EOL date"},
+    "report.col.nearest_eol_days": {"ja": "EOLまでの日数", "en": "Days to EOL"},
+    "report.col.partial": {"ja": "一部のみ", "en": "Partial"},
+    "report.col.unit": {"ja": "会社・部署", "en": "Company / department"},
+    "report.col.open": {"ja": "未対応", "en": "Open"},
+    "report.col.due": {"ja": "期限", "en": "Due"},
+    "report.col.days_over": {"ja": "超過日数", "en": "Days over"},
+    "report.col.days_left": {"ja": "残り日数", "en": "Days left"},
+    "report.subject": {
+        "ja": "[Vectana] 週次レポート（{period}）期限超過 {overdue} 件",
+        "en": "[Vectana] Weekly report ({period}): {overdue} overdue",
+    },
+    "report.intro": {
+        "ja": "{scope} の脆弱性とEOLの状況です（{today} 時点）。",
+        "en": "Vulnerability and EOL status for {scope} as of {today}.",
+    },
+    "report.summary": {
+        "ja": (
+            "プロジェクト {projects} 件 / 未対応の脆弱性 {open} 件"
+            "（CRITICAL {critical}、HIGH {high}）/ 期限超過 {overdue} 件 / "
+            "EOL到達 {eol} 件・接近 {approaching} 件"
+        ),
+        "en": (
+            "{projects} projects / {open} open vulnerabilities "
+            "(CRITICAL {critical}, HIGH {high}) / {overdue} overdue / "
+            "EOL reached {eol}, approaching {approaching}"
+        ),
+    },
+    "report.units": {"ja": "会社・部署別", "en": "By company and department"},
+    "report.overdue": {
+        "ja": "期限超過の脆弱性（古い順、上位 {count} 件）",
+        "en": "Overdue vulnerabilities (oldest first, top {count})",
+    },
+    "report.upcoming_eol": {
+        "ja": "EOLが近いもの（上位 {count} 件）",
+        "en": "Nearest EOL (top {count})",
+    },
+    "report.none": {"ja": "なし", "en": "None"},
+    "report.days_left": {"ja": "あと {days} 日", "en": "in {days} days"},
+    "report.days_over": {"ja": "{days} 日超過", "en": "{days} days ago"},
+    "report.open_link": {
+        "ja": "組織別ダッシュボードを開く",
+        "en": "Open the organization dashboard",
+    },
+    "report.scope.group": {"ja": "グループ全体", "en": "the whole group"},
+    "report.scope.mine": {"ja": "あなたの担当範囲", "en": "your organization"},
+    "report.partial_note": {
+        "ja": "* はあなたに見えるプロジェクトだけの集計です。",
+        "en": "* covers only the projects you can see.",
+    },
     "test.subject": {"ja": "[Vectana] テスト通知", "en": "[Vectana] Test notification"},
     "test.body": {
         "ja": "Vectana からのテスト通知です。この通知が届いていれば設定は正しく動いています。",

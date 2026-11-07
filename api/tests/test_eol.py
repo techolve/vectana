@@ -182,9 +182,9 @@ async def test_eol_notified_once_per_stage(
 
 
 async def test_settings_require_group_admin(client: AsyncClient, org: Org) -> None:
-    assert (await client.get("/api/settings", headers=auth(org.member))).json() == {
-        "eol_warning_days": 90
-    }
+    assert (await client.get("/api/settings", headers=auth(org.member))).json()[
+        "eol_warning_days"
+    ] == 90
     body = {"eol_warning_days": 30}
     assert (
         await client.put("/api/settings", json=body, headers=auth(org.company_admin))
@@ -192,7 +192,9 @@ async def test_settings_require_group_admin(client: AsyncClient, org: Org) -> No
     assert (
         await client.put("/api/settings", json=body, headers=auth(org.group_admin))
     ).status_code == 200
-    assert (await client.get("/api/settings", headers=auth(org.member))).json() == body
+    assert (await client.get("/api/settings", headers=auth(org.member))).json()[
+        "eol_warning_days"
+    ] == 30
 
 
 def test_digest_renders_both_languages() -> None:

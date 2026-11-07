@@ -54,6 +54,10 @@ class Settings(BaseSettings):
     scan_interval_minutes: int = 360
     # Scan packages right after they are added (in the API process).
     scan_on_change: bool = True
+    # Weekly organization report: sent on the configured weekday (system
+    # settings) at or after this hour, in this time zone.
+    report_timezone: str = "Asia/Tokyo"
+    report_hour: int = 9
 
     # Mail: "smtp" | "cloudflare" | "none"
     mail_backend: str = "smtp"
