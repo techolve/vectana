@@ -89,6 +89,7 @@ async def me(actor: CurrentActor, session: Session) -> MeResponse:
         can_sell=actor.user.company_id is not None and actor.can_sell(actor.user.company_id),
         can_see_customers=actor.is_group_admin
         or (actor.user.company_id is not None and actor.can_see_customers(actor.user.company_id)),
+        can_see_invoices=actor.can_manage_org or actor.is_accounting,
         managed_department_ids=sorted(actor.managed_department_ids, key=str),
         group_name=settings.group_name,
         locale=user.locale,

@@ -37,6 +37,7 @@ class MeResponse(BaseModel):
     can_manage_org: bool
     can_sell: bool  # create customers and estimates
     can_see_customers: bool
+    can_see_invoices: bool  # the billing page (accounting and admins)
     managed_department_ids: list[UUID]
     group_name: str
     locale: str

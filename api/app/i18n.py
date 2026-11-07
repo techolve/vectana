@@ -101,6 +101,28 @@ ERRORS_JA: dict[str, str] = {
     "source must be 1-80 characters of letters, digits and ._/@+-": (
         "取り込み元の名前は英数字と ._/@+- で80文字以内にしてください"
     ),
+    # Timesheet, activity notes, billing
+    "A row needs a project, a task or a label": (
+        "各行にプロジェクト・タスク・作業名のいずれかを指定してください"
+    ),
+    "Accounting or administrators only": "経理または管理者のみ利用できます",
+    "Already invoiced: undo it before changing it": (
+        "請求済みです。変更するには先に請求済みを取り消してください"
+    ),
+    "Assignee cannot work on this project": "この担当者はこのプロジェクトで作業できません",
+    "Cannot see this person's timesheet": "この人の実績工数は閲覧できません",
+    "Estimate not found": "見積が見つかりません",
+    "Invoice not found": "請求予定が見つかりません",
+    "More than 24 hours in a day": "1日の合計が24時間を超えています",
+    "Only accounting and administrators can record": (
+        "請求済・入金済の記録は経理または管理者のみ行えます"
+    ),
+    "Only sales and administrators can plan": "請求予定は営業または管理者のみ作成できます",
+    "Only won estimates can be billed": "受注した見積だけ請求予定を作成できます",
+    "Task belongs to another project": "タスクが別のプロジェクトのものです",
+    "Task not found": "タスクが見つかりません",
+    "The same row appears twice": "同じ行が重複しています",
+    "month must be YYYY-MM": "月は YYYY-MM の形式で指定してください",
     "Invalid request": "入力内容が正しくありません",
 }
 
@@ -204,6 +226,20 @@ TEXTS: dict[str, dict[str, str]] = {
     "report.col.due": {"ja": "期限", "en": "Due"},
     "report.col.days_over": {"ja": "超過日数", "en": "Days over"},
     "report.col.days_left": {"ja": "残り日数", "en": "Days left"},
+    "invoice.col.planned_on": {"ja": "請求予定日", "en": "Planned on"},
+    "invoice.col.project": {"ja": "プロジェクト", "en": "Project"},
+    "invoice.col.customer": {"ja": "顧客", "en": "Customer"},
+    "invoice.col.estimate": {"ja": "見積", "en": "Estimate"},
+    "invoice.col.label": {"ja": "請求内容", "en": "Item"},
+    "invoice.col.amount": {"ja": "金額（税抜）", "en": "Amount (excl. tax)"},
+    "invoice.col.status": {"ja": "状況", "en": "Status"},
+    "invoice.col.invoiced_on": {"ja": "請求日", "en": "Invoiced on"},
+    "invoice.col.due_on": {"ja": "入金期日", "en": "Due on"},
+    "invoice.col.paid_on": {"ja": "入金日", "en": "Paid on"},
+    "invoice.status.planned": {"ja": "予定", "en": "Planned"},
+    "invoice.status.invoiced": {"ja": "請求済", "en": "Invoiced"},
+    "invoice.status.paid": {"ja": "入金済", "en": "Paid"},
+    "invoice.status.overdue": {"ja": "入金遅れ", "en": "Overdue"},
     "report.subject": {
         "ja": "[Vectana] 週次レポート（{period}）期限超過 {overdue} 件",
         "en": "[Vectana] Weekly report ({period}): {overdue} overdue",

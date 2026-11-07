@@ -2,12 +2,13 @@
 status rules shared by the project and estimate endpoints."""
 
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlmodel import col, select
+from sqlmodel import SQLModel, col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models.customer import Customer
@@ -21,6 +22,18 @@ from app.models.estimate import (
 from app.models.project import DELIVERY_STATUSES, Project, ProjectStatus
 from app.models.user import User
 from app.schemas.org import UserBrief
+
+
+async def rows_by_id[M: SQLModel](
+    session: AsyncSession, model: type[M], ids: Iterable[UUID | None]
+) -> dict[UUID, M]:
+    """Rows of a table keyed by id, in one query."""
+    wanted = {i for i in ids if i is not None}
+    if not wanted:
+        return {}
+    id_col = model.id  # type: ignore[attr-defined]
+    rows = (await session.exec(select(model).where(col(id_col).in_(wanted)))).all()
+    return {r.id: r for r in rows}  # type: ignore[attr-defined]
 
 
 def brief(u: User | None) -> UserBrief | None:

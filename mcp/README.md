@@ -16,6 +16,9 @@ Claude などの AI クライアントから Vectana を操作するための [M
 | 見積 | `list_estimates` `get_estimate` `create_estimate` `update_estimate` |
 | タスク | `list_my_tasks` `list_project_tasks` `get_task` `create_task` `update_task` `list_security_candidates` `create_security_task` |
 | スプリント | `list_sprints` `get_burndown` `get_velocity` `create_sprint` `update_sprint` |
+| 実績工数 | `get_timesheet` `log_time` `save_timesheet` `submit_timesheet` `get_project_actuals` |
+| 商談メモ | `list_activities` `add_activity` `update_activity` |
+| 請求 | `list_project_invoices` `list_invoices` `plan_invoices` `update_invoice` |
 
 削除系の操作は、AI が誤って消さないよう用意していません（画面から行ってください）。
 
