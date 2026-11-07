@@ -21,6 +21,7 @@ from app.routers import (
     org,
     project,
     report,
+    task,
     token,
     vulnerability,
 )
@@ -60,6 +61,7 @@ app.include_router(org.router)
 app.include_router(project.router)
 app.include_router(customer.router)
 app.include_router(estimate.router)
+app.include_router(task.router)
 app.include_router(token.router)
 app.include_router(eol.router)
 app.include_router(vulnerability.router)

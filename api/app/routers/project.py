@@ -41,6 +41,7 @@ from app.models.project import (
     ProjectRole,
     ProjectWebhook,
 )
+from app.models.task import Task, TaskKind, TaskStatus
 from app.models.user import User
 from app.routers.vulnerability import upgrade_out
 from app.schemas.project import (
@@ -62,6 +63,7 @@ from app.schemas.project import (
 )
 from app.schemas.sales import CustomerBrief
 from app.services import deals, eol, lockfile, toolfile, upgrade
+from app.services import tasks as security_tasks
 from app.services.notify import digest
 from app.services.scanner import scan_and_notify
 
@@ -155,6 +157,7 @@ async def project_rows(
     packages = await _package_counts(session, ids)
     eol_counts = await _eol_counts(session, ids)
     scans = await _last_scans(session, ids)
+    security = await _open_security_tasks(session, ids)
     rows = [
         _project_out(
             p,
@@ -165,8 +168,25 @@ async def project_rows(
         )
         for p in projects
     ]
+    for row in rows:
+        row.open_security_tasks = security.get(row.id, 0)
     await _fill_people_and_money(session, projects, rows, actor)
     return rows
+
+
+async def _open_security_tasks(session: AsyncSession, project_ids: list[UUID]) -> dict[UUID, int]:
+    if not project_ids:
+        return {}
+    rows = await session.exec(
+        select(Task.project_id, func.count())
+        .where(
+            col(Task.project_id).in_(project_ids),
+            Task.kind == TaskKind.security,
+            Task.status != TaskStatus.done,
+        )
+        .group_by(col(Task.project_id))
+    )
+    return {pid: n for pid, n in rows.all()}
 
 
 async def _fill_people_and_money(
@@ -221,6 +241,7 @@ def _project_out(
         description=p.description,
         created_at=p.created_at,
         method=p.method,
+        security_threshold=p.security_threshold,
         archived=p.status in ARCHIVED_STATUSES,
         is_deal=p.is_deal,
         starts_on=p.starts_on,
@@ -396,10 +417,14 @@ async def update_project(
             setattr(project, key, fields[key])
     if body.method is not None:
         project.method = body.method
+    if body.security_threshold is not None:
+        project.security_threshold = body.security_threshold.value
     if body.status is not None:
         deals.apply_status(project, body.status)
     session.add(project)
     await session.commit()
+    if "security_threshold" in fields:
+        await security_tasks.sync(session, [project.id])
     return await get_project(project_id, actor, session)
 
 
@@ -733,6 +758,7 @@ async def delete_package(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Package not found")
     await session.delete(package)
     await session.commit()
+    await security_tasks.sync(session, [project_id])
 
 
 _SOURCE_NAME = re.compile(r"^[A-Za-z0-9._/@+-]{1,80}$")
@@ -804,6 +830,9 @@ async def import_lockfile(
         session.add(pkg)
         added.append(pkg)
     await session.commit()
+    if removed:
+        # Upgraded packages drop their old versions: complete what they fixed.
+        await security_tasks.sync(session, [project_id])
     _schedule_scan(tasks, [p.id for p in added])
     return ImportResult(
         filename=filename,

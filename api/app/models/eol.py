@@ -62,6 +62,9 @@ class EolFinding(SQLModel, table=True):
         default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False)
     )
     checked_at: datetime | None = nullable_ts_field()
+    task_id: UUID | None = Field(
+        default=None, foreign_key="tasks.id", index=True, ondelete="SET NULL"
+    )
 
 
 class EolDelivery(SQLModel, table=True):

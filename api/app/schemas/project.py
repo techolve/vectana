@@ -48,6 +48,7 @@ class ProjectUpdate(BaseModel):
     next_action_on: date | None = None
     lost_reason: str | None = None
     competitor: str | None = Field(default=None, max_length=200)
+    security_threshold: Severity | None = None
 
 
 class SeverityCounts(BaseModel):
@@ -71,6 +72,7 @@ class ProjectOut(BaseModel):
     description: str | None
     created_at: datetime
     method: str
+    security_threshold: str = Severity.HIGH
     archived: bool = False  # 保留・失注
     # A deal (not ordered yet). Shown to everyone who can see the project.
     is_deal: bool = False
@@ -97,6 +99,7 @@ class ProjectOut(BaseModel):
     open_counts: SeverityCounts = SeverityCounts()
     eol_counts: EolCounts = EolCounts()
     last_scanned_at: datetime | None = None
+    open_security_tasks: int = 0
     my_level: str | None = None
 
 
@@ -226,6 +229,7 @@ class MatchOut(BaseModel):
     sla_due_date: date | None = None
     updated_at: datetime | None = None
     comment_count: int = 0
+    task_id: UUID | None = None  # the security task that resolves it
 
 
 class MatchUpdate(BaseModel):

@@ -25,6 +25,7 @@ from app.models.project import Project
 from app.schemas.eol import EolFindingOut, ProductOut, RuntimeBody, RuntimeOut, SystemSettings
 from app.schemas.report import SystemSettingsUpdate
 from app.services import eol
+from app.services import tasks as security_tasks
 from app.services.scanner import scan_and_notify
 
 router = APIRouter(prefix="/api", tags=["eol"])
@@ -130,6 +131,7 @@ async def delete_runtime(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Runtime not found")
     await session.delete(runtime)
     await session.commit()
+    await security_tasks.sync(session, [project_id])
 
 
 # --- Findings ------------------------------------------------------------------

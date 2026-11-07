@@ -92,6 +92,10 @@ class VulnMatch(SQLModel, table=True):
     )
     due_date: date | None = Field(default=None, sa_column=Column(Date, nullable=True))
     updated_at: datetime | None = nullable_ts_field()
+    # The security task (one package upgrade) that resolves it.
+    task_id: UUID | None = Field(
+        default=None, foreign_key="tasks.id", index=True, ondelete="SET NULL"
+    )
 
 
 class MatchEventKind(StrEnum):

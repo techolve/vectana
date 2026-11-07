@@ -13,6 +13,8 @@ import { useMe, usePageCrumb } from "@/components/app-shell";
 import { ProjectStatusBadge } from "@/components/sales/status";
 import { OverviewPanel, StatusStepper } from "@/components/project/overview-panel";
 import { EstimatesPanel } from "@/components/project/estimates-panel";
+import { SecurityPanel } from "@/components/project/security-panel";
+import { TasksPanel } from "@/components/project/tasks-panel";
 import { departmentPath } from "@/lib/org";
 import { Button } from "@/components/ui/button";
 import { ErrorText, PageHeader, PageTabs, SeverityCountsInline } from "@/components/common";
@@ -25,7 +27,7 @@ import { WebhooksPanel } from "@/components/project/webhooks-panel";
 import { TokensPanel } from "@/components/project/tokens-panel";
 import { SettingsPanel } from "@/components/project/settings-panel";
 
-type Tab = "overview" | "estimates" | "vulns" | "eol" | "packages" | "members" | "webhooks" | "tokens" | "settings";
+type Tab = "overview" | "tasks" | "security" | "estimates" | "vulns" | "eol" | "packages" | "members" | "webhooks" | "tokens" | "settings";
 
 function ProjectDetail() {
   const t = useTranslations();
@@ -63,6 +65,8 @@ function ProjectDetail() {
 
   const tabs: { value: Tab; label: React.ReactNode }[] = [
     { value: "overview", label: t("project.tabs.overview") },
+    { value: "tasks", label: t("project.tabs.tasks") },
+    { value: "security", label: t("project.tabs.security", { count: project.open_security_tasks || "" }) },
     ...(me.is_partner
       ? []
       : [{ value: "estimates" as const, label: t("project.tabs.estimates", { count: project.estimate_count ?? 0 }) }]),
@@ -112,6 +116,10 @@ function ProjectDetail() {
       </div>
       <PageTabs tabs={tabs} value={tab} onChange={setTab} />
       {tab === "overview" && <OverviewPanel project={project} canManage={canManage} onSaved={reload} />}
+      {tab === "tasks" && <TasksPanel project={project} canWrite={canWrite} />}
+      {tab === "security" && (
+        <SecurityPanel project={project} canWrite={canWrite} canManage={canManage} onChanged={refreshAll} />
+      )}
       {tab === "estimates" && !me.is_partner && <EstimatesPanel project={project} onChanged={reload} />}
       {tab === "vulns" && matches && (
         <MatchTable matches={matches} onChanged={refreshAll} canTriage={canWrite} empty={t("project.noMatches")} />

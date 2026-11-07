@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Link } from "@/i18n/navigation";
-import type { Dashboard, Project } from "@/lib/api";
+import { Link, useRouter } from "@/i18n/navigation";
+import type { Dashboard, Project, Task } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +30,7 @@ import {
 import { MatchTable } from "@/components/match-table";
 import { EOL_STYLE, EolTable } from "@/components/eol-table";
 import { useMe } from "@/components/app-shell";
+import { TaskRow } from "@/components/task/task-list";
 
 export default function DashboardPage() {
   const t = useTranslations();
@@ -43,6 +44,7 @@ export default function DashboardPage() {
       <ErrorText>{error}</ErrorText>
       {data && (
         <>
+          <TasksCard />
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
             <StatCard icon={FolderIcon} label={t("dashboard.projects")} value={data.project_count} href="/projects/" />
             <StatCard icon={PackageIcon} label={t("dashboard.packages")} value={data.package_count} />
@@ -153,6 +155,47 @@ export default function DashboardPage() {
         </>
       )}
     </>
+  );
+}
+
+type TaskScope = "mine" | "team" | "unassigned";
+
+/** What to work on next: my tasks, my projects' tasks, or nobody's yet. */
+function TasksCard() {
+  const t = useTranslations();
+  const router = useRouter();
+  const [scope, setScope] = useState<TaskScope>("mine");
+  const { data } = useApi<Task[]>(`/tasks?scope=${scope}&limit=10`);
+  const open = (task: Task) => router.push({ pathname: "/projects/detail/", query: { id: task.project_id } });
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("dashboard.tasks")}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <PageTabs
+          value={scope}
+          onChange={setScope}
+          tabs={[
+            { value: "mine", label: t("dashboard.tasksMine") },
+            { value: "team", label: t("dashboard.tasksTeam") },
+            { value: "unassigned", label: t("dashboard.tasksUnassigned") },
+          ]}
+        />
+        {data &&
+          (data.length === 0 ? (
+            <Empty>{t("dashboard.tasksEmpty")}</Empty>
+          ) : (
+            <Table>
+              <TableBody>
+                {data.map((task) => (
+                  <TaskRow key={task.id} task={task} onOpen={open} showProject />
+                ))}
+              </TableBody>
+            </Table>
+          ))}
+      </CardContent>
+    </Card>
   );
 }
 

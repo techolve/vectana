@@ -213,6 +213,7 @@ export type Project = {
   description: string | null;
   created_at: string;
   method: ProjectMethod;
+  security_threshold: Severity;
   archived: boolean;
   is_deal: boolean;
   manager: UserBrief | null;
@@ -238,6 +239,7 @@ export type Project = {
   open_counts: SeverityCounts;
   eol_counts: EolCounts;
   last_scanned_at: string | null;
+  open_security_tasks: number;
   my_level: "read" | "write" | "manage" | null;
 };
 export type ProjectRole = "owner" | "member" | "viewer";
@@ -384,6 +386,7 @@ export type Match = {
   sla_due_date: string | null; // SLA deadline when due_date is unset
   updated_at: string | null;
   comment_count: number;
+  task_id: string | null; // the security task that resolves it
 };
 export type MatchStatus = "open" | "ack" | "ignored";
 export const MATCH_STATUSES: MatchStatus[] = ["open", "ack", "ignored"];
@@ -507,6 +510,97 @@ export type Dashboard = {
   recent: Match[];
   eol: EolFinding[];
 };
+
+export type TaskKind = "development" | "security" | "other";
+export const TASK_KINDS: TaskKind[] = ["development", "security", "other"];
+export type TaskStatus = "todo" | "in_progress" | "done";
+export const TASK_STATUSES: TaskStatus[] = ["todo", "in_progress", "done"];
+export type TaskSecurity = {
+  subject: "package" | "runtime";
+  ecosystem: string;
+  name: string;
+  label: string;
+  installed: string[];
+  vuln_count: number;
+  max_severity: Severity | null;
+  eol_status: "eol" | "approaching" | null;
+  eol_date: string | null;
+  latest: string | null;
+  upgrade: Upgrade | null;
+};
+export type Task = {
+  id: string;
+  project_id: string;
+  project_name: string;
+  number: number;
+  kind: TaskKind;
+  title: string;
+  description: string | null;
+  status: TaskStatus;
+  assignee: UserBrief | null;
+  start_date: string | null;
+  due_date: string | null;
+  effective_due: string | null; // own due date, else (security) the earliest vulnerability's
+  overdue: boolean;
+  parent_id: string | null;
+  is_milestone: boolean;
+  progress: number;
+  depends_on: string[];
+  sprint_id: string | null;
+  points: number | null;
+  position: number;
+  estimate_hours: number | null;
+  auto_created: boolean;
+  security: TaskSecurity | null;
+  created_at: string;
+  updated_at: string | null;
+  completed_at: string | null;
+};
+export type TaskDetail = Task & {
+  matches: {
+    id: string;
+    vuln_id: string;
+    summary: string | null;
+    severity: Severity;
+    package_version: string;
+    fixed_version: string | null;
+    status: MatchStatus;
+  }[];
+  findings: { id: string; product_label: string; version: string; cycle: string | null; eol_date: string | null; status: EolStatus }[];
+};
+export type SecurityCandidate = {
+  subject: "package" | "runtime";
+  ecosystem: string;
+  name: string;
+  label: string;
+  installed: string[];
+  vuln_count: number;
+  max_severity: Severity | null;
+  eol_status: "eol" | "approaching" | null;
+  upgrade: Upgrade | null;
+};
+export type SprintStatus = "planned" | "active" | "closed";
+export type Sprint = {
+  id: string;
+  project_id: string;
+  name: string;
+  goal: string | null;
+  starts_on: string;
+  ends_on: string;
+  status: SprintStatus;
+  definition_of_done: { text: string; done: boolean }[];
+  task_count: number;
+  done_count: number;
+  points: number;
+  done_points: number;
+};
+export type Burndown = {
+  sprint_id: string;
+  unit: "points" | "tasks";
+  total: number;
+  points: { date: string; ideal: number; remaining: number | null }[];
+};
+export type Velocity = { sprint_id: string; name: string; status: SprintStatus; committed: number; completed: number };
 
 export const ECOSYSTEMS = ["npm", "PyPI", "Pub", "Maven", "Go", "crates.io", "RubyGems", "Packagist", "NuGet"];
 
