@@ -6,7 +6,8 @@
 
 - 組織: グループ > 会社（親会社・関連会社・BP）> 部署（入れ子）
 - 権限: グループ管理者 / 会社管理者 / 部署長（配下の部署のプロジェクト）/ メンバーと BP（アサインされたプロジェクトだけ）
-- パッケージ登録: 手入力、または lockfile の取り込み（`package-lock.json` `pnpm-lock.yaml` `uv.lock` `poetry.lock` `requirements*.txt` `pubspec.lock`）
+- パッケージ登録: 手入力、lockfile の取り込み（`package-lock.json` `pnpm-lock.yaml` `uv.lock` `poetry.lock` `requirements*.txt` `pubspec.lock` `go.mod` `go.sum` `composer.lock` `Cargo.lock` `gradle.lockfile`）、または SBOM（CycloneDX / SPDX）の取り込み
+- CI 連携: プロジェクト単位の API トークンで、CI から lockfile や SBOM を自動登録できる
 
 ## 構成
 
