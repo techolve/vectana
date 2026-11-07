@@ -142,6 +142,30 @@ async def test_group_admin_sees_every_unit(client: AsyncClient, org: Org, data: 
     assert [e["days_left"] for e in body["upcoming_eol"]] == [-5, 20]
 
 
+async def test_explicit_due_date_wins_over_sla(
+    client: AsyncClient,
+    org: Org,
+    session: AsyncSession,
+    data: dict,  # type: ignore[type-arg]
+) -> None:
+    from sqlmodel import select
+
+    matches = {m.vuln_id: m for m in (await session.exec(select(VulnMatch))).all()}
+    # Past its SLA, but the team agreed on a later date: not overdue.
+    matches["GHSA-HIGH-31"].due_date = TODAY + timedelta(days=14)
+    # Within its SLA, but its own date has passed: overdue.
+    matches["GHSA-MEDIUM-90"].due_date = TODAY - timedelta(days=2)
+    session.add_all(matches.values())
+    await session.commit()
+
+    body = (await client.get("/api/org-dashboard", headers=auth(org.group_admin))).json()
+    items = {i["vuln_id"]: i for i in body["overdue"]}
+    assert "GHSA-HIGH-31" not in items
+    assert items["GHSA-MEDIUM-90"]["due_date"] == (TODAY - timedelta(days=2)).isoformat()
+    assert items["GHSA-MEDIUM-90"]["days_overdue"] == 2
+    assert body["totals"]["overdue"] == 3
+
+
 async def test_company_admin_sees_own_company(client: AsyncClient, org: Org, data: dict) -> None:  # type: ignore[type-arg]
     body = (await client.get("/api/org-dashboard", headers=auth(org.company_admin))).json()
     assert [n for _, n, _ in _rows(body)] == ["親会社", "営業部", "開発本部", "第1開発部", ""]

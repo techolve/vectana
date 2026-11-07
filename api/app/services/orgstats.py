@@ -2,7 +2,8 @@
 company and department, limited to the projects a viewer can see.
 
 "Overdue" means an open or acknowledged vulnerability past its remediation
-deadline: ``first_seen_at`` + the SLA days for its severity (system settings).
+deadline: its own ``due_date`` when one is set, otherwise ``first_seen_at`` +
+the SLA days for its severity (system settings).
 """
 
 from collections import defaultdict
@@ -157,7 +158,7 @@ async def org_dashboard(
                 .where(col(Package.project_id).in_(ids), col(VulnMatch.status).in_(UNRESOLVED))
             )
         ).all():
-            due = due_date(match.severity, match.first_seen_at, sla)
+            due = match.due_date or due_date(match.severity, match.first_seen_at, sla)
             if due >= today:
                 continue
             late = (today - due).days
