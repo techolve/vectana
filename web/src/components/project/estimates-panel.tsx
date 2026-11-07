@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Empty, ErrorText, LabeledField, OptionSelect } from "@/components/common";
 import { EstimateStatusBadge, shortDate, userLabel } from "@/components/sales/status";
+import { ProjectInvoices } from "@/components/billing/project-invoices";
 
 export function EstimatesPanel({ project, onChanged }: { project: Project; onChanged: () => void }) {
   const t = useTranslations();
@@ -82,6 +83,7 @@ export function EstimatesPanel({ project, onChanged }: { project: Project; onCha
           </Table>
         ))}
       {!showCost && data && data.length > 0 && <p className="text-xs text-muted-foreground">{t("estimates.costHidden")}</p>}
+      {data && <ProjectInvoices project={project} estimates={data} />}
       {editing && (
         <EstimateDialog
           project={project}

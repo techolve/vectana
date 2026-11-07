@@ -13,6 +13,8 @@ import { useMe, usePageCrumb } from "@/components/app-shell";
 import { ProjectStatusBadge } from "@/components/sales/status";
 import { OverviewPanel, StatusStepper } from "@/components/project/overview-panel";
 import { EstimatesPanel } from "@/components/project/estimates-panel";
+import { ActivityPanel } from "@/components/project/activity-panel";
+import { ActualsPanel } from "@/components/project/actuals-panel";
 import { SecurityPanel } from "@/components/project/security-panel";
 import { TasksPanel } from "@/components/project/tasks-panel";
 import { departmentPath } from "@/lib/org";
@@ -27,7 +29,14 @@ import { WebhooksPanel } from "@/components/project/webhooks-panel";
 import { TokensPanel } from "@/components/project/tokens-panel";
 import { SettingsPanel } from "@/components/project/settings-panel";
 
-type Tab = "overview" | "tasks" | "security" | "estimates" | "vulns" | "eol" | "packages" | "members" | "webhooks" | "tokens" | "settings";
+type Tab =
+  | "overview"
+  | "tasks"
+  | "security"
+  | "activity"
+  | "estimates"
+  | "actuals"
+  | "vulns" | "eol" | "packages" | "members" | "webhooks" | "tokens" | "settings";
 
 function ProjectDetail() {
   const t = useTranslations();
@@ -69,7 +78,11 @@ function ProjectDetail() {
     { value: "security", label: t("project.tabs.security", { count: project.open_security_tasks || "" }) },
     ...(me.is_partner
       ? []
-      : [{ value: "estimates" as const, label: t("project.tabs.estimates", { count: project.estimate_count ?? 0 }) }]),
+      : [
+          { value: "activity" as const, label: t("project.tabs.activity") },
+          { value: "estimates" as const, label: t("project.tabs.estimates", { count: project.estimate_count ?? 0 }) },
+          { value: "actuals" as const, label: t("project.tabs.actuals") },
+        ]),
     { value: "vulns", label: t("project.tabs.vulns") },
     { value: "eol", label: t("project.tabs.eol") },
     { value: "packages", label: t("project.tabs.packages", { count: project.package_count }) },
@@ -120,7 +133,9 @@ function ProjectDetail() {
       {tab === "security" && (
         <SecurityPanel project={project} canWrite={canWrite} canManage={canManage} onChanged={refreshAll} />
       )}
+      {tab === "activity" && !me.is_partner && <ActivityPanel project={project} onChanged={reload} />}
       {tab === "estimates" && !me.is_partner && <EstimatesPanel project={project} onChanged={reload} />}
+      {tab === "actuals" && !me.is_partner && <ActualsPanel project={project} />}
       {tab === "vulns" && matches && (
         <MatchTable matches={matches} onChanged={refreshAll} canTriage={canWrite} empty={t("project.noMatches")} />
       )}

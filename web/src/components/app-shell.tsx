@@ -39,6 +39,8 @@ const SECTIONS = {
   "/org": "nav.org",
   "/projects": "nav.projects",
   "/customers": "nav.customers",
+  "/timesheet": "nav.timesheet",
+  "/billing": "nav.billing",
   "/vulnerabilities": "nav.vulnerabilities",
   "/eol": "nav.eol",
   "/admin": "nav.admin",
@@ -71,7 +73,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <CrumbContext.Provider value={setCrumb}>
         <SidebarProvider>
           <AppSidebar me={me} />
-          <SidebarInset>
+          <SidebarInset className="min-w-0">
             <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
               <div className="flex items-center gap-2 px-4">
                 <SidebarTrigger className="-ml-1" />

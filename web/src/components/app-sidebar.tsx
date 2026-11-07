@@ -4,11 +4,13 @@ import {
   BugIcon,
   Building2Icon,
   CalendarClockIcon,
+  ClockIcon,
   ContactIcon,
   FolderIcon,
   LayoutDashboardIcon,
   MoreHorizontalIcon,
   NetworkIcon,
+  ReceiptIcon,
   ShieldIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -48,6 +50,8 @@ export function AppSidebar({ me, ...props }: { me: Me } & React.ComponentProps<t
     { href: "/org/", label: t("nav.org"), icon: NetworkIcon },
     { href: "/projects/", label: t("nav.projects"), icon: FolderIcon },
     ...(me.can_see_customers ? [{ href: "/customers/", label: t("nav.customers"), icon: ContactIcon }] : []),
+    { href: "/timesheet/", label: t("nav.timesheet"), icon: ClockIcon },
+    ...(me.can_see_invoices ? [{ href: "/billing/", label: t("nav.billing"), icon: ReceiptIcon }] : []),
     { href: "/vulnerabilities/", label: t("nav.vulnerabilities"), icon: BugIcon },
     { href: "/eol/", label: t("nav.eol"), icon: CalendarClockIcon },
     ...(me.can_manage_org ? [{ href: "/admin/", label: t("nav.admin"), icon: Building2Icon }] : []),

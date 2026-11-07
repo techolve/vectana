@@ -271,12 +271,12 @@ async def _query(
     if month:
         start, end = _month_range(month)
         # The month's planned invoices, plus anything paid in it and every
-        # overdue one, so nothing late drops off the screen.
+        # invoice still awaiting payment, so nothing unpaid drops off.
         query = query.where(
             or_(
                 and_(col(Invoice.planned_on) >= start, col(Invoice.planned_on) <= end),
                 and_(col(Invoice.paid_on) >= start, col(Invoice.paid_on) <= end),
-                overdue,
+                col(Invoice.status) == InvoiceStatus.invoiced,
             )
         )
     if status_ == "overdue":

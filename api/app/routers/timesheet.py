@@ -24,6 +24,7 @@ from app.models.project import Project
 from app.models.task import Task
 from app.models.user import User
 from app.models.work import HOURS_PER_DAY, TimeEntry, TimesheetWeek
+from app.schemas.org import UserBrief
 from app.schemas.work import (
     ActualsOut,
     PersonActual,
@@ -138,6 +139,33 @@ async def _task_hours(session: AsyncSession, task_ids: set[UUID]) -> dict[UUID, 
         .group_by(col(TimeEntry.task_id))
     )
     return {tid: float(h or 0) for tid, h in rows.all() if tid is not None}
+
+
+@router.get("/timesheet/people", response_model=list[UserBrief], summary="工数を見られる人")
+async def timesheet_people(actor: CurrentActor, session: Session) -> list[UserBrief]:
+    """The caller first, then whoever's sheet the caller may read: everyone
+    of the company for admins (all companies for group admins), the
+    department's people for heads."""
+    query = select(User).where(col(User.is_active).is_(True))
+    if actor.is_group_admin:
+        pass
+    elif actor.is_company_admin and actor.user.company_id is not None:
+        query = query.where(User.company_id == actor.user.company_id)
+    elif actor.managed_department_ids:
+        query = query.where(
+            col(User.id).in_(
+                select(UserDepartment.user_id).where(
+                    col(UserDepartment.department_id).in_(actor.managed_department_ids)
+                )
+            )
+        )
+    else:
+        query = query.where(User.id == actor.user.id)
+    users = list(
+        (await session.exec(query.order_by(col(User.display_name), col(User.email)))).all()
+    )
+    users.sort(key=lambda u: u.id != actor.user.id)
+    return [b for u in users if (b := deals.brief(u)) is not None]
 
 
 @router.get("/timesheet", response_model=TimesheetOut, summary="週の実績工数")

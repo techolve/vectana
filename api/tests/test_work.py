@@ -117,6 +117,10 @@ async def test_timesheet_permissions(client: AsyncClient, org: Org, project: str
         headers=auth(org.company_admin),
     )
     assert r.status_code == 200 and r.json()["rows"] == []
+    r = await client.get("/api/timesheet/people", headers=auth(org.head))
+    assert [u["id"] for u in r.json()] == [str(org.head.id), str(uid)]
+    r = await client.get("/api/timesheet/people", headers=auth(org.seller))
+    assert [u["id"] for u in r.json()] == [str(org.seller.id)]
     # Others cannot see it.
     for user in (org.seller, org.affiliate_admin, org.bp):
         r = await client.get(f"/api/timesheet?week={WEEK}&user_id={uid}", headers=auth(user))

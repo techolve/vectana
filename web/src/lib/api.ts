@@ -140,6 +140,7 @@ export type Me = {
   can_manage_org: boolean;
   can_sell: boolean; // create customers and estimates
   can_see_customers: boolean;
+  can_see_invoices: boolean; // the billing page (accounting and admins)
   managed_department_ids: string[];
   group_name: string;
   locale: string;
@@ -420,6 +421,19 @@ export function todayISO(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+/** Add days to a YYYY-MM-DD date (calendar arithmetic, no timezone drift). */
+export function addDaysISO(iso: string, days: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+/** The Monday of the week that contains the date. */
+export function mondayISO(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  const weekday = (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7;
+  return addDaysISO(iso, -weekday);
+}
+
 /** Unresolved and past its due date. */
 /** The match's own due date, or the SLA deadline when none is set. */
 export function effectiveDue(m: Pick<Match, "due_date" | "sla_due_date">): string | null {
@@ -611,6 +625,86 @@ export type Burndown = {
   points: { date: string; ideal: number; remaining: number | null }[];
 };
 export type Velocity = { sprint_id: string; name: string; status: SprintStatus; committed: number; completed: number };
+
+// --- Timesheet, actuals, activity notes, invoices ---------------------------
+
+export const HOURS_PER_DAY = 8;
+export type TimesheetRow = {
+  project_id: string | null;
+  project_name: string | null;
+  task_id: string | null;
+  task_number: number | null;
+  task_title: string | null;
+  task_kind: TaskKind | null;
+  label: string | null;
+  hours: (number | null)[]; // Monday..Sunday
+  estimate_hours: number | null;
+  actual_hours: number | null;
+};
+export type Timesheet = {
+  user: UserBrief;
+  week_start: string;
+  days: string[];
+  rows: TimesheetRow[];
+  standard_hours: number;
+  submitted_at: string | null;
+  can_edit: boolean;
+};
+export type PhaseActual = { task_id: string | null; title: string | null; estimate_days: number | null; actual_days: number };
+export type Actuals = {
+  project_id: string;
+  estimate_days: number | null;
+  estimate_amount: number | null;
+  actual_hours: number;
+  actual_days: number;
+  this_month_days: number;
+  actual_cost: number | null;
+  phases: PhaseActual[];
+  people: { user: UserBrief; actual_days: number }[];
+};
+export type ActivityKind = "meeting" | "phone" | "email";
+export const ACTIVITY_KINDS: ActivityKind[] = ["meeting", "phone", "email"];
+export type Activity = {
+  id: string;
+  project_id: string;
+  kind: ActivityKind;
+  occurred_on: string;
+  participants: string | null;
+  body: string;
+  next_action: string | null;
+  task: {
+    id: string;
+    title: string;
+    status: TaskStatus;
+    assignee: UserBrief | null;
+    due_date: string | null;
+    overdue: boolean;
+  } | null;
+  created_by: UserBrief | null;
+  created_at: string;
+};
+export type InvoiceStatus = "planned" | "invoiced" | "paid";
+export type Invoice = {
+  id: string;
+  project_id: string;
+  project_name: string;
+  customer_name: string | null;
+  company_id: string;
+  estimate_id: string;
+  estimate_title: string;
+  billing: "one_time" | "monthly";
+  seq: number;
+  count: number;
+  label: string;
+  planned_on: string;
+  amount: number;
+  status: InvoiceStatus;
+  invoiced_on: string | null;
+  due_on: string | null;
+  paid_on: string | null;
+  overdue: boolean;
+  can_record: boolean;
+};
 
 export const ECOSYSTEMS = ["npm", "PyPI", "Pub", "Maven", "Go", "crates.io", "RubyGems", "Packagist", "NuGet"];
 

@@ -12,6 +12,7 @@ import { projectTools } from "./projects.ts";
 import { sprintTools } from "./sprints.ts";
 import { taskTools } from "./tasks.ts";
 import { vulnerabilityTools } from "./vulnerabilities.ts";
+import { workTools } from "./work.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const allTools: readonly ToolDef<any>[] = [
@@ -25,4 +26,5 @@ export const allTools: readonly ToolDef<any>[] = [
   ...estimateTools,
   ...taskTools,
   ...sprintTools,
+  ...workTools,
 ];
