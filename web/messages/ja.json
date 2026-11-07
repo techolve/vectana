@@ -164,7 +164,8 @@
       "members": "メンバー",
       "webhooks": "通知（Webhook）",
       "settings": "設定",
-      "eol": "EOL"
+      "eol": "EOL",
+      "tokens": "CI 連携"
     },
     "noMatches": "ヒットした脆弱性はありません"
   },
@@ -173,7 +174,7 @@
     "namePlaceholder": "パッケージ名",
     "versionPlaceholder": "バージョン",
     "added": "登録しました。バックグラウンドでスキャンします。",
-    "drop": "lockfile をドロップして取り込み",
+    "drop": "lockfile・SBOM をドロップして取り込み",
     "reimportHint": "同じファイル名で再取り込みすると差分を反映します",
     "imported": "{file}: {total} 件（追加 {added} / 削除 {removed}）",
     "confirmDelete": "{name}@{version} を削除しますか？",
@@ -189,7 +190,8 @@
     "reason": {
       "unsupported": "EOL 情報なし",
       "unpinned": "バージョン未固定"
-    }
+    },
+    "unsupportedComponents": "SBOM のうち対象外のコンポーネント: {list}"
   },
   "members": {
     "assign": "メンバーをアサイン",
@@ -209,6 +211,34 @@
     "testSent": "テスト通知を送信しました",
     "confirmDelete": "この Webhook を削除しますか？",
     "language": "通知の言語"
+  },
+  "tokens": {
+    "description": "CI から lockfile や SBOM を自動で登録するための API トークンです。トークンはこのプロジェクトへの取り込みとスキャン実行にだけ使え、画面の閲覧や設定の変更はできません。",
+    "issue": "API トークンを発行",
+    "namePlaceholder": "用途（例: GitHub Actions）",
+    "issueButton": "発行",
+    "issuedOnce": "トークンを発行しました。この画面を閉じると二度と表示されないので、今すぐ CI のシークレットに保存してください。",
+    "token": "トークン",
+    "done": "保存した",
+    "copy": "コピー",
+    "copied": "コピーしました",
+    "empty": "API トークンはまだありません",
+    "name": "名前",
+    "createdBy": "発行者",
+    "createdAt": "発行日時",
+    "expiresAt": "有効期限",
+    "lastUsed": "最終利用",
+    "expired": "期限切れ",
+    "revoke": "失効",
+    "confirmRevoke": "トークン「{name}」を失効させますか？このトークンを使っている CI は失敗するようになります。",
+    "expiry": {
+      "30": "30 日",
+      "90": "90 日",
+      "365": "1 年",
+      "never": "無期限"
+    },
+    "example": "GitHub Actions の例",
+    "exampleNote": "トークンはリポジトリのシークレット {secret} に登録してください。source を変えると、1 つのプロジェクトに複数のリポジトリやサービスの SBOM を登録できます。"
   },
   "projectSettings": {
     "name": "名前",

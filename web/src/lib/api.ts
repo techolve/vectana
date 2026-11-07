@@ -176,6 +176,15 @@ export type Webhook = {
   locale: string;
   enabled: boolean;
 };
+export type ApiToken = {
+  id: string;
+  name: string;
+  prefix: string;
+  created_by_email: string | null;
+  expires_at: string | null;
+  last_used_at: string | null;
+  created_at: string;
+};
 export type Package = {
   id: string;
   ecosystem: string;
