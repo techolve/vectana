@@ -164,7 +164,8 @@
       "members": "Members",
       "webhooks": "Notifications (Webhook)",
       "settings": "Settings",
-      "eol": "EOL"
+      "eol": "EOL",
+      "tokens": "CI"
     },
     "noMatches": "No vulnerabilities found"
   },
@@ -173,7 +174,7 @@
     "namePlaceholder": "Package name",
     "versionPlaceholder": "Version",
     "added": "Added. Scanning in the background.",
-    "drop": "Drop a lockfile to import",
+    "drop": "Drop a lockfile or SBOM to import",
     "reimportHint": "Re-importing a file with the same name applies the differences",
     "imported": "{file}: {total} packages (added {added} / removed {removed})",
     "confirmDelete": "Delete {name}@{version}?",
@@ -189,7 +190,8 @@
     "reason": {
       "unsupported": "no EOL data",
       "unpinned": "version not pinned"
-    }
+    },
+    "unsupportedComponents": "SBOM components not imported: {list}"
   },
   "members": {
     "assign": "Assign members",
@@ -209,6 +211,34 @@
     "testSent": "Test notification sent",
     "confirmDelete": "Delete this webhook?",
     "language": "Notification language"
+  },
+  "tokens": {
+    "description": "API tokens let CI register lockfiles and SBOMs automatically. A token can only import into this project and start a scan; it cannot view pages or change settings.",
+    "issue": "Issue an API token",
+    "namePlaceholder": "Purpose (e.g. GitHub Actions)",
+    "issueButton": "Issue",
+    "issuedOnce": "Token issued. It will not be shown again once you close this, so save it to your CI secrets now.",
+    "token": "Token",
+    "done": "I saved it",
+    "copy": "Copy",
+    "copied": "Copied",
+    "empty": "No API tokens yet",
+    "name": "Name",
+    "createdBy": "Issued by",
+    "createdAt": "Issued",
+    "expiresAt": "Expires",
+    "lastUsed": "Last used",
+    "expired": "expired",
+    "revoke": "Revoke",
+    "confirmRevoke": "Revoke the token \"{name}\"? CI jobs using it will start failing.",
+    "expiry": {
+      "30": "30 days",
+      "90": "90 days",
+      "365": "1 year",
+      "never": "Never"
+    },
+    "example": "GitHub Actions example",
+    "exampleNote": "Store the token as the repository secret {secret}. Use a different source to register SBOMs from several repositories or services into one project."
   },
   "projectSettings": {
     "name": "Name",

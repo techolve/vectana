@@ -52,8 +52,10 @@ ERRORS_JA: dict[str, str] = {
     "Email already registered": "このメールアドレスはすでに登録されています",
     "File too large": "ファイルが大きすぎます",
     "Group administrator required": "グループ管理者の権限が必要です",
+    "API token has expired": "APIトークンの有効期限が切れています",
     "Insufficient permission": "権限がありません",
     "Invalid credentials": "メールアドレスまたはパスワードが違います",
+    "Invalid API token": "APIトークンが正しくありません",
     "Invalid token": "認証情報が正しくありません",
     "Invalid token type": "認証情報が正しくありません",
     "Invitation has expired": "招待の有効期限が切れています",
@@ -77,6 +79,7 @@ ERRORS_JA: dict[str, str] = {
     "Runtime already registered": "このランタイムはすでに登録されています",
     "Runtime not found": "ランタイムが見つかりません",
     "Token has expired": "ログインの有効期限が切れました",
+    "Token not found": "APIトークンが見つかりません",
     "Unknown product": "endoflife.date に登録されていない製品です",
     "Unknown severity": "重大度の指定が正しくありません",
     "User has no company": "ユーザーが会社に所属していません",
@@ -86,6 +89,9 @@ ERRORS_JA: dict[str, str] = {
         "自分自身のロール変更や無効化はできません"
     ),
     "company_id is required": "会社を指定してください",
+    "source must be 1-80 characters of letters, digits and ._/@+-": (
+        "取り込み元の名前は英数字と ._/@+- で80文字以内にしてください"
+    ),
     "Invalid request": "入力内容が正しくありません",
 }
 

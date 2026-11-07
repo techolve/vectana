@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from app.models.package import ECOSYSTEMS, Severity
 from app.models.project import ProjectRole, WebhookType
@@ -131,11 +131,15 @@ class SkippedTool(BaseModel):
 class ImportResult(BaseModel):
     filename: str
     kind: str = "packages"  # packages | runtimes
-    ecosystem: str
+    # Lockfile ecosystem, "CycloneDX" / "SPDX", or None for tool files.
+    format: str | None = None
+    ecosystem: str  # comma-separated when an SBOM spans several
     added: int
     removed: int
     total: int
     skipped: list[SkippedTool] = []
+    # SBOM components left out, by purl type ("(no purl)" when missing).
+    unsupported: dict[str, int] = {}
 
 
 class MatchOut(BaseModel):
@@ -175,3 +179,32 @@ class DashboardOut(BaseModel):
     projects: list[ProjectOut]
     recent: list[MatchOut]
     eol: list[EolFindingOut]
+
+
+class TokenBody(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    # None = never expires.
+    expires_in_days: int | None = Field(default=None, ge=1, le=3650)
+
+    @field_validator("name")
+    @classmethod
+    def not_blank(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("must not be blank")
+        return v
+
+
+class TokenOut(BaseModel):
+    id: UUID
+    name: str
+    prefix: str
+    created_by_email: str | None
+    expires_at: datetime | None
+    last_used_at: datetime | None
+    created_at: datetime
+
+
+class TokenCreated(TokenOut):
+    # The secret. Shown once: only its hash is stored.
+    token: str

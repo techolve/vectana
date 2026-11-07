@@ -19,9 +19,10 @@ import { EolPanel } from "@/components/project/eol-panel";
 import { PackagesPanel } from "@/components/project/packages-panel";
 import { MembersPanel } from "@/components/project/members-panel";
 import { WebhooksPanel } from "@/components/project/webhooks-panel";
+import { TokensPanel } from "@/components/project/tokens-panel";
 import { SettingsPanel } from "@/components/project/settings-panel";
 
-type Tab = "vulns" | "eol" | "packages" | "members" | "webhooks" | "settings";
+type Tab = "vulns" | "eol" | "packages" | "members" | "webhooks" | "tokens" | "settings";
 
 function ProjectDetail() {
   const t = useTranslations();
@@ -64,6 +65,7 @@ function ProjectDetail() {
     ...(canManage
       ? [
           { value: "webhooks" as const, label: t("project.tabs.webhooks") },
+          { value: "tokens" as const, label: t("project.tabs.tokens") },
           { value: "settings" as const, label: t("project.tabs.settings") },
         ]
       : []),
@@ -107,6 +109,7 @@ function ProjectDetail() {
       {tab === "packages" && <PackagesPanel projectId={project.id} canWrite={canWrite} onChanged={refreshAll} />}
       {tab === "members" && companies && <MembersPanel projectId={project.id} canManage={canManage} companies={companies} />}
       {tab === "webhooks" && canManage && <WebhooksPanel projectId={project.id} />}
+      {tab === "tokens" && canManage && <TokensPanel projectId={project.id} />}
       {tab === "settings" && canManage && departments && (
         <SettingsPanel
           project={project}

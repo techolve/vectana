@@ -16,14 +16,18 @@ import { Empty, OptionSelect, useFormatDate } from "@/components/common";
 type ImportResult = {
   filename: string;
   kind: "packages" | "runtimes";
+  format: string | null;
   ecosystem: string;
   added: number;
   removed: number;
   total: number;
   skipped: { tool: string; version: string; reason: "unsupported" | "unpinned" }[];
+  unsupported: Record<string, number>;
 };
 
-const LOCKFILES = "package-lock.json / pnpm-lock.yaml / uv.lock / poetry.lock / requirements*.txt / pubspec.lock";
+const LOCKFILES =
+  "package-lock.json / pnpm-lock.yaml / uv.lock / poetry.lock / requirements*.txt / pubspec.lock / go.mod / go.sum / composer.lock / Cargo.lock / gradle.lockfile";
+const SBOMS = "SBOM: CycloneDX (JSON / XML) / SPDX (JSON / tag-value)";
 const TOOL_FILES = "mise.toml / .tool-versions";
 
 export function PackagesPanel({
@@ -74,6 +78,11 @@ export function PackagesPanel({
         if (r.skipped.length > 0) {
           const list = r.skipped.map((s) => `${s.tool} ${s.version}（${t(`reason.${s.reason}`)}）`).join(", ");
           toast.info(t("skipped", { list }), { duration: 10000 });
+        }
+        const unsupported = Object.entries(r.unsupported ?? {});
+        if (unsupported.length > 0) {
+          const list = unsupported.map(([type, n]) => `${type} ×${n}`).join(", ");
+          toast.info(t("unsupportedComponents", { list }), { duration: 10000 });
         }
       } catch (err) {
         toast.error(`${file.name}: ${(err as Error).message}`);
@@ -128,6 +137,7 @@ export function PackagesPanel({
             <UploadIcon className="size-5 text-muted-foreground" />
             <span className="font-medium">{t("drop")}</span>
             <span className="text-xs text-muted-foreground">{LOCKFILES}</span>
+            <span className="text-xs text-muted-foreground">{SBOMS}</span>
             <span className="text-xs text-muted-foreground">{TOOL_FILES}</span>
             <span className="text-xs text-muted-foreground">{t("reimportHint")}</span>
             <input ref={fileInput} type="file" multiple className="hidden" onChange={(e) => upload(e.target.files)} />

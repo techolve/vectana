@@ -56,7 +56,11 @@ async def get_current_user(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> User:
     """FastAPI dependency: resolve Bearer token to a User model instance."""
-    payload = decode_access_token(credentials.credentials)
+    return await user_from_access_token(credentials.credentials, session)
+
+
+async def user_from_access_token(token: str, session: AsyncSession) -> User:
+    payload = decode_access_token(token)
     user = await session.get(User, UUID(payload["sub"]))
 
     if not user:

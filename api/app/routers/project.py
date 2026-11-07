@@ -1,3 +1,4 @@
+import re
 from collections import defaultdict
 from datetime import datetime
 from typing import Annotated
@@ -7,6 +8,7 @@ from fastapi import (
     APIRouter,
     BackgroundTasks,
     Depends,
+    Form,
     HTTPException,
     Query,
     UploadFile,
@@ -27,6 +29,7 @@ from app.core.access import (
 )
 from app.core.config import settings
 from app.core.database import get_session
+from app.core.tokens import Caller, caller_project, get_caller
 from app.models.eol import EolFinding, EolStatus, Runtime
 from app.models.organization import Company, CompanyType, Department
 from app.models.package import MatchStatus, Package, Severity, VulnMatch
@@ -59,6 +62,8 @@ router = APIRouter(prefix="/api", tags=["projects"])
 
 Session = Annotated[AsyncSession, Depends(get_session)]
 CurrentActor = Annotated[Actor, Depends(get_actor)]
+# Endpoints CI may call with a project API token.
+CurrentCaller = Annotated[Caller, Depends(get_caller)]
 
 MAX_LOCKFILE_BYTES = 10 * 1024 * 1024
 
@@ -595,30 +600,42 @@ async def delete_package(
     await session.commit()
 
 
+_SOURCE_NAME = re.compile(r"^[A-Za-z0-9._/@+-]{1,80}$")
+
+
 @router.post(
     "/projects/{project_id}/packages/import",
     response_model=ImportResult,
-    summary="lockfileから取り込み",
+    summary="lockfile・SBOMから取り込み",
 )
 async def import_lockfile(
     project_id: UUID,
     file: UploadFile,
     tasks: BackgroundTasks,
-    actor: CurrentActor,
+    caller: CurrentCaller,
     session: Session,
+    source: Annotated[str | None, Form(description="取り込み元の名前（既定はファイル名）")] = None,
 ) -> ImportResult:
-    """Sync packages from a lockfile, or runtimes from mise.toml / .tool-versions.
-    Re-importing the same filename replaces what that file previously
-    contributed; manual entries are untouched."""
-    await accessible_project(project_id, actor, session, Level.write)
+    """Sync packages from a lockfile or an SBOM (CycloneDX / SPDX), or runtimes
+    from mise.toml / .tool-versions. Callable with a project API token.
+
+    Re-importing under the same source name (the filename unless ``source`` is
+    given) replaces what that source previously contributed; manual entries and
+    other sources are untouched."""
+    await caller_project(project_id, caller, session, Level.write)
     raw = await file.read(MAX_LOCKFILE_BYTES + 1)
     if len(raw) > MAX_LOCKFILE_BYTES:
         raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, "File too large")
     filename = (file.filename or "").rsplit("/", 1)[-1]
+    if source is not None and not _SOURCE_NAME.match(source):
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "source must be 1-80 characters of letters, digits and ._/@+-",
+        )
     if toolfile.is_tool_file(filename):
         return await _import_tool_file(project_id, filename, raw, tasks, session)
     try:
-        ecosystem, parsed = lockfile.parse(filename, raw.decode("utf-8"))
+        parsed = lockfile.parse(filename, raw.decode("utf-8"))
     except lockfile.UnsupportedLockfile as exc:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
     except Exception as exc:
@@ -626,34 +643,28 @@ async def import_lockfile(
             status.HTTP_422_UNPROCESSABLE_CONTENT, f"Could not parse {filename}: {exc}"
         ) from exc
 
-    source = f"lockfile:{filename}"
+    source_key = f"{parsed.kind}:{source or filename}"
     existing = list(
-        (
-            await session.exec(
-                select(Package).where(
-                    Package.project_id == project_id, Package.ecosystem == ecosystem
-                )
-            )
-        ).all()
+        (await session.exec(select(Package).where(Package.project_id == project_id))).all()
     )
-    by_key = {(p.name, p.version): p for p in existing}
-    wanted = set(parsed)
+    by_key = {(p.ecosystem, p.name, p.version): p for p in existing}
+    wanted = set(parsed.packages)
 
     removed = 0
     for p in existing:
-        if p.source == source and (p.name, p.version) not in wanted:
+        if p.source == source_key and (p.ecosystem, p.name, p.version) not in wanted:
             await session.delete(p)
             removed += 1
     added: list[Package] = []
-    for name, version in parsed:
-        if (name, version) in by_key:
+    for ecosystem, name, version in parsed.packages:
+        if (ecosystem, name, version) in by_key:
             continue
         pkg = Package(
             project_id=project_id,
             ecosystem=ecosystem,
             name=name,
             version=version,
-            source=source,
+            source=source_key,
         )
         session.add(pkg)
         added.append(pkg)
@@ -661,10 +672,12 @@ async def import_lockfile(
     _schedule_scan(tasks, [p.id for p in added])
     return ImportResult(
         filename=filename,
-        ecosystem=ecosystem,
+        format=parsed.format,
+        ecosystem=", ".join(parsed.ecosystems) or parsed.format,
         added=len(added),
         removed=removed,
         total=len(wanted),
+        unsupported=parsed.unsupported,
     )
 
 
@@ -729,9 +742,10 @@ async def _import_tool_file(
     summary="今すぐスキャン",
 )
 async def scan_project(
-    project_id: UUID, tasks: BackgroundTasks, actor: CurrentActor, session: Session
+    project_id: UUID, tasks: BackgroundTasks, caller: CurrentCaller, session: Session
 ) -> dict[str, int]:
-    await accessible_project(project_id, actor, session, Level.write)
+    """Callable with a project API token."""
+    await caller_project(project_id, caller, session, Level.write)
     ids = list(
         (await session.exec(select(Package.id).where(Package.project_id == project_id))).all()
     )
