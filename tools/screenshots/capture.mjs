@@ -72,6 +72,7 @@ await tab(1, "project-eol");
 await tab(2, "project-packages");
 await tab(3, "project-members");
 await tab(4, "project-webhooks");
+await tab(5, "project-tokens");
 
 await open("/vulnerabilities/");
 await shot("vulnerabilities");
