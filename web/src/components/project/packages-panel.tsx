@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Empty, OptionSelect, useFormatDate } from "@/components/common";
+import { UpgradeHint } from "@/components/upgrade-hint";
 
 type ImportResult = {
   filename: string;
@@ -40,6 +41,7 @@ export function PackagesPanel({
   onChanged: () => void;
 }) {
   const t = useTranslations("packages");
+  const tu = useTranslations("upgrade");
   const formatDate = useFormatDate();
   const { data, reload } = useApi<Package[]>(`/projects/${projectId}/packages`);
   const [ecosystem, setEcosystem] = useState("npm");
@@ -160,6 +162,7 @@ export function PackagesPanel({
                 <TableHead>{t("source")}</TableHead>
                 <TableHead>{t("lastScanned")}</TableHead>
                 <TableHead className="text-right">{t("open")}</TableHead>
+                <TableHead>{tu("column")}</TableHead>
                 {canWrite && <TableHead />}
               </TableRow>
             </TableHeader>
@@ -173,6 +176,9 @@ export function PackagesPanel({
                   <TableCell className="text-xs">{formatDate(p.last_scanned_at)}</TableCell>
                   <TableCell className={cn("text-right tabular-nums", p.open_vulns && "font-semibold text-destructive")}>
                     {p.open_vulns}
+                  </TableCell>
+                  <TableCell>
+                    <UpgradeHint upgrade={p.upgrade} />
                   </TableCell>
                   {canWrite && (
                     <TableCell className="text-right">

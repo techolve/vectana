@@ -364,5 +364,17 @@
     "eolWarningDays": "Warn this many days before end of life",
     "eolWarningHint": "Anything reaching end of life within this window is shown and notified as \"ending soon\" (1–730 days)",
     "days": "days"
+  },
+  "upgrade": {
+    "column": "Upgrade to",
+    "hint": "The lowest version that fixes every unresolved (not ignored) vulnerability. Use it as a guide.",
+    "noFix": "No fix yet",
+    "unfixed": "+{count} without a fix",
+    "bump": {
+      "patch": "patch",
+      "minor": "minor",
+      "major": "major",
+      "unknown": "unknown"
+    }
   }
 }

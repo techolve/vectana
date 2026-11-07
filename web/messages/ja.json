@@ -364,5 +364,17 @@
     "eolWarningDays": "サポート終了の何日前から警告するか",
     "eolWarningHint": "この日数以内に EOL を迎えるものを「まもなく終了」として表示・通知します（1〜730日）",
     "days": "日"
+  },
+  "upgrade": {
+    "column": "推奨バージョン",
+    "hint": "未対応の脆弱性（無視したものを除く）をすべて直す最小のバージョンです。目安として使ってください。",
+    "noFix": "修正版なし",
+    "unfixed": "ほか修正版なし {count} 件",
+    "bump": {
+      "patch": "patch",
+      "minor": "minor",
+      "major": "major",
+      "unknown": "不明"
+    }
   }
 }

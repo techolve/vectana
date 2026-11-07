@@ -51,10 +51,11 @@ from app.schemas.project import (
     ProjectUpdate,
     SeverityCounts,
     SkippedTool,
+    UpgradeOut,
     WebhookBody,
     WebhookOut,
 )
-from app.services import eol, lockfile, toolfile
+from app.services import eol, lockfile, toolfile, upgrade
 from app.services.notify import digest
 from app.services.scanner import scan_and_notify
 
@@ -525,6 +526,7 @@ async def _package_out(session: AsyncSession, packages: list[Package]) -> list[P
                 )
             ).all()
         )
+    upgrades = await upgrade.for_packages(session, {p.id: p.version for p in packages})
     return [
         PackageOut(
             id=p.id,
@@ -534,6 +536,7 @@ async def _package_out(session: AsyncSession, packages: list[Package]) -> list[P
             source=p.source,
             last_scanned_at=p.last_scanned_at,
             open_vulns=open_counts.get(p.id, 0),
+            upgrade=_upgrade_out(upgrades.get(p.id)),
         )
         for p in packages
     ]
@@ -765,7 +768,15 @@ def _match_query(actor: Actor):  # type: ignore[no-untyped-def]
     )
 
 
-def _match_out(m: VulnMatch, pkg: Package, project: Project) -> MatchOut:
+def _upgrade_out(u: upgrade.Upgrade | None) -> UpgradeOut | None:
+    if u is None:
+        return None
+    return UpgradeOut(version=u.version, bump=u.bump, unfixed=u.unfixed)
+
+
+def _match_out(
+    m: VulnMatch, pkg: Package, project: Project, up: upgrade.Upgrade | None = None
+) -> MatchOut:
     return MatchOut(
         id=m.id,
         project_id=project.id,
@@ -782,7 +793,15 @@ def _match_out(m: VulnMatch, pkg: Package, project: Project) -> MatchOut:
         fixed_version=m.fixed_version,
         status=m.status,
         first_seen_at=m.first_seen_at,
+        upgrade=_upgrade_out(up),
     )
+
+
+async def _matches_out(
+    session: AsyncSession, rows: list[tuple[VulnMatch, Package, Project]]
+) -> list[MatchOut]:
+    upgrades = await upgrade.for_packages(session, {p.id: p.version for _, p, _ in rows})
+    return [_match_out(m, p, pr, upgrades.get(p.id)) for m, p, pr in rows]
 
 
 SEVERITY_ORDER = case(
@@ -809,7 +828,7 @@ async def list_matches(
     if severity is not None:
         query = query.where(VulnMatch.severity == severity)
     query = query.order_by(SEVERITY_ORDER, col(VulnMatch.first_seen_at).desc()).limit(limit)
-    return [_match_out(m, p, pr) for m, p, pr in (await session.exec(query)).all()]
+    return await _matches_out(session, list((await session.exec(query)).all()))
 
 
 @router.patch("/vulnerabilities/{match_id}", response_model=MatchOut, summary="対応状況の更新")
@@ -825,7 +844,7 @@ async def update_match(
     match.status = body.status
     session.add(match)
     await session.commit()
-    return _match_out(match, package, project)
+    return (await _matches_out(session, [(match, package, project)]))[0]
 
 
 @router.get("/dashboard", response_model=DashboardOut, summary="ダッシュボード")

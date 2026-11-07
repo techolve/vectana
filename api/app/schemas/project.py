@@ -112,6 +112,14 @@ class PackageBody(BaseModel):
         return v
 
 
+class UpgradeOut(BaseModel):
+    """Lowest version that fixes every unresolved vulnerability of a package."""
+
+    version: str | None  # None when none of them has a published fix
+    bump: str | None  # patch | minor | major | unknown
+    unfixed: int  # unresolved vulnerabilities with no published fix
+
+
 class PackageOut(BaseModel):
     id: UUID
     ecosystem: str
@@ -120,6 +128,7 @@ class PackageOut(BaseModel):
     source: str
     last_scanned_at: datetime | None
     open_vulns: int = 0
+    upgrade: UpgradeOut | None = None
 
 
 class SkippedTool(BaseModel):
@@ -158,6 +167,8 @@ class MatchOut(BaseModel):
     fixed_version: str | None
     status: str
     first_seen_at: datetime
+    # Recommended upgrade for the package (across all its unresolved vulns).
+    upgrade: UpgradeOut | None = None
 
 
 class MatchUpdate(BaseModel):

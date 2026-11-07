@@ -185,6 +185,13 @@ export type ApiToken = {
   last_used_at: string | null;
   created_at: string;
 };
+export type UpgradeBump = "patch" | "minor" | "major" | "unknown";
+/** Lowest version that fixes every unresolved (not ignored) vulnerability of a package. */
+export type Upgrade = {
+  version: string | null; // null when none of them has a published fix
+  bump: UpgradeBump | null;
+  unfixed: number; // unresolved vulnerabilities with no published fix
+};
 export type Package = {
   id: string;
   ecosystem: string;
@@ -193,6 +200,7 @@ export type Package = {
   source: string;
   last_scanned_at: string | null;
   open_vulns: number;
+  upgrade: Upgrade | null;
 };
 export type Match = {
   id: string;
@@ -210,6 +218,7 @@ export type Match = {
   fixed_version: string | null;
   status: "open" | "ack" | "ignored";
   first_seen_at: string;
+  upgrade: Upgrade | null;
 };
 export type EolCounts = { eol: number; approaching: number };
 export type EolStatus = "eol" | "approaching" | "supported" | "unknown";
