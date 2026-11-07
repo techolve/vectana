@@ -78,6 +78,9 @@ class Project(SQLModel, table=True):
     # Kept for later analysis when the deal is lost.
     lost_reason: str | None = Field(default=None)
     competitor: str | None = Field(default=None, max_length=200)
+    # Vulnerabilities at or above this severity (and reached EOL) become
+    # security tasks automatically; below it, someone presses タスク化.
+    security_threshold: str = Field(default="HIGH", max_length=20)
     created_at: datetime = created_at_field()
 
     @property

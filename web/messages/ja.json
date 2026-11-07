@@ -97,6 +97,16 @@
       "submitted": "提出済み",
       "won": "受注",
       "lost": "失注"
+    },
+    "taskKind": {
+      "development": "開発",
+      "security": "セキュリティ対応",
+      "other": "その他"
+    },
+    "taskStatus": {
+      "todo": "未着手",
+      "in_progress": "対応中",
+      "done": "完了"
     }
   },
   "login": {
@@ -156,7 +166,14 @@
     "noProjects": "見えているプロジェクトはまだありません。",
     "mine": "自分の担当（未完了）",
     "overdue": "期限切れ",
-    "unassigned": "担当者未定の未対応"
+    "unassigned": "担当者未定の未対応",
+    "tasks": "タスク",
+    "tasksEmpty": "担当のタスクはありません",
+    "myTasks": "自分の担当",
+    "myOverdue": "うち期限超過 {count}",
+    "tasksMine": "自分",
+    "tasksTeam": "チーム",
+    "tasksUnassigned": "未割り当て"
   },
   "matches": {
     "severity": "重大度",
@@ -245,7 +262,9 @@
       "eol": "EOL",
       "tokens": "CI 連携",
       "overview": "概要",
-      "estimates": "見積 {count}"
+      "estimates": "見積 {count}",
+      "tasks": "タスク",
+      "security": "セキュリティ対応 {count}"
     },
     "noMatches": "ヒットした脆弱性はありません"
   },
@@ -634,5 +653,148 @@
     "editTitle": "顧客の編集",
     "delete": "この顧客を削除",
     "confirmDelete": "顧客「{name}」を削除しますか？プロジェクトがある顧客は削除できません。"
+  },
+  "tasks": {
+    "add": "タスクを追加",
+    "editTitle": "タスクを編集",
+    "title": "タスク名",
+    "titlePlaceholder": "例：画面設計",
+    "kind": "種別",
+    "status": "状態",
+    "assignee": "担当",
+    "unassigned": "未割当",
+    "startDate": "開始日",
+    "dueDate": "期限",
+    "parent": "親タスク（フェーズ）",
+    "noParent": "なし",
+    "milestone": "マイルストーン（1日だけの節目）",
+    "progress": "進み具合（%）",
+    "dependsOn": "先に終わらせるタスク",
+    "sprint": "スプリント",
+    "backlog": "バックログ",
+    "points": "ポイント",
+    "estimateHours": "見積（時間）",
+    "description": "説明",
+    "confirmDelete": "「{title}」を削除しますか？",
+    "empty": "タスクはまだありません",
+    "overdue": "期限切れ",
+    "noDue": "期限なし",
+    "due": "期限 {date}",
+    "dueFromSla": "脆弱性の期限（SLA）から",
+    "upgradeTo": "{name} を {version} に更新",
+    "upgradeRuntime": "{name} {version} を更新",
+    "upgrade": "{name} を更新",
+    "auto": "自動",
+    "manual": "手動",
+    "project": "プロジェクト",
+    "task": "タスク",
+    "view": {
+      "gantt": "ガント",
+      "board": "ボード",
+      "list": "一覧"
+    },
+    "methodHint": "進め方（{method}）に合わせた表示です。設定で変更できます。",
+    "maintenanceHint": "運用・保守の段階では、ガントやボードの代わりにこのシンプルな一覧を使います。セキュリティ対応は {threshold} 以上が自動でここに入ります。",
+    "group": {
+      "overdue": "期限切れ",
+      "thisWeek": "今週",
+      "later": "来週以降",
+      "none": "期限なし",
+      "done": "完了"
+    },
+    "sort": {
+      "due": "期限順",
+      "assignee": "担当者別"
+    },
+    "allAssignees": "担当: 全員",
+    "allKinds": "種別: すべて",
+    "showDone": "完了も表示",
+    "gantt": {
+      "today": "今日",
+      "noDates": "日付が未設定のタスク",
+      "zoomDay": "日",
+      "zoomWeek": "週",
+      "unscheduled": "開始日・期限を入れるとガントに表示されます"
+    },
+    "estimateActual": "見積 / 実績"
+  },
+  "sprints": {
+    "new": "スプリントを作成",
+    "edit": "スプリントを編集",
+    "name": "名前",
+    "goal": "スプリントゴール",
+    "startsOn": "開始日",
+    "endsOn": "終了日",
+    "dod": "完成の定義",
+    "dodPlaceholder": "例：レビュー2名承認・CI通過",
+    "addDod": "項目を追加",
+    "start": "開始する",
+    "close": "スプリントを完了",
+    "confirmClose": "「{name}」を完了しますか？未完了のタスクはバックログに戻ります。",
+    "none": "スプリントがありません。作成してタスクを計画しましょう。",
+    "status": {
+      "planned": "予定",
+      "active": "進行中",
+      "closed": "完了"
+    },
+    "period": "{start} 〜 {end}",
+    "summary": "{count} 件 ・ {points} pt",
+    "burndown": "バーンダウン",
+    "velocity": "ベロシティ",
+    "remaining": "{remaining} / {total} {unit} が残り",
+    "ideal": "理想",
+    "actual": "実績",
+    "unit": {
+      "points": "pt",
+      "tasks": "件"
+    },
+    "avgVelocity": "直近 {count} 回の平均",
+    "noVelocity": "完了したスプリントがまだありません",
+    "addFromBacklog": "バックログから追加",
+    "moveToSprint": "スプリントへ",
+    "moveToBacklog": "バックログへ",
+    "committed": "計画",
+    "completed": "完了"
+  },
+  "security": {
+    "threshold": "自動でタスクにするしきい値",
+    "thresholdHint": "この重大度以上の脆弱性と、EOL に達したランタイム・パッケージは自動でタスクになります",
+    "thresholdLabel": "{severity} 以上",
+    "todo": "未着手",
+    "inProgress": "対応中",
+    "doneThisMonth": "今月の完了",
+    "candidates": "未タスク化",
+    "tasks": "タスク",
+    "tasksHint": "1 タスク = パッケージ（またはランタイム）のアップグレード 1 回",
+    "subject": "パッケージ・ランタイム",
+    "versions": "現在 → 推奨バージョン",
+    "linked": "紐づく脆弱性・EOL",
+    "origin": "起票",
+    "vulnCount": "{count} 件",
+    "eolEnded": "{date} 終了",
+    "eolApproaching": "{date} 終了予定",
+    "filter": {
+      "open": "未完了",
+      "all": "すべて",
+      "done": "完了"
+    },
+    "source": {
+      "all": "脆弱性と EOL",
+      "vuln": "脆弱性だけ",
+      "eol": "EOL だけ"
+    },
+    "candidatesTitle": "しきい値未満でまだタスクになっていないもの",
+    "candidatesHint": "同じパッケージの脆弱性は 1 つのタスクにまとめられます",
+    "createTask": "タスク化",
+    "createSelected": "選んだものをまとめてタスク化",
+    "created": "タスクにしました",
+    "noCandidates": "タスク化を待っているものはありません",
+    "noTasks": "セキュリティ対応のタスクはありません",
+    "linkedVulns": "このタスクに紐づく脆弱性",
+    "linkedEol": "このタスクに紐づく EOL",
+    "fixedIn": "修正される版",
+    "allFixed": "{version} にすれば、このパッケージの未対応の脆弱性はすべて解消します。",
+    "markDone": "完了にする",
+    "runtime": "ランタイム"
   }
 }

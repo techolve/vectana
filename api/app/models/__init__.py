@@ -9,6 +9,7 @@ from app.models.organization import Company, Department, UserDepartment
 from app.models.package import Package, VulnMatch, VulnMatchEvent
 from app.models.project import Project, ProjectMember, ProjectWebhook
 from app.models.report import ReportDelivery
+from app.models.task import Sprint, Task
 from app.models.token import ApiToken
 from app.models.user import User
 
@@ -32,6 +33,8 @@ __all__ = [
     "ProjectMember",
     "ProjectWebhook",
     "ReportDelivery",
+    "Sprint",
+    "Task",
     "User",
     "UserDepartment",
     "VulnMatch",

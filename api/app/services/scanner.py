@@ -128,6 +128,7 @@ async def scan_and_notify(
     (and refreshes EOL for their projects); ``project_ids`` refreshes EOL only.
     """
     from app.services import eol
+    from app.services import tasks as security_tasks
     from app.services.notify import notify_pending
 
     pkg_list = list(package_ids) if package_ids is not None else None
@@ -157,5 +158,11 @@ async def scan_and_notify(
                 await eol.refresh(session, eol_projects)
             except Exception:
                 logger.exception("EOL refresh failed")
+                await session.rollback()
+        if eol_projects is None or eol_projects:
+            try:
+                await security_tasks.sync(session, eol_projects)
+            except Exception:
+                logger.exception("Security task sync failed")
                 await session.rollback()
         return await notify_pending(session)

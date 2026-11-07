@@ -97,6 +97,16 @@
       "submitted": "Submitted",
       "won": "Won",
       "lost": "Lost"
+    },
+    "taskKind": {
+      "development": "Development",
+      "security": "Security",
+      "other": "Other"
+    },
+    "taskStatus": {
+      "todo": "To do",
+      "in_progress": "In progress",
+      "done": "Done"
     }
   },
   "login": {
@@ -156,7 +166,14 @@
     "noProjects": "You can't see any projects yet.",
     "mine": "Assigned to me (unresolved)",
     "overdue": "Overdue",
-    "unassigned": "Open and unassigned"
+    "unassigned": "Open and unassigned",
+    "tasks": "Tasks",
+    "tasksEmpty": "No tasks",
+    "myTasks": "Assigned to me",
+    "myOverdue": "{count} overdue",
+    "tasksMine": "Mine",
+    "tasksTeam": "Team",
+    "tasksUnassigned": "Unassigned"
   },
   "matches": {
     "severity": "Severity",
@@ -245,7 +262,9 @@
       "eol": "EOL",
       "tokens": "CI",
       "overview": "Overview",
-      "estimates": "Estimates {count}"
+      "estimates": "Estimates {count}",
+      "tasks": "Tasks",
+      "security": "Security {count}"
     },
     "noMatches": "No vulnerabilities found"
   },
@@ -634,5 +653,148 @@
     "editTitle": "Edit customer",
     "delete": "Delete this customer",
     "confirmDelete": "Delete customer \"{name}\"? Customers with projects cannot be deleted."
+  },
+  "tasks": {
+    "add": "Add task",
+    "editTitle": "Edit task",
+    "title": "Title",
+    "titlePlaceholder": "e.g. Screen design",
+    "kind": "Kind",
+    "status": "Status",
+    "assignee": "Assignee",
+    "unassigned": "Unassigned",
+    "startDate": "Start",
+    "dueDate": "Due",
+    "parent": "Parent task (phase)",
+    "noParent": "None",
+    "milestone": "Milestone (a single day)",
+    "progress": "Progress (%)",
+    "dependsOn": "Depends on",
+    "sprint": "Sprint",
+    "backlog": "Backlog",
+    "points": "Points",
+    "estimateHours": "Estimate (hours)",
+    "description": "Description",
+    "confirmDelete": "Delete \"{title}\"?",
+    "empty": "No tasks yet",
+    "overdue": "Overdue",
+    "noDue": "No due date",
+    "due": "Due {date}",
+    "dueFromSla": "From the vulnerability deadline (SLA)",
+    "upgradeTo": "Upgrade {name} to {version}",
+    "upgradeRuntime": "Upgrade {name} {version}",
+    "upgrade": "Upgrade {name}",
+    "auto": "Auto",
+    "manual": "Manual",
+    "project": "Project",
+    "task": "Task",
+    "view": {
+      "gantt": "Gantt",
+      "board": "Board",
+      "list": "List"
+    },
+    "methodHint": "Shown for the project's method ({method}). Change it in the settings.",
+    "maintenanceHint": "In maintenance, this simple list replaces the Gantt chart and board. Security work at {threshold} or above lands here automatically.",
+    "group": {
+      "overdue": "Overdue",
+      "thisWeek": "This week",
+      "later": "Later",
+      "none": "No due date",
+      "done": "Done"
+    },
+    "sort": {
+      "due": "By due date",
+      "assignee": "By assignee"
+    },
+    "allAssignees": "Assignee: all",
+    "allKinds": "Kind: all",
+    "showDone": "Show done",
+    "gantt": {
+      "today": "Today",
+      "noDates": "Tasks without dates",
+      "zoomDay": "Day",
+      "zoomWeek": "Week",
+      "unscheduled": "Set a start and due date to show a task on the chart"
+    },
+    "estimateActual": "Estimate / actual"
+  },
+  "sprints": {
+    "new": "New sprint",
+    "edit": "Edit sprint",
+    "name": "Name",
+    "goal": "Sprint goal",
+    "startsOn": "Starts",
+    "endsOn": "Ends",
+    "dod": "Definition of done",
+    "dodPlaceholder": "e.g. Two approvals and CI green",
+    "addDod": "Add item",
+    "start": "Start",
+    "close": "Complete sprint",
+    "confirmClose": "Complete \"{name}\"? Unfinished tasks go back to the backlog.",
+    "none": "No sprints yet. Create one to plan the work.",
+    "status": {
+      "planned": "Planned",
+      "active": "Active",
+      "closed": "Closed"
+    },
+    "period": "{start} – {end}",
+    "summary": "{count} tasks · {points} pt",
+    "burndown": "Burndown",
+    "velocity": "Velocity",
+    "remaining": "{remaining} / {total} {unit} left",
+    "ideal": "Ideal",
+    "actual": "Actual",
+    "unit": {
+      "points": "pt",
+      "tasks": "tasks"
+    },
+    "avgVelocity": "Average of the last {count}",
+    "noVelocity": "No sprint has been completed yet",
+    "addFromBacklog": "Add from backlog",
+    "moveToSprint": "To sprint",
+    "moveToBacklog": "To backlog",
+    "committed": "Committed",
+    "completed": "Completed"
+  },
+  "security": {
+    "threshold": "Create tasks automatically at",
+    "thresholdHint": "Vulnerabilities at this severity or above, and runtimes or packages past EOL, become tasks automatically",
+    "thresholdLabel": "{severity} or above",
+    "todo": "To do",
+    "inProgress": "In progress",
+    "doneThisMonth": "Done this month",
+    "candidates": "Not yet tasks",
+    "tasks": "Tasks",
+    "tasksHint": "One task = one upgrade of a package (or runtime)",
+    "subject": "Package / runtime",
+    "versions": "Current → recommended",
+    "linked": "Vulnerabilities / EOL",
+    "origin": "Created",
+    "vulnCount": "{count}",
+    "eolEnded": "Ended {date}",
+    "eolApproaching": "Ends {date}",
+    "filter": {
+      "open": "Open",
+      "all": "All",
+      "done": "Done"
+    },
+    "source": {
+      "all": "Vulnerabilities and EOL",
+      "vuln": "Vulnerabilities only",
+      "eol": "EOL only"
+    },
+    "candidatesTitle": "Below the threshold and not yet tasks",
+    "candidatesHint": "Vulnerabilities of the same package share one task",
+    "createTask": "Make task",
+    "createSelected": "Make tasks from selection",
+    "created": "Task created",
+    "noCandidates": "Nothing is waiting to become a task",
+    "noTasks": "No security tasks",
+    "linkedVulns": "Vulnerabilities in this task",
+    "linkedEol": "EOL in this task",
+    "fixedIn": "Fixed in",
+    "allFixed": "Upgrading to {version} fixes every open vulnerability of this package.",
+    "markDone": "Mark done",
+    "runtime": "Runtime"
   }
 }
