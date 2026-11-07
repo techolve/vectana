@@ -66,10 +66,7 @@ function detail(body: unknown, fallback: string): string {
   return fallback;
 }
 
-export async function api<T = unknown>(
-  path: string,
-  init: RequestInit & { json?: unknown; auth?: boolean } = {},
-): Promise<T> {
+async function request(path: string, init: RequestInit & { json?: unknown; auth?: boolean } = {}): Promise<Response> {
   const { json, auth = true, ...rest } = init;
   const doFetch = () => {
     const headers = new Headers(rest.headers);
@@ -94,10 +91,34 @@ export async function api<T = unknown>(
     window.location.href = `/${currentLocale()}/login/`;
     throw new ApiError(401, "Unauthorized");
   }
+  return res;
+}
+
+export async function api<T = unknown>(
+  path: string,
+  init: RequestInit & { json?: unknown; auth?: boolean } = {},
+): Promise<T> {
+  const res = await request(path, init);
   if (res.status === 204) return undefined as T;
   const body = await res.json().catch(() => null);
   if (!res.ok) throw new ApiError(res.status, detail(body, res.statusText));
   return body as T;
+}
+
+/** Fetch an authenticated file (e.g. a CSV export) and hand it to the browser as a download. */
+export async function apiDownload(path: string, fallbackName: string): Promise<void> {
+  const res = await request(path);
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new ApiError(res.status, detail(body, res.statusText));
+  }
+  const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ?? fallbackName;
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export type Severity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN";
@@ -239,7 +260,67 @@ export type EolFinding = {
 };
 export type Runtime = { id: string; product: string; version: string; source: string };
 export type EolProduct = { name: string; label: string; category: string | null };
-export type SystemSettings = { eol_warning_days: number };
+export type SystemSettings = {
+  eol_warning_days: number;
+  sla_critical_days: number;
+  sla_high_days: number;
+  sla_medium_days: number;
+  sla_low_days: number;
+  sla_unknown_days: number;
+  report_enabled: boolean;
+  report_weekday: number; // 0 = Monday
+};
+
+export type OrgRow = {
+  kind: "total" | "company" | "department" | "unassigned";
+  id: string | null;
+  company_id: string | null;
+  parent_id: string | null;
+  name: string;
+  depth: number;
+  complete: boolean;
+  project_count: number;
+  open_counts: SeverityCounts;
+  overdue: number;
+  oldest_overdue_days: number | null;
+  eol_counts: EolCounts;
+  nearest_eol_date: string | null;
+  nearest_eol_days: number | null;
+};
+export type OverdueItem = {
+  match_id: string;
+  company_id: string;
+  project_id: string;
+  project_name: string;
+  package_name: string;
+  package_version: string;
+  vuln_id: string;
+  severity: Severity;
+  status: "open" | "ack";
+  first_seen_at: string;
+  due_date: string;
+  days_overdue: number;
+};
+export type UpcomingEol = {
+  finding_id: string;
+  company_id: string;
+  project_id: string;
+  project_name: string;
+  product: string;
+  product_label: string;
+  version: string;
+  cycle: string | null;
+  eol_date: string;
+  days_left: number;
+};
+export type OrgDashboard = {
+  today: string;
+  sla_days: Record<Severity, number>;
+  totals: OrgRow;
+  rows: OrgRow[];
+  overdue: OverdueItem[];
+  upcoming_eol: UpcomingEol[];
+};
 
 export type Dashboard = {
   project_count: number;

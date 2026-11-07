@@ -7,6 +7,7 @@ import {
   FolderIcon,
   LayoutDashboardIcon,
   MoreHorizontalIcon,
+  NetworkIcon,
   ShieldIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -41,6 +42,7 @@ export function AppSidebar({ me, ...props }: { me: Me } & React.ComponentProps<t
 
   const nav = [
     { href: "/", label: t("nav.dashboard"), icon: LayoutDashboardIcon },
+    { href: "/org/", label: t("nav.org"), icon: NetworkIcon },
     { href: "/projects/", label: t("nav.projects"), icon: FolderIcon },
     { href: "/vulnerabilities/", label: t("nav.vulnerabilities"), icon: BugIcon },
     { href: "/eol/", label: t("nav.eol"), icon: CalendarClockIcon },

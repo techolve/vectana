@@ -43,7 +43,8 @@
     "eol": "EOL",
     "platform": "Menu",
     "myProjects": "Projects",
-    "more": "View all"
+    "more": "View all",
+    "org": "By organization"
   },
   "labels": {
     "role": {
@@ -363,7 +364,22 @@
     "eolTitle": "EOL warnings",
     "eolWarningDays": "Warn this many days before end of life",
     "eolWarningHint": "Anything reaching end of life within this window is shown and notified as \"ending soon\" (1–730 days)",
-    "days": "days"
+    "days": "days",
+    "slaTitle": "Remediation deadlines (SLA)",
+    "slaHint": "Vulnerabilities still open or acknowledged this many days after detection count as overdue (1–3650 days)",
+    "reportTitle": "Weekly report",
+    "reportEnabled": "Email group admins, company admins and department heads a weekly summary of their organization",
+    "reportWeekday": "Send on",
+    "reportHint": "Sent at or after the hour set on the server (09:00 Japan time by default). People who turned off email notifications are skipped.",
+    "weekdays": {
+      "0": "Monday",
+      "1": "Tuesday",
+      "2": "Wednesday",
+      "3": "Thursday",
+      "4": "Friday",
+      "5": "Saturday",
+      "6": "Sunday"
+    }
   },
   "upgrade": {
     "column": "Upgrade to",
@@ -376,5 +392,43 @@
       "major": "major",
       "unknown": "unknown"
     }
+  },
+  "org": {
+    "title": "Organization dashboard",
+    "description": "Open vulnerabilities, overdue items and days to EOL per company and department. Departments include their sub-departments.",
+    "allCompanies": "All companies",
+    "csv": "Download CSV",
+    "overdue": "Overdue",
+    "eolReached": "EOL reached",
+    "eolApproaching": "EOL approaching",
+    "units": "By company and department",
+    "slaNote": "Overdue = still open or acknowledged after CRITICAL {critical} / HIGH {high} / MEDIUM {medium} / LOW {low} days from detection",
+    "empty": "No projects to show",
+    "unit": "Company / department",
+    "projects": "Projects",
+    "open": "Open",
+    "eol": "EOL",
+    "nearestEol": "Nearest EOL",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "unassigned": "(No department)",
+    "partial": "partial",
+    "partialHint": "Rows marked \"partial\" only count the projects you can see.",
+    "none": "None",
+    "oldestOverdue": "Longest {days} days overdue",
+    "overdueTab": "Overdue ({count})",
+    "eolTab": "Nearest EOL ({count})",
+    "noOverdue": "No overdue vulnerabilities",
+    "noEol": "Nothing has reached or is approaching EOL",
+    "severity": "Severity",
+    "project": "Project",
+    "package": "Package",
+    "vuln": "Vulnerability",
+    "due": "Due",
+    "daysOver": "Days over",
+    "product": "Product",
+    "eolDate": "EOL date",
+    "daysLeft": "in {days} days",
+    "daysPassed": "{days} days ago"
   }
 }
