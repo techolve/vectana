@@ -828,7 +828,8 @@
     "empty": "個人用トークンはまだありません",
     "confirmRevoke": "トークン「{name}」を失効させますか？このトークンを使っている AI クライアントやスクリプトは使えなくなります。",
     "mcpExample": "MCP サーバの設定例（Claude Desktop・Claude Code など）",
-    "mcpNote": "Claude Code なら次のコマンドでも追加できます: {command}"
+    "mcpNote": "Claude Code なら次のコマンドでも追加できます: {command}",
+    "remoteMcp": "claude.ai などのコネクタとして追加するときの URL（ログインは OAuth で行われ、トークンの貼り付けは不要です）"
   },
   "timesheet": {
     "title": "実績工数",
@@ -1030,5 +1031,19 @@
     "manualWebhookGitlab": "Webhook を自動登録できませんでした。プロジェクトの設定 → Webhooks で、下の URL をシークレットトークン付きで登録してください（トリガー: プッシュ、Issue、マージリクエスト）。",
     "webhookUrl": "Webhook の URL",
     "webhookSecret": "シークレット"
+  },
+  "oauth": {
+    "title": "{client} が Vectana へのアクセスを求めています",
+    "description": "許可すると、{client}（{host}）があなた（{user}）の権限で Vectana のツールを使えるようになります。",
+    "scope": "許可する権限",
+    "scopes": {
+      "read": "読み取りのみ（閲覧だけ。変更はできません）",
+      "write": "読み書き（あなたができる操作はすべて。削除ツールはありません）"
+    },
+    "approve": "許可する",
+    "deny": "拒否",
+    "revokeNote": "あとから「個人設定 → 個人用トークン」でいつでも取り消せます。",
+    "invalid": "この認可リクエストは正しくありません。接続元のアプリからやり直してください。",
+    "unknownClient": "不明なクライアント"
   }
 }

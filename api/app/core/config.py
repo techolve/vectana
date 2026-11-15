@@ -71,6 +71,14 @@ class Settings(BaseSettings):
     cloudflare_account_id: str = ""
     cloudflare_api_token: str = ""
 
+    # Remote MCP (/mcp). The API runs the Node MCP server (mcp/dist/index.js)
+    # in HTTP mode on 127.0.0.1:MCP_PORT when MCP_SCRIPT is set; the Docker
+    # image sets it. The server calls the API back at MCP_API_URL.
+    mcp_script: str = ""
+    mcp_node: str = "node"
+    mcp_port: int = 8001
+    mcp_api_url: str = "http://127.0.0.1:8000"
+
     # Outbound webhooks (Discord / Slack)
     webhook_timeout_seconds: float = 10.0
 

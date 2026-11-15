@@ -5,6 +5,7 @@ from app.models.eol import AppSettings, EolDelivery, EolFinding, Runtime
 from app.models.estimate import Estimate, EstimateLine
 from app.models.invitation import Invitation
 from app.models.notification import NotificationDelivery, NotificationPref
+from app.models.oauth import OAuthClient, OAuthCode
 from app.models.organization import Company, Department, UserDepartment
 from app.models.package import Package, VulnMatch, VulnMatchEvent
 from app.models.project import Project, ProjectMember, ProjectWebhook
@@ -30,6 +31,8 @@ __all__ = [
     "Invitation",
     "NotificationDelivery",
     "NotificationPref",
+    "OAuthClient",
+    "OAuthCode",
     "Package",
     "PersonalToken",
     "Project",

@@ -27,6 +27,14 @@ Claude などの AI クライアントから Vectana を操作するための [M
 
 ## 使い方
 
+### リモート MCP（claude.ai・Claude アプリ）
+
+Vectana 本体が `https://<Vectana の URL>/mcp` で Streamable HTTP の MCP を提供しています（OAuth でログイン）。claude.ai の「設定 → コネクタ → カスタムコネクタを追加」にこの URL を入れるだけで、Web・デスクトップ・モバイルとプロジェクトから使えます。Claude Code なら `claude mcp add --transport http vectana https://vectana.example.com/mcp`。
+
+Docker イメージでは API がこのサーバを `--http` モードで `127.0.0.1:8001` に起動し、`/mcp` へのリクエストをトークン確認のうえ転送します（`api/app/routers/mcp.py`）。
+
+### ローカル（stdio）
+
 1. Vectana の「個人設定 → 個人用トークン」でトークン（`vcu_...`）を発行します。読み取り専用にすると、閲覧だけで変更はできません。
 2. MCP クライアントに登録します。
 
