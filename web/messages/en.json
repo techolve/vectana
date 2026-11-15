@@ -828,7 +828,8 @@
     "empty": "No personal tokens yet",
     "confirmRevoke": "Revoke the token \"{name}\"? AI clients and scripts using it will stop working.",
     "mcpExample": "MCP server settings (Claude Desktop, Claude Code and others)",
-    "mcpNote": "In Claude Code you can also add it with: {command}"
+    "mcpNote": "In Claude Code you can also add it with: {command}",
+    "remoteMcp": "URL for adding Vectana as a connector in claude.ai and similar apps (sign-in uses OAuth, no token to paste)"
   },
   "timesheet": {
     "title": "Timesheet",
@@ -1030,5 +1031,19 @@
     "manualWebhookGitlab": "The webhook could not be registered. Add it under the project's Settings → Webhooks with this URL and secret token (triggers: push, issues, merge requests).",
     "webhookUrl": "Webhook URL",
     "webhookSecret": "Secret"
+  },
+  "oauth": {
+    "title": "{client} wants to access Vectana",
+    "description": "If you allow it, {client} ({host}) can use Vectana's tools with your ({user}) permissions.",
+    "scope": "Access to grant",
+    "scopes": {
+      "read": "Read only (view, but change nothing)",
+      "write": "Read and write (anything you can do; there are no delete tools)"
+    },
+    "approve": "Allow",
+    "deny": "Deny",
+    "revokeNote": "You can revoke it any time under Settings → Personal tokens.",
+    "invalid": "This authorization request is not valid. Start again from the app you are connecting.",
+    "unknownClient": "Unknown client"
   }
 }

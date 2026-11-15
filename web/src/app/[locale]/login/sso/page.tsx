@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { useRouter } from "@/i18n/navigation";
-import { api, setTokens } from "@/lib/api";
+import { api, setTokens, takeAfterLogin } from "@/lib/api";
 import { AuthLayout } from "@/components/auth-layout";
 
 // Landing page after SSO. The API puts the app's tokens in the URL fragment,
@@ -27,7 +27,11 @@ export default function SsoCallbackPage() {
     // Emails follow the language the user works in.
     api("/auth/locale", { method: "PUT", json: { locale } })
       .catch(() => undefined)
-      .finally(() => router.replace("/"));
+      .finally(() => {
+        const next = takeAfterLogin();
+        if (next) window.location.assign(next);
+        else router.replace("/");
+      });
   }, [locale, router]);
 
   return (

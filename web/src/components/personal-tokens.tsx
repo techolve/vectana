@@ -167,6 +167,7 @@ export function PersonalTokensCard() {
               </TableBody>
             </Table>
           ))}
+        <CopyBlock text={`${origin()}/mcp`} label={t("remoteMcp")} />
         <CopyBlock text={mcpConfig(shown)} label={t("mcpExample")} />
         <p className="text-xs break-all text-muted-foreground">
           {t("mcpNote", { command: claudeCodeCommand(shown) })}

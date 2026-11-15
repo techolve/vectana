@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 
 import { useRouter } from "@/i18n/navigation";
-import { api, setTokens } from "@/lib/api";
+import { api, setTokens, takeAfterLogin } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -60,7 +60,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
       setTokens(tokens.access_token, tokens.refresh_token);
       // Emails follow the language the user works in.
       await api("/auth/locale", { method: "PUT", json: { locale } }).catch(() => undefined);
-      router.replace("/");
+      const next = takeAfterLogin();
+      if (next) window.location.assign(next);
+      else router.replace("/");
     } catch (err) {
       setError((err as Error).message || t("invalid"));
     } finally {

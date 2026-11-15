@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
 
 from app import __version__
+from app.core import mcp_process
 from app.core.config import settings
 from app.i18n import request_locale, translate_error, validation_message
 from app.routers import (
@@ -19,6 +20,8 @@ from app.routers import (
     customer,
     eol,
     estimate,
+    mcp,
+    oauth,
     oidc,
     org,
     personal_token,
@@ -40,7 +43,8 @@ logger = logging.getLogger("vectana")
 async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
     if settings.secret_key == "change-me-in-production" and not settings.debug:
         raise RuntimeError("Set SECRET_KEY (openssl rand -hex 32) before starting Vectana")
-    yield
+    async with mcp_process.running():
+        yield
 
 
 app = FastAPI(
@@ -76,6 +80,8 @@ app.include_router(eol.router)
 app.include_router(vulnerability.router)
 app.include_router(report.router)
 app.include_router(repo.router)
+app.include_router(oauth.router)
+app.include_router(mcp.router)
 
 
 @app.exception_handler(HTTPException)

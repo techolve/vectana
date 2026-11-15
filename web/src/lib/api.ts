@@ -25,6 +25,21 @@ export function clearTokens() {
   localStorage.removeItem(REFRESH);
 }
 
+// Where to go after signing in, e.g. back to the OAuth consent page. Kept in
+// sessionStorage so it survives the SSO round trip.
+const AFTER_LOGIN = "vectana.afterLogin";
+
+export function setAfterLogin(path: string) {
+  sessionStorage.setItem(AFTER_LOGIN, path);
+}
+
+/** The saved same-origin path, once; null when there is none. */
+export function takeAfterLogin(): string | null {
+  const path = sessionStorage.getItem(AFTER_LOGIN);
+  sessionStorage.removeItem(AFTER_LOGIN);
+  return path && path.startsWith("/") && !path.startsWith("//") ? path : null;
+}
+
 export function hasToken() {
   return typeof window !== "undefined" && !!localStorage.getItem(ACCESS);
 }
