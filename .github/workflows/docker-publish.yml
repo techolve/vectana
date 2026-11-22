@@ -1,4 +1,5 @@
-# Builds the image and pushes it to Docker Hub when a tag vX.Y.Z is pushed.
+# Builds the image and pushes it to Docker Hub when a tag vX.Y.Z is pushed,
+# then creates the GitHub Release for the tag (notes: tools/release/notes.sh).
 # Needs repository secrets DOCKERHUB_USERNAME and DOCKERHUB_TOKEN (a Docker
 # Hub access token with Read & Write on the image repository).
 name: Publish Docker image
@@ -43,3 +44,11 @@ jobs:
             ${{ env.IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  release:
+    needs: publish
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tags: ${{ github.ref_name }}

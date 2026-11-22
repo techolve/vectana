@@ -20,6 +20,7 @@ User ──HTTPS──▶ Worker ──▶ App コンテナ（uvicorn: API + Nex
 ## 1. リリース（タグを打つと自動で公開）
 
 1. バージョンを上げる PR を作る: `api/pyproject.toml` `api/app/__init__.py` `api/uv.lock` `web/package.json`（と lock）、MCP を出すなら `mcp/package.json`（と lock）と `mcp/src/server.ts`。CHANGELOG も更新する（`mise run changelog -- --tag vX.Y.Z` で下書きして整える）
+   - GitHub Release の冒頭に載せる日本語の要約を `.github/release-notes/vX.Y.Z.md` に書く（任意。主な変更と、更新するときの注意。書き方は既存のファイルを参照）
 2. マージしたら main にタグを打つ
 
 ```bash
@@ -30,6 +31,8 @@ git tag mcp-vX.Y.Z && git push origin mcp-vX.Y.Z  # npm（.github/workflows/mcp-
 - `vX.Y.Z` で `heki0824/vectana:X.Y.Z` と `:latest` を linux/amd64・linux/arm64 で push する。リポジトリの Secrets に `DOCKERHUB_USERNAME`（heki0824）と `DOCKERHUB_TOKEN`（Docker Hub の Access Token、Read & Write）が必要
 - `mcp-vX.Y.Z` で `@techolve/vectana-mcp` を npm に公開する（Trusted Publishing。トークン不要）
 - どちらもタグとバージョンが合わないと失敗する
+- `vX.Y.Z` のイメージの push が終わると、同じワークフローが GitHub Release「Vectana X.Y.Z」を作る。本文は `tools/release/notes.sh vX.Y.Z` の出力（上の要約 + イメージと npm パッケージ + CHANGELOG の該当節）。CHANGELOG に節がないと失敗する。同じタグの Release がすでにあれば何もしない。MCP（`mcp-vX.Y.Z`）は同じバージョンの `vX.Y.Z` の Release にまとめ、別の Release は作らない
+- Release が抜けたタグは、Actions の「Create GitHub Release」→「Run workflow」にタグ（空白区切りで複数可）を入れて作る（`.github/workflows/release.yml`）。「Latest」はいちばん新しい `vX.Y.Z` にだけ付く
 
 手元から push する場合（ワークフローが使えないとき）:
 
