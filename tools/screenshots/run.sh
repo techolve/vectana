@@ -4,32 +4,50 @@
 #   tools/screenshots/run.sh [out-dir]   (default: tools/screenshots/out)
 #
 # Uses the dev PostgreSQL container (`mise run services`) with its own database
-# `vectana_docs`, which is dropped and recreated for each language. Scans hit
-# the real OSV and endoflife.date APIs. Expects a fresh `web/out` build.
+# `vectana_docs`, which is dropped and recreated for each language. Set PGURL
+# (e.g. postgresql://vectana:vectana@localhost:55432) to use another server
+# instead of Docker. OSV, endoflife.date and GitHub are replaced by feeds.mjs,
+# so no network is needed and the findings stay the same. Expects a fresh
+# `web/out` build.
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
 root="$(cd "$here/../.." && pwd)"
 out="$(mkdir -p "${1:-$here/out}" && cd "${1:-$here/out}" && pwd)"
 port=8099
+feeds_port=8098
 base="http://127.0.0.1:$port"
+feeds="http://127.0.0.1:$feeds_port"
 db=vectana_docs
 
 [ -d "$root/web/out" ] || { echo "web/out is missing: run \`mise run web:build\` first" >&2; exit 1; }
 [ -d "$here/node_modules" ] || (cd "$here" && npm ci && npx playwright install chromium)
 
-docker compose -f "$root/compose.yaml" up -d --wait db
+if [ -n "${PGURL:-}" ]; then
+  psql_admin() { psql -q "$PGURL/postgres" "$@"; }
+else
+  docker compose -f "$root/compose.yaml" up -d --wait db
+  PGURL="postgresql://vectana:vectana@localhost:5432"
+  psql_admin() { docker compose -f "$root/compose.yaml" exec -T db psql -qU vectana -d postgres "$@"; }
+fi
 
-export DATABASE_URL="postgresql+asyncpg://vectana:vectana@localhost:5432/$db"
+export DATABASE_URL="postgresql+asyncpg://${PGURL#postgresql://}/$db"
 export ALEMBIC_DATABASE_URL="$DATABASE_URL"
 export SECRET_KEY="docs-screenshots-only-0123456789abcdef"
 export STATIC_DIR="$root/web/out"
 export WEB_URL="$base"
 export MAIL_BACKEND=none
 export SCAN_ON_CHANGE=false
+export OSV_BASE_URL="$feeds/osv"
+export EOL_BASE_URL="$feeds/eol"
 
+node "$here/feeds.mjs" "$feeds_port" &
+feeds_pid=$!
 api_pid=""
-cleanup() { [ -n "$api_pid" ] && kill "$api_pid" 2>/dev/null || true; }
+cleanup() {
+  [ -n "$api_pid" ] && kill "$api_pid" 2>/dev/null || true
+  kill "$feeds_pid" 2>/dev/null || true
+}
 trap cleanup EXIT
 
 admin() { node --input-type=module -e "import { admin } from '$here/data.mjs'; console.log(admin['$1']['$2'])"; }
@@ -38,8 +56,7 @@ admin_password() { node --input-type=module -e "import { ADMIN_PASSWORD } from '
 
 for locale in ja en; do
   echo "== $locale"
-  docker compose -f "$root/compose.yaml" exec -T db psql -qU vectana -d postgres \
-    -c "DROP DATABASE IF EXISTS $db WITH (FORCE)" -c "CREATE DATABASE $db"
+  psql_admin -c "DROP DATABASE IF EXISTS $db WITH (FORCE)" -c "CREATE DATABASE $db"
 
   export GROUP_NAME="$(admin "$locale" group)"
   (
@@ -56,6 +73,7 @@ for locale in ja en; do
   node "$here/seed.mjs" "$base" "$locale"
   (cd "$root/api" && uv run python -m app.worker --once)
   node "$here/seed.mjs" "$base" "$locale" --webhooks
+  node "$here/seed.mjs" "$base" "$locale" --pm "$feeds"
   node "$here/capture.mjs" "$base" "$locale" "$out"
 
   kill "$api_pid"; wait "$api_pid" 2>/dev/null || true; api_pid=""
