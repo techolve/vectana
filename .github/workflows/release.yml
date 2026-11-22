@@ -1,0 +1,57 @@
+# Creates the GitHub Release "Vectana X.Y.Z" for tags vX.Y.Z, with notes from
+# tools/release/notes.sh. docker-publish.yml calls it after the image is
+# pushed. Run it by hand (Actions → Create GitHub Release → Run workflow) to
+# add releases for tags that have none; tags that already have one are left
+# as they are. mcp-vX.Y.Z tags get no Release of their own: the vX.Y.Z
+# Release names the npm package of the same version.
+name: Create GitHub Release
+
+on:
+  workflow_call:
+    inputs:
+      tags:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: "Tags, separated by spaces (e.g. v1.2.0 v1.3.0)"
+        type: string
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      # The default branch's tools/release and .github/release-notes, with all
+      # tags so notes.sh can read CHANGELOG.md at each tag.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+      - name: Create the releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAGS: ${{ inputs.tags }}
+        run: |
+          # "Latest" goes to the highest vX.Y.Z tag only, so adding a release
+          # for an older tag does not take it over.
+          newest="$(git tag -l 'v[0-9]*' | sort -V | tail -1)"
+          for tag in $(printf '%s\n' $TAGS | sort -V); do
+            case "$tag" in
+              v[0-9]*) ;;
+              *) echo "Skipping $tag: not a vX.Y.Z tag"; continue ;;
+            esac
+            if gh release view "$tag" >/dev/null 2>&1; then
+              echo "Release $tag already exists; leaving it as is"
+              continue
+            fi
+            tools/release/notes.sh "$tag" > "$RUNNER_TEMP/notes.md"
+            gh release create "$tag" --verify-tag \
+              --title "Vectana ${tag#v}" \
+              --notes-file "$RUNNER_TEMP/notes.md" \
+              --latest="$([ "$tag" = "$newest" ] && echo true || echo false)"
+          done
