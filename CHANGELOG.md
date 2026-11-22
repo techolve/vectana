@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-11-22
+
+### Fixed
+
+- Dropdowns inside dialogs (such as the task form) can be clicked again (#15)
+
+### Security
+
+- Update Next.js and eslint-config-next to 16.4.5 (fixes 6 moderate Next.js advisories)
+
 ## [1.3.0] - 2026-11-15
 
 ### Added
@@ -110,6 +120,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add Date and Message-ID headers
 
+[1.3.1]: https://github.com/techolve/vectana/compare/v1.3.0..v1.3.1
+[1.3.0]: https://github.com/techolve/vectana/compare/v1.2.0..v1.3.0
 [1.2.0]: https://github.com/techolve/vectana/compare/v1.1.0..v1.2.0
 [1.1.0]: https://github.com/techolve/vectana/compare/v1.0.0..v1.1.0
 [1.0.0]: https://github.com/techolve/vectana/compare/v0.1.5..v1.0.0
